@@ -20,10 +20,10 @@
             </a>
             <ul class="submenu">
                 <li class="{{ request()->routeIs('owner.property.index') ? 'active' : '' }}">
-                    <a href="{{ route('owner.property.index') }}">Property List</a>
+                    <a href="{{ route('owner.property.index') }}">📋 Property List</a>
                 </li>
                 <li class="{{ request()->routeIs('owner.property.create') ? 'active' : '' }}">
-                    <a href="{{ route('owner.property.create') }}">Add Property</a>
+                    <a href="{{ route('owner.property.create') }}">➕ Add Property</a>
                 </li>
             </ul>
         </li>
@@ -35,11 +35,11 @@
             </a>
             <ul class="submenu">
                 <li class="{{ request()->routeIs('owner.units.index') ? 'active' : '' }}">
-                    <a href="{{ route('owner.units.index') }}">Unit List</a>
+                    <a href="{{ route('owner.units.index') }}">🏢 Unit List</a>
                 </li>
             </ul>
         </li>
-        <li class="has-submenu {{ request()->routeIs('owner.tenants.*') ? 'open' : '' }}">
+        <li class="has-submenu {{ request()->routeIs('owner.tenants.*') || request()->routeIs('owner.checkouts.*') ? 'open' : '' }}">
             <a href="javascript:void(0);" class="submenu-toggle">
                 <span class="menu-icon">👥</span>
                 Tenants
@@ -47,10 +47,13 @@
             </a>
             <ul class="submenu">
                 <li class="{{ request()->routeIs('owner.tenants.index') ? 'active' : '' }}">
-                    <a href="{{ route('owner.tenants.index') }}">Tenant List</a>
+                    <a href="{{ route('owner.tenants.index') }}">👥 Tenant List</a>
                 </li>
                 <li class="{{ request()->routeIs('owner.tenants.create') ? 'active' : '' }}">
-                    <a href="{{ route('owner.tenants.create') }}">Add Tenant</a>
+                    <a href="{{ route('owner.tenants.create') }}">➕ Add Tenant</a>
+                </li>
+                <li class="{{ request()->routeIs('owner.checkouts.*') ? 'active' : '' }}">
+                    <a href="{{ route('owner.checkouts.index') }}">🚪 Checkouts</a>
                 </li>
             </ul>
         </li>
@@ -62,10 +65,11 @@
             </a>
             <ul class="submenu">
                 <li class="{{ request()->routeIs('owner.invoices.index') ? 'active' : '' }}">
-                    <a href="{{ route('owner.invoices.index') }}">Rent Collection</a>
+                    <a href="{{ route('owner.invoices.index') }}">💰 Rent Collection</a>
                 </li>
             </ul>
         </li>
+
         <li class="{{ request()->routeIs('owner.settings.*') ? 'active' : '' }}">
             <a href="">
                 <span class="menu-icon">⚙️</span>

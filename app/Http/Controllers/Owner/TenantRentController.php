@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Property;
 use App\Models\Owner;
 use App\Models\Invoice;
+use App\Http\Controllers\TenantLedgerController;
 
 class TenantRentController extends Controller
 {
@@ -45,12 +46,12 @@ public function store(Request $request, $tenantId)
     // Update the assigned unit's tenant_id and status
     $unit = \App\Models\Unit::find($validated['unit_id']);
     $unit->tenant_id = $tenantId;
-    $unit->status = 'rent';
+    $unit->status = 'occupied';
     $unit->save();
 
     // Generate Advance Invoice if advance_amount > 0
     if (!empty($validated['advance_amount']) && $validated['advance_amount'] > 0) {
-        Invoice::create([
+        $advanceInvoice = Invoice::create([
             'invoice_number' => 'ADV-' . time() . rand(100,999),
             'owner_id' => $validated['owner_id'],
             'tenant_id' => $tenantId,
@@ -64,11 +65,25 @@ public function store(Request $request, $tenantId)
             'breakdown' => json_encode(['advance' => $validated['advance_amount']]),
             'rent_month' => date('Y-m', strtotime($validated['start_month'])),
         ]);
+        // Ledger entry for advance
+        TenantLedgerController::log([
+            'tenant_id'        => $tenantId,
+            'unit_id'          => $unit->id,
+            'owner_id'         => $validated['owner_id'],
+            'transaction_type' => 'security_deposit',
+            'reference_type'   => 'invoice',
+            'reference_id'     => $advanceInvoice->id,
+            'invoice_number'   => $advanceInvoice->invoice_number,
+            'debit_amount'     => $validated['advance_amount'],
+            'credit_amount'    => 0,
+            'description'      => 'Advance payment invoice generated',
+            'transaction_date' => now(),
+        ]);
     }
 
     // Generate First Month Rent Invoice
     $rentAmount = $unit->rent + ($unit->charges ? $unit->charges->sum('amount') : 0);
-    Invoice::create([
+    $rentInvoice = Invoice::create([
         'invoice_number' => 'RENT-' . time() . rand(100,999),
         'owner_id' => $validated['owner_id'],
         'tenant_id' => $tenantId,
@@ -84,6 +99,20 @@ public function store(Request $request, $tenantId)
             'charges' => $unit->charges ? $unit->charges->toArray() : [],
         ]),
         'rent_month' => date('Y-m', strtotime($validated['start_month'])),
+    ]);
+    // Ledger entry for first rent invoice
+    TenantLedgerController::log([
+        'tenant_id'        => $tenantId,
+        'unit_id'          => $unit->id,
+        'owner_id'         => $validated['owner_id'],
+        'transaction_type' => 'rent_due',
+        'reference_type'   => 'invoice',
+        'reference_id'     => $rentInvoice->id,
+        'invoice_number'   => $rentInvoice->invoice_number,
+        'debit_amount'     => $rentAmount,
+        'credit_amount'    => 0,
+        'description'      => 'First month rent invoice generated',
+        'transaction_date' => now(),
     ]);
 
     return redirect()->route('owner.tenants.index')->with('success', 'Rent assigned and invoices generated successfully.');

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Owner\TenantRentController;
 use App\Http\Controllers\Owner\RentPaymentController;
 use App\Http\Controllers\Owner\InvoiceController;
+use App\Http\Controllers\Owner\CheckoutController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -62,6 +63,13 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+
+    // Checkout routes
+    Route::get('checkouts', [CheckoutController::class, 'index'])->name('checkouts.index');
+    Route::get('tenants/{tenant}/checkout', [CheckoutController::class, 'showCheckoutForm'])->name('checkouts.create');
+    Route::post('tenants/{tenant}/checkout', [CheckoutController::class, 'processCheckout'])->name('checkouts.process');
+    Route::get('checkouts/{checkout}', [CheckoutController::class, 'show'])->name('checkouts.show');
+    Route::get('checkouts/{checkout}/invoice', [CheckoutController::class, 'generateInvoice'])->name('checkouts.invoice');
 
 });
 

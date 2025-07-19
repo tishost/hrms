@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\RentPayment;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\TenantLedgerController;
 
 class RentPaymentController extends Controller
 {
@@ -86,7 +87,7 @@ class RentPaymentController extends Controller
         $amountPaid = $request->amount_paid;
         $status = ($amountPaid >= $totalDue) ? 'Paid' : 'Partial';
 
-        \App\Models\RentPayment::create([
+        $rentPayment = \App\Models\RentPayment::create([
             'owner_id' => $ownerId,
             'tenant_id' => $tenant->id,
             'unit_id' => $unit->id,
@@ -110,6 +111,23 @@ class RentPaymentController extends Controller
             $invoice->paid_date = now();
             $invoice->save();
         }
+
+        // Ledger entry
+        TenantLedgerController::log([
+            'tenant_id'        => $tenant->id,
+            'unit_id'          => $unit->id,
+            'owner_id'         => $ownerId,
+            'transaction_type' => 'rent_payment',
+            'reference_type'   => 'rent_payment',
+            'reference_id'     => $rentPayment->id,
+            'invoice_number'   => $invoice ? $invoice->invoice_number : null,
+            'debit_amount'     => 0,
+            'credit_amount'    => $amountPaid,
+            'description'      => 'Rent payment received',
+            'transaction_date' => $request->payment_date,
+            'payment_method'   => $request->payment_method,
+            'payment_status'   => 'completed',
+        ]);
 
         return redirect()->route('owner.rent_payments.create')->with('success', 'Rent payment recorded successfully.');
     }

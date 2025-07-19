@@ -190,7 +190,11 @@
                         @if (empty($tenant->unit_id))
                             <a href="{{ route('owner.rents.create', $tenant->id) }}" class="btn-assign">Tenant Assign</a>
                         @else
-                            <button class="btn-assign" style="background: #ccc; cursor: not-allowed;" disabled>Assigned</button>
+                            @if($tenant->status === 'active')
+                                <a href="{{ route('owner.checkouts.create', $tenant->id) }}" class="btn-assign" style="background: #f72585;">Check-out</a>
+                            @else
+                                <button class="btn-assign" style="background: #ccc; cursor: not-allowed;" disabled>Checked Out</button>
+                            @endif
                         @endif
                     </td>
                 </tr>

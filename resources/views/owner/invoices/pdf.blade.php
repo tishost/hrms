@@ -1,97 +1,204 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Invoice #{{ $invoice->invoice_number }}</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; color: #222; }
-        .invoice-box { max-width: 700px; margin: auto; padding: 30px; border: 1px solid #eee; background: #fff; }
-        .header { display: flex; justify-content: space-between; align-items: center; }
-        .company { font-size: 1.2em; font-weight: bold; color: #4361ee; }
-        .invoice-title { font-size: 2em; font-weight: bold; }
-        .info-table, .fee-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        .info-table td { padding: 4px 0; }
-        .fee-table th, .fee-table td { border: 1px solid #eee; padding: 8px; text-align: left; }
-        .fee-table th { background: #e8edff; color: #3f37c9; }
-        .total-row td { font-weight: bold; }
-        .status { font-weight: bold; color: #fff; background: #4895ef; padding: 4px 12px; border-radius: 4px; }
-        .paid { background: #43aa8b; }
-        .unpaid { background: #f72585; }
-        .footer { margin-top: 40px; font-size: 0.95em; color: #888; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Invoice {{ $invoice->invoice_number }}</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      color: #333;
+      font-size: 12px;
+    }
+    .invoice-box {
+      max-width: 700px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    h1 {
+      font-size: 20px;
+      color: #2d2d2d;
+      margin-bottom: 8px;
+    }
+    .invoice-header,
+    .invoice-details {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    .invoice-header div,
+    .invoice-details div {
+      flex: 1;
+      min-width: 200px;
+    }
+    .invoice-header p,
+    .invoice-details p {
+      margin: 3px 0;
+      font-size: 11px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table thead {
+      background: #f0f0f0;
+    }
+    table th {
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 11px;
+    }
+    table th:last-child {
+      text-align: right;
+    }
+    table td {
+      padding: 8px 10px;
+      text-align: right;
+      border-bottom: 1px solid #eee;
+      font-size: 11px;
+    }
+    table td:first-child {
+      text-align: left;
+    }
+    .totals {
+      margin-top: 15px;
+      width: 100%;
+    }
+    .totals td {
+      padding: 5px 10px;
+      text-align: right;
+      font-size: 11px;
+    }
+    .totals td:first-child {
+      text-align: left;
+    }
+    .totals .label {
+      font-weight: bold;
+    }
+    .totals .total {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .status {
+      padding: 3px 8px;
+      background: #ffd4d4;
+      color: #d40000;
+      border-radius: 3px;
+      font-weight: bold;
+      display: inline-block;
+      font-size: 10px;
+    }
+    .status.paid {
+      background: #d4ffd4;
+      color: #00a000;
+    }
+    .status.partial {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .payment-box {
+      margin-top: 20px;
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 6px;
+    }
+    .payment-box h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+    }
+    .payment-box p {
+      margin: 3px 0;
+      font-size: 11px;
+    }
+  </style>
 </head>
 <body>
-<div class="invoice-box">
-    <div class="header">
-        <div class="company">
-            {{ config('app.name', 'Your Company') }}
-        </div>
-        <div class="invoice-title">
-            INVOICE
-        </div>
+  <div class="invoice-box">
+    <div class="invoice-header">
+      <div>
+        <h1>Rent Invoice</h1>
+        <p><strong>Invoice #:</strong> {{ $invoice->invoice_number }}</p>
+        <p><strong>Date:</strong> {{ $invoice->issue_date }}</p>
+        <p><strong>Due Date:</strong> {{ $invoice->due_date }}</p>
+      </div>
+      <div style="text-align:right;">
+        <p><strong>Status:</strong> <span class="status {{ strtolower($invoice->status) }}">{{ ucfirst($invoice->status) }}</span></p>
+        <p><strong>Month:</strong> {{ $invoice->rent_month }}</p>
+        <p><strong>Unit:</strong> {{ $invoice->unit->name ?? '' }}</p>
+      </div>
     </div>
-    <table class="info-table">
-        <tr>
-            <td><strong>Invoice #:</strong> {{ $invoice->invoice_number }}</td>
-            <td><strong>Date:</strong> {{ $invoice->issue_date }}</td>
-        </tr>
-        <tr>
-            <td><strong>Tenant:</strong> {{ $invoice->tenant->first_name ?? '' }} {{ $invoice->tenant->last_name ?? '' }}</td>
-            <td><strong>Unit:</strong> {{ $invoice->unit->name ?? '' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Month:</strong> {{ $invoice->rent_month }}</td>
-            <td><strong>Status:</strong>
-                <span class="status {{ strtolower($invoice->status) }}">
-                    {{ ucfirst($invoice->status) }}
-                </span>
-            </td>
-        </tr>
-    </table>
 
-    <table class="fee-table" style="margin-top: 30px;">
-        <thead>
+    <div class="invoice-details">
+      <div>
+        <p><strong>Tenant:</strong> {{ $invoice->tenant->first_name ?? '' }} {{ $invoice->tenant->last_name ?? '' }}</p>
+        <p><strong>Address:</strong> {{ $invoice->tenant->address ?? 'N/A' }}</p>
+        <p><strong>Mobile:</strong> {{ $invoice->tenant->mobile ?? 'N/A' }}</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount (৳)</th>
+        </tr>
+      </thead>
+      <tbody>
+        @php
+            $breakdown = $invoice->breakdown ? json_decode($invoice->breakdown, true) : [];
+        @endphp
+        @if(isset($breakdown['base_rent']))
             <tr>
-                <th>Description</th>
-                <th>Amount (৳)</th>
+                <td>Base Rent</td>
+                <td>{{ number_format($breakdown['base_rent'], 2) }}</td>
             </tr>
-        </thead>
-        <tbody>
-            @php
-                $breakdown = $invoice->breakdown ? json_decode($invoice->breakdown, true) : [];
-            @endphp
-            @if(isset($breakdown['base_rent']))
+        @endif
+        @if(isset($breakdown['charges']) && is_array($breakdown['charges']))
+            @foreach($breakdown['charges'] as $charge)
                 <tr>
-                    <td>Base Rent</td>
-                    <td>{{ number_format($breakdown['base_rent'], 2) }}</td>
+                    <td>{{ $charge['label'] ?? '' }}</td>
+                    <td>{{ number_format($charge['amount'] ?? 0, 2) }}</td>
                 </tr>
-            @endif
-            @if(isset($breakdown['charges']) && is_array($breakdown['charges']))
-                @foreach($breakdown['charges'] as $charge)
-                    <tr>
-                        <td>{{ $charge['label'] ?? '' }}</td>
-                        <td>{{ number_format($charge['amount'] ?? 0, 2) }}</td>
-                    </tr>
-                @endforeach
-            @endif
-            @if(isset($breakdown['advance']))
-                <tr>
-                    <td>Advance Payment</td>
-                    <td>{{ number_format($breakdown['advance'], 2) }}</td>
-                </tr>
-            @endif
-            <tr class="total-row">
-                <td>Total</td>
-                <td>{{ number_format($invoice->amount, 2) }}</td>
+            @endforeach
+        @endif
+        @if(isset($breakdown['advance']))
+            <tr>
+                <td>Advance Payment</td>
+                <td>{{ number_format($breakdown['advance'], 2) }}</td>
             </tr>
-        </tbody>
+        @endif
+      </tbody>
     </table>
 
-    <div class="footer">
-        <strong>Notes:</strong> {{ $invoice->notes ?? 'Thank you for your payment!' }}
-        <br>
-        <strong>Contact:</strong> {{ config('app.email') ?? 'info@example.com' }}
+    <table class="totals">
+      <tr>
+        <td class="label">Sub Total:</td>
+        <td>{{ number_format($invoice->amount, 2) }}</td>
+      </tr>
+      <tr>
+        <td class="label">Discount:</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td class="label total">Total:</td>
+        <td class="total">{{ number_format($invoice->amount, 2) }}</td>
+      </tr>
+    </table>
+
+    <div class="payment-box">
+      <h3>Payment Details</h3>
+      <p><strong>Payment Method:</strong> {{ $invoice->payment_method ?? 'N/A' }}</p>
+      <p><strong>Transaction ID:</strong> {{ $invoice->transaction_id ?? 'N/A' }}</p>
+      <p><strong>Paid On:</strong> {{ $invoice->paid_date ?? 'N/A' }}</p>
+      <p><strong>Payment Status:</strong> {{ ucfirst($invoice->status) }}</p>
     </div>
-</div>
+  </div>
 </body>
 </html>
