@@ -4,8 +4,10 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-class Owner extends Authenticatable
+use Illuminate\Database\Eloquent\SoftDeletes;
+class Owner extends Model
 {
+    use SoftDeletes;
     //
 protected $fillable = [
     'name',
@@ -13,12 +15,13 @@ protected $fillable = [
     'phone',
     'address',
     'country',
+    'gender',
+    'profile_pic',
     'owner_uid',
     'total_properties',
     'total_tenants',
-    'user_id', // Added user_id to fillable attributes
 ];
- 
+
 
 
 protected static function booted()

@@ -38,6 +38,9 @@ class OwnerController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'country' => $request->country,
+            'gender' => $request->gender,
+            'address' => $request->address,
+            'profile_pic' => $request->profile_pic,
             // add other fields as needed
         ]);
 

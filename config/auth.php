@@ -40,10 +40,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        
+
         'owner' => [
             'driver' => 'session',
             'provider' => 'owners',
+        ],
+
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
         ],
     ],
 
@@ -76,7 +81,7 @@ return [
     ],
 
 
-       
+
 
 
 

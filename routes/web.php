@@ -74,6 +74,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
 });
 
 
+// API route for owner profile update (for Flutter)
+Route::post('/owner/profile/update', [App\Http\Controllers\Admin\OwnerController::class, 'update']);
+
 
 // Supper Admin routes
 Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {

@@ -179,6 +179,9 @@ class OwnerUnitController extends Controller
                 }
             }
         }
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Unit updated successfully.']);
+        }
         return redirect()->route('owner.units.index')->with('success', 'Unit updated successfully.');
     }
 
@@ -194,6 +197,9 @@ class OwnerUnitController extends Controller
             })
             ->firstOrFail();
         $unit->delete();
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Unit deleted successfully.']);
+        }
         return redirect()->route('owner.units.index')->with('success', 'Unit deleted successfully.');
     }
 }
