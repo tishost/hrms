@@ -20,6 +20,7 @@ protected $fillable = [
     'owner_uid',
     'total_properties',
     'total_tenants',
+    'user_id',
 ];
 
 

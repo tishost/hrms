@@ -1,0 +1,180 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Invoice;
+use App\Models\RentPayment;
+use App\Models\TenantLedger;
+use Illuminate\Support\Facades\DB;
+
+class InvoiceController extends Controller
+{
+    public function index(Request $request)
+    {
+        $ownerId = $request->user()->owner->id;
+
+        $invoices = Invoice::where('owner_id', $ownerId)
+            ->with(['tenant:id,first_name,last_name', 'unit:id,name', 'property:id,name'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($invoice) {
+                // Parse breakdown JSON to get fees
+                $breakdown = [];
+                if ($invoice->breakdown) {
+                    try {
+                        $breakdown = json_decode($invoice->breakdown, true) ?? [];
+                    } catch (Exception $e) {
+                        $breakdown = [];
+                    }
+                }
+
+                return [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_type' => $invoice->invoice_type,
+                    'description' => $invoice->description,
+                    'amount' => $invoice->amount,
+                    'paid_amount' => $invoice->paid_amount ?? 0,
+                    'status' => $invoice->status,
+                    'issue_date' => $invoice->issue_date,
+                    'due_date' => $invoice->due_date,
+                    'breakdown' => $breakdown,
+                    'tenant_name' => $invoice->tenant ? trim(($invoice->tenant->first_name ?? '') . ' ' . ($invoice->tenant->last_name ?? '')) : 'N/A',
+                    'unit_name' => $invoice->unit ? $invoice->unit->name : 'N/A',
+                    'property_name' => $invoice->property ? $invoice->property->name : 'N/A',
+                ];
+            });
+
+        return response()->json([
+            'invoices' => $invoices
+        ]);
+    }
+
+    public function pay(Request $request, $invoiceId)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,bank_transfer,mobile_banking,check,other',
+            'reference_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        // Log the request data for debugging
+        \Log::info('Payment request data:', $request->all());
+
+        try {
+            DB::beginTransaction();
+
+            $ownerId = $request->user()->owner->id;
+            $invoice = Invoice::where('id', $invoiceId)
+                ->where('owner_id', $ownerId)
+                ->with(['tenant', 'unit'])
+                ->first();
+
+            if (!$invoice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice not found'
+                ], 404);
+            }
+
+            $paymentAmount = $request->amount;
+            $invoiceAmount = $invoice->amount;
+            $paidAmount = $invoice->paid_amount ?? 0;
+            $remainingAmount = $invoiceAmount - $paidAmount;
+
+            if ($paymentAmount > $remainingAmount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment amount cannot exceed remaining invoice amount'
+                ], 400);
+            }
+
+            // Format payment method (replace underscores with spaces)
+            $paymentMethod = str_replace('_', ' ', $request->payment_method);
+
+            // Create rent payment record
+            $rentPayment = RentPayment::create([
+                'owner_id' => $ownerId,
+                'tenant_id' => $invoice->tenant_id,
+                'unit_id' => $invoice->unit_id,
+                'invoice_id' => $invoice->id,
+                'amount' => $paymentAmount,
+                'amount_due' => $invoiceAmount,
+                'amount_paid' => $paymentAmount,
+                'payment_method' => $paymentMethod,
+                'reference_number' => $request->reference_number,
+                'notes' => $request->notes,
+                'payment_date' => now(),
+            ]);
+
+            // Update invoice paid amount
+            $newPaidAmount = $paidAmount + $paymentAmount;
+            $invoice->paid_amount = $newPaidAmount;
+
+            // Update invoice status
+            if ($newPaidAmount >= $invoiceAmount) {
+                $invoice->status = 'paid';
+            } elseif ($newPaidAmount > 0) {
+                $invoice->status = 'partial';
+            }
+
+            $invoice->save();
+
+            // Create ledger entry for payment
+            TenantLedger::create([
+                'owner_id' => $ownerId,
+                'tenant_id' => $invoice->tenant_id,
+                'unit_id' => $invoice->unit_id,
+                'transaction_type' => 'rent_payment',
+                'credit_amount' => $paymentAmount,
+                'debit_amount' => 0,
+                'balance' => $this->calculateNewBalance($invoice->tenant_id, $paymentAmount),
+                'description' => "Payment for invoice #{$invoice->invoice_number}",
+                'payment_status' => 'completed',
+                'payment_reference' => $request->reference_number,
+                'notes' => $request->notes,
+                'transaction_date' => now(),
+            ]);
+
+            DB::commit();
+
+            \Log::info('Payment processed successfully', [
+                'invoice_id' => $invoice->id,
+                'payment_id' => $rentPayment->id,
+                'amount' => $paymentAmount,
+                'new_balance' => $this->calculateNewBalance($invoice->tenant_id, $paymentAmount)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment processed successfully',
+                'payment' => $rentPayment,
+                'invoice' => $invoice->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Invoice payment error: ' . $e->getMessage());
+            \Log::error('Invoice payment error stack: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function calculateNewBalance($tenantId, $paymentAmount)
+    {
+        $lastLedger = TenantLedger::where('tenant_id', $tenantId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $currentBalance = $lastLedger ? $lastLedger->balance : 0;
+        return $currentBalance - $paymentAmount; // Payment reduces balance
+    }
+}

@@ -16,7 +16,7 @@ class UnitController extends Controller
         $units = Unit::whereHas('property', function($q) use ($ownerId) {
             $q->where('owner_id', $ownerId);
         })
-        ->with(['property', 'charges'])
+        ->with(['property', 'charges', 'tenant'])
         ->get();
         $unitsTransformed = $units->map(function($unit) {
             return [
@@ -33,6 +33,9 @@ class UnitController extends Controller
                     ];
                 })->toArray(),
                 'status' => $unit->status,
+                'tenant_id' => $unit->tenant_id,
+                'tenant_name' => $unit->tenant ? trim(($unit->tenant->first_name ?? '') . ' ' . ($unit->tenant->last_name ?? '')) : null,
+                'tenant_mobile' => $unit->tenant ? $unit->tenant->mobile : null,
             ];
         });
         return response()->json(['units' => $unitsTransformed]);

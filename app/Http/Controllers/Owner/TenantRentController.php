@@ -51,6 +51,14 @@ public function store(Request $request, $tenantId)
 
     // Generate Advance Invoice if advance_amount > 0
     if (!empty($validated['advance_amount']) && $validated['advance_amount'] > 0) {
+        $advanceBreakdown = [
+            [
+                'name' => 'Security Deposit',
+                'amount' => $validated['advance_amount'],
+                'type' => 'advance'
+            ]
+        ];
+
         $advanceInvoice = Invoice::create([
             'invoice_number' => 'ADV-' . time() . rand(100,999),
             'owner_id' => $validated['owner_id'],
@@ -62,7 +70,7 @@ public function store(Request $request, $tenantId)
             'issue_date' => now(),
             'due_date' => now(),
             'notes' => 'Advance payment on unit assignment',
-            'breakdown' => json_encode(['advance' => $validated['advance_amount']]),
+            'breakdown' => json_encode($advanceBreakdown),
             'rent_month' => date('Y-m', strtotime($validated['start_month'])),
         ]);
         // Ledger entry for advance
@@ -83,6 +91,30 @@ public function store(Request $request, $tenantId)
 
     // Generate First Month Rent Invoice
     $rentAmount = $unit->rent + ($unit->charges ? $unit->charges->sum('amount') : 0);
+
+    // Prepare breakdown for fees
+    $breakdown = [];
+
+    // Add base rent
+    if ($unit->rent > 0) {
+        $breakdown[] = [
+            'name' => 'Base Rent',
+            'amount' => $unit->rent,
+            'type' => 'rent'
+        ];
+    }
+
+    // Add unit charges
+    if ($unit->charges && $unit->charges->count() > 0) {
+        foreach ($unit->charges as $charge) {
+            $breakdown[] = [
+                'name' => $charge->label,
+                'amount' => $charge->amount,
+                'type' => 'charge'
+            ];
+        }
+    }
+
     $rentInvoice = Invoice::create([
         'invoice_number' => 'RENT-' . time() . rand(100,999),
         'owner_id' => $validated['owner_id'],
@@ -94,10 +126,7 @@ public function store(Request $request, $tenantId)
         'issue_date' => now(),
         'due_date' => now()->addDays(7),
         'notes' => 'First month rent invoice on unit assignment',
-        'breakdown' => json_encode([
-            'base_rent' => $unit->rent,
-            'charges' => $unit->charges ? $unit->charges->toArray() : [],
-        ]),
+        'breakdown' => json_encode($breakdown),
         'rent_month' => date('Y-m', strtotime($validated['start_month'])),
     ]);
     // Ledger entry for first rent invoice

@@ -36,6 +36,16 @@ class Tenant extends Model
         'check_out_reason',
         'handover_date',
         'handover_condition',
+        'remarks',
+        'family_types',
+        'child_qty',
+        'city',
+        'state',
+        'zip',
+        'college_university',
+        'business_name',
+        'frequency',
+        'nid_picture',
     ];
 
     protected $casts = [
