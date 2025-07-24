@@ -51,7 +51,24 @@ class UnitController extends Controller
             })
             ->with('charges')
             ->firstOrFail();
-        return response()->json($unit);
+
+        $unitData = [
+            'id' => $unit->id,
+            'name' => $unit->name,
+            'rent' => $unit->rent,
+            'property_id' => $unit->property_id,
+            'property_name' => $unit->property ? $unit->property->name : null,
+            'charges' => $unit->charges->map(function($charge) {
+                return [
+                    'id' => $charge->id,
+                    'label' => $charge->label,
+                    'amount' => $charge->amount,
+                ];
+            })->toArray(),
+            'status' => $unit->status,
+        ];
+
+        return response()->json(['unit' => $unitData]);
     }
 
     // Store a new unit

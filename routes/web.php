@@ -78,25 +78,36 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
 Route::post('/owner/profile/update', [App\Http\Controllers\Admin\OwnerController::class, 'update']);
 
 
-// Supper Admin routes
-Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-        Route::get('/owners', [OwnerController::class, 'index'])->name('admin.owners.index');
-        Route::get('/owners/create', [OwnerController::class, 'create'])->name('owners.create');
-        Route::post('/owners', [OwnerController::class, 'store'])->name('owners.store');
-        Route::get('/owners/{owner}/edit', [OwnerController::class, 'edit'])->name('admin.owners.edit');
-        Route::post('/owners/{owner}', [OwnerController::class, 'update'])->name('owners.update');
-        Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
-        Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+// Admin Routes
+Route::get('/admin/login', function () {
+    return view('admin.auth.login');
+})->name('admin.login');
 
+Route::post('/admin/login', [App\Http\Controllers\Admin\AuthController::class, 'login'])->name('admin.login.post');
 
+Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
 
+    // Owner Management Routes
+    Route::get('/owners', [App\Http\Controllers\Admin\OwnerController::class, 'index'])->name('owners.index');
+    Route::get('/owners/create', [App\Http\Controllers\Admin\OwnerController::class, 'create'])->name('owners.create');
+    Route::post('/owners', [App\Http\Controllers\Admin\OwnerController::class, 'store'])->name('owners.store');
+    Route::get('/owners/{owner}/edit', [App\Http\Controllers\Admin\OwnerController::class, 'edit'])->name('owners.edit');
+    Route::put('/owners/{owner}', [App\Http\Controllers\Admin\OwnerController::class, 'update'])->name('owners.update');
+    Route::delete('/owners/{owner}', [App\Http\Controllers\Admin\OwnerController::class, 'destroy'])->name('owners.destroy');
+
+    // Settings Routes
+    Route::get('/settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'update'])->name('settings.update');
+
+    // OTP Settings Routes
+    Route::get('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'index'])->name('otp-settings.index');
+    Route::put('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'update'])->name('otp-settings.update');
+    Route::post('/otp-settings/toggle', [App\Http\Controllers\Admin\OtpSettingsController::class, 'toggle'])->name('otp-settings.toggle');
 });
 
-
-
-
-
+// API OTP Settings Route (Public)
+Route::get('/api/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'getSettings']);
 
 
 require __DIR__.'/auth.php';

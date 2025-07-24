@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Owner;
+use App\Models\Tenant;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -25,6 +26,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'tenant_id',
+        'owner_id',
     ];
 
     /**
@@ -55,5 +58,9 @@ class User extends Authenticatable
         return $this->hasOne(Owner::class);
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
 
 }

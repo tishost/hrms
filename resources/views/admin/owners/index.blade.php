@@ -2,181 +2,197 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container">
-    <h2>Owner List</h2>
-    <a href="{{ route('owners.create') }}" class="btn btn-primary mb-3">Add New Owner</a>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Country</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($owners as $owner)
-            <tr>
-                <td>{{ $owner->name }}</td>
-                <td>{{ $owner->email }}</td>
-                <td>{{ $owner->phone }}</td>
-                <td>{{ $owner->country }}</td>
-                <td>
-                   <button class="btn btn-sm btn-primary edit-owner-btn" 
-                    data-id="{{ $owner->id }}" 
-                    data-toggle="modal" 
-                    data-target="#editOwnerModal">
-                     Edit
-                   </button>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">Owner Management</h3>
+                    <a href="{{ route('admin.owners.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Owner
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if(session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Country</th>
+                                    <th>Status</th>
+                                    <th>Super Admin</th>
+                                    <th>Properties</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($owners as $owner)
+                                <tr>
+                                    <td>{{ $owner->id }}</td>
+                                    <td>{{ $owner->name }}</td>
+                                    <td>{{ $owner->email }}</td>
+                                    <td>{{ $owner->phone }}</td>
+                                    <td>{{ $owner->country }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ $owner->status === 'active' ? 'success' : ($owner->status === 'inactive' ? 'warning' : 'danger') }}">
+                                            {{ ucfirst($owner->status) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($owner->is_super_admin)
+                                            <span class="badge badge-primary">Super Admin</span>
+                                        @else
+                                            <span class="badge badge-secondary">Owner</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $owner->properties->count() }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-info" onclick="editOwner({{ $owner->id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            @if(!$owner->is_super_admin)
+                                            <form action="{{ route('admin.owners.destroy', $owner->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this owner?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Edit Owner Modal -->
+<div class="modal fade" id="editOwnerModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Owner</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editOwnerForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control" name="name" id="edit_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-control" name="email" id="edit_email" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="text" class="form-control" name="phone" id="edit_phone" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Country</label>
+                                <select class="form-control" name="country" id="edit_country" required>
+                                    @foreach($countries as $code => $name)
+                                        <option value="{{ $name }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select class="form-control" name="gender" id="edit_gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea class="form-control" name="address" id="edit_address" rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Update Owner</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
-
-<div class="modal fade" id="editOwnerModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form id="edit-owner-form">
-        @csrf
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Owner</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-
-        <div class="modal-body">
-          <input type="hidden" name="owner_id" id="owner_id">
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" name="name" id="owner_name" class="form-control">
-          </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" id="owner_email" class="form-control"> 
-            </div>
-            <div class="form-group">    
-                <label>Phone</label>
-                <input type="text" name="phone" id="owner_phone" class="form-control">  
-            </div>
-            <div class="form-group">
-                <label>Country</label>
-                <select name="country" id="owner_country" class="form-control">
-            </div>
-        <!-- Options will be injected via AJAX -->
-    </select>
-</div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Udate</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-           <span aria-hidden="true">&times;</span>
-  
-          Close</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div id="updateToast" class="toast" style="position: fixed; bottom: 20px; right: 20px;" data-delay="3000">
-  <div class="toast-header">
-    <strong class="mr-auto text-success">Update Successful</strong>
-    <small>Now</small>
-    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
-  </div>
-  <div class="toast-body">
-    Owner details have been updated.
-  </div>
-</div>
-
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-$(document).ready(function () {
-    $(document).on('click', '.edit-owner-btn', function () {
-        let ownerId = $(this).data('id');
-        $.get(`/admin/owners/${ownerId}/edit`, function (data) {
-                const owner = data.owner;
-                $('#owner_id').val(owner.id);
-                $('#owner_name').val(owner.name);
-                $('#owner_email').val(owner.email);
-                $('#owner_phone').val(owner.phone);
-                let countryOptions = '';
-                data.countries.forEach(function (country) {
-                    const selected = (owner.country === country) ? 'selected' : '';
-                    countryOptions += `<option value="${country}" ${selected}>${country}</option>`;
-                });
-                $('#owner_country').html(countryOptions);
+function editOwner(ownerId) {
+    $.get(`/admin/owners/${ownerId}/edit`, function(data) {
+        $('#edit_name').val(data.owner.name);
+        $('#edit_email').val(data.owner.email);
+        $('#edit_phone').val(data.owner.phone);
+        $('#edit_country').val(data.owner.country);
+        $('#edit_gender').val(data.owner.gender);
+        $('#edit_address').val(data.owner.address);
 
-                $('#editOwnerModal').modal('show');
-            });
-        });
-});
-$(document).on('click', '.close', function () {
-    $('#editOwnerModal').modal('hide');
-});
+        $('#editOwnerForm').attr('action', `/admin/owners/${ownerId}`);
+        $('#editOwnerModal').modal('show');
+    });
+}
 
-$('#editOwnerModal').on('hidden.bs.modal', function () {
-    $('body').removeClass('modal-open');
-    $('.modal-backdrop').remove();
-});
-
-let toastPending = false;
-
-$('#edit-owner-form').submit(function (e) {
+$('#editOwnerForm').on('submit', function(e) {
     e.preventDefault();
 
-    const ownerId = $('#owner_id').val();
-    const formData = $(this).serialize();
-    toastPending = true; // mark that toast should trigger
-
     $.ajax({
-        url: `/admin/owners/${ownerId}`,
-        type: 'POST',
-        data: formData,
-        success: function (response) {
-            if (response.success) {
+        url: $(this).attr('action'),
+        method: 'PUT',
+        data: $(this).serialize(),
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if(response.success) {
                 $('#editOwnerModal').modal('hide');
+                location.reload();
             }
         },
-        error: function () {
-            toastPending = false;
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'error',
-                title: 'Failed to update owner',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
+        error: function(xhr) {
+            alert('Error updating owner');
         }
     });
 });
-
-$('#editOwnerModal').on('hidden.bs.modal', function () {
-    if (toastPending) {
-        Swal.fire({
-            toast: true,
-            position: 'top-center',
-            icon: 'success',
-            title: 'Owner updated successfully!',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
-        toastPending = false; // reset the flag
-    }
-});
-
 </script>
 @endpush

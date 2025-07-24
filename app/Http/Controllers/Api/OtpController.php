@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Otp;
+use App\Models\OtpSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\SystemSetting;
@@ -15,6 +16,23 @@ class OtpController extends Controller
      */
     public function sendOtp(Request $request)
     {
+        // Check if OTP system is enabled
+        $otpSettings = OtpSetting::getSettings();
+        if (!$otpSettings->is_enabled) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP verification system is currently disabled'
+            ], 503);
+        }
+
+        // Check if OTP is required for this action
+        if (!$otpSettings->isOtpRequiredFor($request->type)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP verification is not required for this action'
+            ], 400);
+        }
+
         $validator = Validator::make($request->all(), [
             'phone' => 'required|string|max:20',
             'type' => 'required|in:registration,login,reset,profile_update',
@@ -56,8 +74,8 @@ class OtpController extends Controller
                 }
             }
 
-            // Generate OTP
-            $otp = Otp::generateOtp($phone, $type);
+            // Generate OTP with settings
+            $otp = Otp::generateOtp($phone, $type, $otpSettings->otp_length);
 
             // TODO: Integrate with SMS service (Twilio, etc.)
             // For now, we'll return the OTP in response for testing
@@ -65,7 +83,7 @@ class OtpController extends Controller
                 'success' => true,
                 'message' => 'OTP sent successfully',
                 'otp' => $otp->otp, // Remove this in production
-                'expires_in' => 10 // minutes
+                'expires_in' => $otpSettings->otp_expiry_minutes // minutes
             ]);
 
         } catch (\Exception $e) {
@@ -103,8 +121,8 @@ class OtpController extends Controller
             $isValid = Otp::verifyOtp($phone, $otp, $type);
 
             if ($isValid) {
-                // If profile_update, set phone_verified true
-                if ($type === 'profile_update') {
+                // Update phone_verified status for profile_update and registration
+                if ($type === 'profile_update' || $type === 'registration') {
                     $owner = \App\Models\Owner::where('phone', $phone)->first();
                     if ($owner) {
                         $owner->phone_verified = true;
@@ -180,6 +198,34 @@ class OtpController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to resend OTP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get OTP settings
+     */
+    public function getOtpSettings()
+    {
+        try {
+            $otpSettings = OtpSetting::getSettings();
+
+            return response()->json([
+                'success' => true,
+                'settings' => [
+                    'is_enabled' => $otpSettings->is_enabled,
+                    'registration_required' => $otpSettings->isOtpRequiredFor('registration'),
+                    'login_required' => $otpSettings->isOtpRequiredFor('login'),
+                    'reset_required' => $otpSettings->isOtpRequiredFor('reset'),
+                    'profile_update_required' => $otpSettings->isOtpRequiredFor('profile_update'),
+                    'otp_length' => $otpSettings->otp_length,
+                    'otp_expiry_minutes' => $otpSettings->otp_expiry_minutes,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get OTP settings: ' . $e->getMessage()
             ], 500);
         }
     }

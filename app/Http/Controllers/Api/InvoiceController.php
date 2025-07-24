@@ -8,6 +8,8 @@ use App\Models\Invoice;
 use App\Models\RentPayment;
 use App\Models\TenantLedger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -164,6 +166,99 @@ class InvoiceController extends Controller
                 'success' => false,
                 'message' => 'Payment failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate PDF for invoice
+     */
+    public function generatePdf(Request $request, $invoiceId)
+    {
+        try {
+            $user = $request->user();
+            $invoice = null;
+
+            // Check if user is owner or tenant
+            if ($user->owner) {
+                // Owner accessing invoice
+                $ownerId = $user->owner->id;
+                $invoice = Invoice::where('id', $invoiceId)
+                    ->where('owner_id', $ownerId)
+                    ->with(['tenant:id,first_name,last_name,mobile,email', 'unit:id,name', 'property:id,name,address'])
+                    ->first();
+            } elseif ($user->tenant) {
+                // Tenant accessing their own invoice
+                $tenantId = $user->tenant->id;
+                $invoice = Invoice::where('id', $invoiceId)
+                    ->where('tenant_id', $tenantId)
+                    ->with(['tenant:id,first_name,last_name,mobile,email', 'unit:id,name', 'property:id,name,address'])
+                    ->first();
+            }
+
+            if (!$invoice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice not found'
+                ], 404);
+            }
+
+            // Parse breakdown
+            $breakdown = [];
+            if ($invoice->breakdown) {
+                try {
+                    $breakdown = json_decode($invoice->breakdown, true) ?? [];
+                } catch (Exception $e) {
+                    $breakdown = [];
+                }
+            }
+
+            // Prepare data for PDF
+            $pdfData = [
+                'invoice' => [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_type' => $invoice->invoice_type,
+                    'description' => $invoice->description,
+                    'amount' => $invoice->amount,
+                    'paid_amount' => $invoice->paid_amount ?? 0,
+                    'remaining_amount' => ($invoice->amount - ($invoice->paid_amount ?? 0)),
+                    'status' => $invoice->status,
+                    'issue_date' => $invoice->issue_date,
+                    'due_date' => $invoice->due_date,
+                    'breakdown' => $breakdown,
+                ],
+                'tenant' => [
+                    'name' => $invoice->tenant ? trim(($invoice->tenant->first_name ?? '') . ' ' . ($invoice->tenant->last_name ?? '')) : 'N/A',
+                    'phone' => $invoice->tenant->mobile ?? 'N/A',
+                    'email' => $invoice->tenant->email ?? 'N/A',
+                ],
+                'unit' => [
+                    'name' => $invoice->unit ? $invoice->unit->name : 'N/A',
+                ],
+                'property' => [
+                    'name' => $invoice->property ? $invoice->property->name : 'N/A',
+                    'address' => $invoice->property ? $invoice->property->address : 'N/A',
+                ],
+                'owner' => $user->owner ? [
+                    'name' => $user->owner->name ?? 'N/A',
+                    'phone' => $user->owner->phone ?? 'N/A',
+                    'email' => $user->owner->email ?? 'N/A',
+                ] : null,
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+            ];
+
+            // Generate PDF
+            $pdf = PDF::loadView('pdf.invoice', $pdfData);
+            $pdf->setPaper('A4', 'portrait');
+
+            // Return PDF as response
+            return $pdf->stream("invoice-{$invoice->invoice_number}.pdf");
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate PDF: ' . $e->getMessage()
             ], 500);
         }
     }

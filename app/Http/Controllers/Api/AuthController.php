@@ -40,6 +40,28 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
+            // Check OTP settings
+            $otpSettings = \App\Models\OtpSetting::getSettings();
+            $requiresOtp = $otpSettings->is_enabled && $otpSettings->isOtpRequiredFor('registration');
+
+            // If OTP is required, verify it
+            if ($requiresOtp) {
+                if (!$request->has('otp')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'OTP is required for registration'
+                    ], 422);
+                }
+
+                $isValidOtp = \App\Models\Otp::verifyOtp($request->phone, $request->otp, 'registration');
+                if (!$isValidOtp) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid or expired OTP'
+                    ], 422);
+                }
+            }
+
             // Create User
             $user = User::create([
                 'name' => $request->name,
@@ -49,9 +71,9 @@ class AuthController extends Controller
             ]);
 
             // Assign Owner role
-            $user->assignRole('Owner');
+            $user->assignRole('owner');
 
-            // Create Owner
+            // Create Owner with phone_verified status
             $owner = Owner::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -61,6 +83,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'total_properties' => 0,
                 'total_tenants' => 0,
+                'phone_verified' => $requiresOtp ? true : false, // Set based on OTP requirement
             ]);
 
             // Generate token
@@ -74,7 +97,8 @@ class AuthController extends Controller
                 'user' => $user,
                 'owner' => $owner,
                 'token' => $token,
-                'role' => 'Owner'
+                'role' => 'owner',
+                'phone_verified' => $owner->phone_verified
             ], 201);
 
         } catch (\Exception $e) {
@@ -86,27 +110,63 @@ class AuthController extends Controller
         }
     }
 
-    // Login
+    // Role-based login (Owner/Tenant)
     public function login(Request $request)
     {
         $request->validate([
-            'login' => 'required', // email or phone
-            'password' => 'required',
+            'mobile' => 'required_without:email|string',
+            'email' => 'required_without:mobile|string|email',
+            'password' => 'required|string',
         ]);
-        $login_type = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        $user = User::where($login_type, $request->login)->first();
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'login' => ['The provided credentials are incorrect.'],
+
+        try {
+            // Check if mobile or email is provided
+            $mobile = $request->mobile;
+            $email = $request->email;
+
+            $user = null;
+
+            if ($mobile) {
+                // Login with mobile
+                $user = User::where('phone', $mobile)->first();
+            } elseif ($email) {
+                // Login with email
+                $user = User::where('email', $email)->first();
+            }
+
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'error' => 'Invalid credentials'
+                ], 401);
+            }
+
+            // Check role
+            if ($user->hasRole('owner')) {
+                $role = 'owner';
+            } elseif ($user->hasRole('tenant')) {
+                $role = 'tenant';
+            } else {
+                return response()->json([
+                    'error' => 'Unauthorized role'
+                ], 403);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'user' => $user,
+                'role' => $role,
+                'token' => $token,
+                'message' => 'Login successful'
             ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Login failed'
+            ], 500);
         }
-        $token = $user->createToken('api-token')->plainTextToken;
-        $role = $user->getRoleNames()->first(); // Get the user's primary role
-        return response()->json([
-            'user' => $user,
-            'role' => $role,
-            'token' => $token,
-        ]);
     }
 
     // Logout
@@ -119,18 +179,94 @@ class AuthController extends Controller
     // Authenticated user info
     public function user(Request $request)
     {
-        $user = $request->user();
-        $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
 
-        return response()->json([
-            'id' => $user->id,
-            'name' => $owner ? $owner->name : $user->name,
-            'email' => $user->email,
-            'phone' => $owner ? $owner->phone : $user->phone,
-            'address' => $owner ? $owner->address : null,
-            'country' => $owner ? $owner->country : null,
-            'gender' => $owner ? $owner->gender : null,
-            'phone_verified' => $owner ? (bool)$owner->phone_verified : false,
-        ]);
+            $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+
+            // Build full name
+            $fullName = '';
+            if ($owner) {
+                $firstName = $owner->first_name ?? $owner->name ?? '';
+                $lastName = $owner->last_name ?? '';
+                $fullName = trim($firstName . ' ' . $lastName);
+            } else {
+                $fullName = $user->name ?? '';
+            }
+
+            return response()->json([
+                'id' => $user->id,
+                'name' => $fullName,
+                'first_name' => $owner ? ($owner->first_name ?? $owner->name ?? '') : ($user->name ?? ''),
+                'last_name' => $owner ? ($owner->last_name ?? '') : '',
+                'email' => $user->email,
+                'phone' => $owner ? $owner->phone : $user->phone,
+                'address' => $owner ? $owner->address : null,
+                'country' => $owner ? $owner->country : null,
+                'gender' => $owner ? $owner->gender : null,
+                'phone_verified' => $owner ? (bool)$owner->phone_verified : false,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+    }
+
+    // Get user profile with owner/tenant detection
+    public function getUserProfile(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $profileData = [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'roles' => $user->roles->pluck('name'),
+            ];
+
+            // Check if user is owner
+            if ($user->owner) {
+                $profileData['owner'] = [
+                    'id' => $user->owner->id,
+                    'first_name' => $user->owner->first_name ?? $user->owner->name,
+                    'last_name' => $user->owner->last_name ?? '',
+                    'mobile' => $user->owner->mobile ?? $user->owner->phone,
+                    'email' => $user->owner->email ?? $user->email,
+                ];
+                $profileData['tenant'] = null;
+            }
+            // Check if user is tenant
+            else if ($user->tenant) {
+                $profileData['owner'] = null;
+                $profileData['tenant'] = [
+                    'id' => $user->tenant->id,
+                    'first_name' => $user->tenant->first_name,
+                    'last_name' => $user->tenant->last_name,
+                    'mobile' => $user->tenant->mobile,
+                    'email' => $user->tenant->email,
+                ];
+            }
+            // Neither owner nor tenant
+            else {
+                $profileData['owner'] = null;
+                $profileData['tenant'] = null;
+            }
+
+            return response()->json([
+                'success' => true,
+                'user' => $profileData
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Get user profile error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to get user profile: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

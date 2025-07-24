@@ -50,8 +50,25 @@ class TenantController extends Controller
             'total_family_member' => $validated['total_family_member'],
             'is_driver'           => $validated['is_driver'],
             'driver_name'         => $validated['driver_name'] ?? null,
+            'building_id'         => $validated['building_id'],
+            'unit_id'             => $validated['unit_id'],
+            'check_in_date'       => $validated['check_in_date'],
+            'security_deposit'    => $validated['security_deposit'],
+            'remarks'             => $validated['remarks'] ?? null,
             'owner_id'            => $ownerId,
+            'status'              => 'active',
         ]);
+
+        // Update unit status to rented
+        if (isset($validated['unit_id'])) {
+            $unit = Unit::find($validated['unit_id']);
+            if ($unit) {
+                $unit->update([
+                    'tenant_id' => $tenant->id,
+                    'status' => 'rented'
+                ]);
+            }
+        }
 
         return redirect()->route('owner.rents.create', $tenant->id)
             ->with('success', 'Tenant added successfully! Now assign rent.');

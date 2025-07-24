@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- মোবাইল রেসপনসিভ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
@@ -18,17 +21,27 @@
         .sidebar .nav-link {
             color: #b8c7ce;
             margin-bottom: 10px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
         .sidebar .nav-link.active, .sidebar .nav-link:hover {
             background: #22304a;
             color: #fff;
-            border-radius: 8px;
+            transform: translateX(5px);
         }
         .profile-img {
             width: 40px; height: 40px; border-radius: 50%;
         }
-        .card { border-radius: 15px; }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
         .card-title { font-size: 1.1rem; }
+        .btn-block {
+            width: 100%;
+            margin-bottom: 10px;
+        }
         @media (max-width: 767.98px) {
             .sidebar {
                 min-height: auto;
@@ -58,17 +71,38 @@
     <div class="row flex-nowrap">
         <!-- Sidebar -->
         <nav class="col-12 col-md-2 sidebar mb-3 mb-md-0">
-            <h4 class="mb-4 text-center">DASHTRAP</h4>
+            <h4 class="mb-4 text-center">HRMS Admin</h4>
             <ul class="nav flex-md-column flex-row">
-                <li class="nav-item"><a class="nav-link active" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('admin.owners.index') }}">Owners</a></li>
-                <!-- আরও মেনু -->
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                       href="{{ route('admin.dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.owners.*') ? 'active' : '' }}"
+                       href="{{ route('admin.owners.index') }}">
+                        <i class="fas fa-users me-2"></i>Owners
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
+                       href="{{ route('admin.settings.index') }}">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
+                       href="{{ route('admin.otp-settings.index') }}">
+                        <i class="fas fa-mobile-alt me-2"></i>OTP Settings
+                    </a>
+                </li>
             </ul>
         </nav>
         <!-- Main Content -->
         <main class="col-12 col-md-10 p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-                <h3 class="mb-2 mb-md-0">Dashboard</h3>
+                <h3 class="mb-2 mb-md-0">@yield('title', 'Dashboard')</h3>
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="https://randomuser.me/api/portraits/women/44.jpg" class="profile-img me-2" alt="Profile">
@@ -76,21 +110,56 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                         <li>
-                            <a class="dropdown-item" href="{{ route('profile.edit') }}">Profile</a>
+                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a>
                         </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="dropdown-item">Logout</button>
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
                             </form>
                         </li>
                     </ul>
                 </div>
             </div>
+
+            <!-- Success/Error Messages -->
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             @yield('content')
         </main>
     </div>
 </div>
-  @stack('scripts')
+@stack('scripts')
 </body>
 </html>

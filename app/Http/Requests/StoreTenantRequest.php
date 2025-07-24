@@ -38,6 +38,11 @@ class StoreTenantRequest extends FormRequest
             'total_family_member'=> 'required|integer|min:1',
             'is_driver'          => 'required|boolean',
             'driver_name'        => 'nullable|required_if:is_driver,1|string|max:100',
+            'building_id'        => 'required|exists:properties,id',
+            'unit_id'            => 'required|exists:units,id',
+            'check_in_date'      => 'required|date',
+            'security_deposit'   => 'required|numeric|min:0',
+            'remarks'            => 'nullable|string',
         ];
     }
 }

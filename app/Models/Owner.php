@@ -21,8 +21,14 @@ protected $fillable = [
     'total_properties',
     'total_tenants',
     'user_id',
+    'is_super_admin',
+    'status',
+    'phone_verified',
 ];
 
+protected $casts = [
+    'is_super_admin' => 'boolean',
+];
 
 
 protected static function booted()

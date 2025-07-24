@@ -4,11 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemSetting;
+use App\Models\Owner;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 
 class AdminSettingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('super.admin');
+    }
+
     public function index()
     {
         $settings = SystemSetting::pluck('value', 'key');

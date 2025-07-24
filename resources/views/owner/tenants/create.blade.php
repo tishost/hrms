@@ -144,6 +144,48 @@
             </div>
         </div>
 
+        <!-- Property & Unit Assignment -->
+        <div class="form-section mb-4">
+            <div class="form-header">
+                <h4 class="form-title"><span class="form-title-icon">🏢</span> Property & Unit Assignment</h4>
+            </div>
+            <div class="row">
+                <div class="col-6" style="margin-bottom:18px;">
+                    <label class="form-label" style="margin-bottom:6px;">Property *</label>
+                    <select name="building_id" id="propertySelect" class="form-select custom-select" style="width:100%;" required>
+                        <option value="">Select Property</option>
+                        @foreach($buildings as $building)
+                            <option value="{{ $building->id }}" {{ old('building_id') == $building->id ? 'selected' : '' }}>
+                                {{ $building->name }} - {{ $building->address }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6" style="margin-bottom:18px;">
+                    <label class="form-label" style="margin-bottom:6px;">Unit *</label>
+                    <select name="unit_id" id="unitSelect" class="form-select custom-select" style="width:100%;" required disabled>
+                        <option value="">Select Unit</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6" style="margin-bottom:18px;">
+                    <label class="form-label" style="margin-bottom:6px;">Check-in Date *</label>
+                    <input type="date" name="check_in_date" class="form-input" style="width:100%;" value="{{ old('check_in_date', date('Y-m-d')) }}" required>
+                </div>
+                <div class="col-6" style="margin-bottom:18px;">
+                    <label class="form-label" style="margin-bottom:6px;">Security Deposit *</label>
+                    <input type="number" name="security_deposit" class="form-input" style="width:100%;" placeholder="Security Deposit Amount" value="{{ old('security_deposit') }}" step="0.01" min="0" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12" style="margin-bottom:18px;">
+                    <label class="form-label">Remarks</label>
+                    <textarea name="remarks" class="form-input" placeholder="Additional remarks" style="min-height:38px; resize:vertical; width:100%">{{ old('remarks') }}</textarea>
+                </div>
+            </div>
+        </div>
+
         <!-- Submit -->
         <div class="text-end">
             <button type="submit" class="form-btn btn-save btn-lg">💾 Save Tenant</button>
@@ -245,6 +287,48 @@
     });
     // On page load, show if already selected
     showDriverNameField(isDriverSelect.value);
+
+    // Property and Unit Selection Logic
+    const propertySelect = document.getElementById('propertySelect');
+    const unitSelect = document.getElementById('unitSelect');
+
+    propertySelect.addEventListener('change', function() {
+        const propertyId = this.value;
+
+        // Reset unit select
+        unitSelect.innerHTML = '<option value="">Select Unit</option>';
+        unitSelect.disabled = true;
+
+        if (propertyId) {
+            // Fetch units for selected property
+            fetch(`/api/properties/${propertyId}/units`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.units.length > 0) {
+                        data.units.forEach(unit => {
+                            const option = document.createElement('option');
+                            option.value = unit.id;
+                            option.textContent = `${unit.name} - Floor ${unit.floor} (Rent: ${unit.rent_amount})`;
+                            unitSelect.appendChild(option);
+                        });
+                        unitSelect.disabled = false;
+                    } else {
+                        unitSelect.innerHTML = '<option value="">No available units</option>';
+                        unitSelect.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching units:', error);
+                    unitSelect.innerHTML = '<option value="">Error loading units</option>';
+                    unitSelect.disabled = true;
+                });
+        }
+    });
+
+    // Auto-select property if old value exists
+    if (propertySelect.value) {
+        propertySelect.dispatchEvent(new Event('change'));
+    }
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>

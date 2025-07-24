@@ -15,9 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         ]);
 
-        // Enable CORS for API routes
+        // Enable CORS for API rourtes
         $middleware->web(append: [
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);

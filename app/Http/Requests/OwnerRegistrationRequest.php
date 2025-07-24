@@ -22,15 +22,24 @@ class OwnerRegistrationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:owners,phone',
             'address' => 'required|string|max:500',
             'country' => 'required|string|max:100',
             'password' => 'required|string|min:6|confirmed',
-            'otp' => 'required|string|size:6',
         ];
+
+        // Check if OTP is required based on settings
+        $otpSettings = \App\Models\OtpSetting::getSettings();
+        if ($otpSettings->is_enabled && $otpSettings->isOtpRequiredFor('registration')) {
+            $rules['otp'] = 'required|string|size:6';
+        } else {
+            $rules['otp'] = 'nullable|string|size:6';
+        }
+
+        return $rules;
     }
 
     /**
@@ -39,9 +48,12 @@ class OwnerRegistrationRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Verify OTP
-            if (!$this->verifyOtp()) {
-                $validator->errors()->add('otp', 'Invalid or expired OTP');
+            // Check if OTP is required and provided
+            $otpSettings = \App\Models\OtpSetting::getSettings();
+            if ($otpSettings->is_enabled && $otpSettings->isOtpRequiredFor('registration')) {
+                if ($this->has('otp') && !$this->verifyOtp()) {
+                    $validator->errors()->add('otp', 'Invalid or expired OTP');
+                }
             }
         });
     }
@@ -62,7 +74,7 @@ class OwnerRegistrationRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
+        $messages = [
             'name.required' => 'Name is required.',
             'name.max' => 'Name cannot exceed 255 characters.',
             'email.required' => 'Email is required.',
@@ -78,8 +90,15 @@ class OwnerRegistrationRequest extends FormRequest
             'password.required' => 'Password is required.',
             'password.min' => 'Password must be at least 6 characters.',
             'password.confirmed' => 'Password confirmation does not match.',
-            'otp.required' => 'OTP is required.',
-            'otp.size' => 'OTP must be 6 digits.',
         ];
+
+        // Check if OTP is required based on settings
+        $otpSettings = \App\Models\OtpSetting::getSettings();
+        if ($otpSettings->is_enabled && $otpSettings->isOtpRequiredFor('registration')) {
+            $messages['otp.required'] = 'OTP is required.';
+            $messages['otp.size'] = 'OTP must be 6 digits.';
+        }
+
+        return $messages;
     }
 }

@@ -16,40 +16,134 @@
         </div>
     </div>
 
+    <div class="col-12 col-md-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <div class="text-muted small">Super Admins</div>
+                <h3 class="mb-0">{{ $superAdminCount ?? 1 }}</h3>
+                <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress-bar bg-primary" style="width: 100%"></div>
+                </div>
+                <span class="badge bg-light text-primary mt-2">Active</span>
+            </div>
+        </div>
+    </div>
 
     <div class="col-12 col-md-3">
         <div class="card shadow-sm mb-3">
             <div class="card-body">
-                <div class="text-muted small">Market Revenue</div>
-                <h3 class="mb-0">$1875.54</h3>
+                <div class="text-muted small">Total Properties</div>
+                <h3 class="mb-0">{{ $propertyCount ?? 0 }}</h3>
                 <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar bg-danger" style="width: 80%"></div>
+                    <div class="progress-bar bg-info" style="width: 75%"></div>
                 </div>
-                <span class="badge bg-light text-danger mt-2">Per Week</span>
+                <span class="badge bg-light text-info mt-2">Registered</span>
             </div>
         </div>
     </div>
+
     <div class="col-12 col-md-3">
         <div class="card shadow-sm mb-3">
             <div class="card-body">
-                <div class="text-muted small">Expenses</div>
-                <h3 class="mb-0">$784.62</h3>
+                <div class="text-muted small">Total Tenants</div>
+                <h3 class="mb-0">{{ $tenantCount ?? 0 }}</h3>
                 <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar bg-warning" style="width: 50%"></div>
+                    <div class="progress-bar bg-warning" style="width: 60%"></div>
                 </div>
-                <span class="badge bg-light text-warning mt-2">Per Month</span>
+                <span class="badge bg-light text-warning mt-2">Active</span>
             </div>
         </div>
     </div>
-    <div class="col-12 col-md-3">
-        <div class="card shadow-sm mb-3">
+</div>
+
+<!-- Quick Actions Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
             <div class="card-body">
-                <div class="text-muted small">Daily Visits</div>
-                <h3 class="mb-0">1,15,187</h3>
-                <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar bg-success" style="width: 90%"></div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ route('admin.owners.index') }}" class="btn btn-primary btn-block">
+                            <i class="fas fa-users"></i> Manage Owners
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ route('admin.settings.index') }}" class="btn btn-info btn-block">
+                            <i class="fas fa-cog"></i> System Settings
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ route('admin.otp-settings.index') }}" class="btn btn-warning btn-block">
+                            <i class="fas fa-mobile-alt"></i> OTP Settings
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ route('admin.owners.create') }}" class="btn btn-success btn-block">
+                            <i class="fas fa-plus"></i> Add New Owner
+                        </a>
+                    </div>
                 </div>
-                <span class="badge bg-light text-success mt-2">All Time</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Owners Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Owners</h5>
+                <a href="{{ route('admin.owners.index') }}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentOwners ?? [] as $owner)
+                            <tr>
+                                <td>{{ $owner->name }}</td>
+                                <td>{{ $owner->email }}</td>
+                                <td>{{ $owner->phone }}</td>
+                                <td>
+                                    <span class="badge badge-{{ $owner->status === 'active' ? 'success' : 'warning' }}">
+                                        {{ ucfirst($owner->status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($owner->is_super_admin)
+                                        <span class="badge badge-primary">Super Admin</span>
+                                    @else
+                                        <span class="badge badge-secondary">Owner</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="#" onclick="editOwner({{ $owner->id }})" class="btn btn-sm btn-info">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center">No owners found</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

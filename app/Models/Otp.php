@@ -23,7 +23,7 @@ class Otp extends Model
     /**
      * Generate a new OTP for the given phone number
      */
-    public static function generateOtp(string $phone, string $type = 'registration'): self
+    public static function generateOtp(string $phone, string $type = 'registration', int $length = 6): self
     {
         // Delete any existing unused OTPs for this phone and type
         self::where('phone', $phone)
@@ -31,15 +31,20 @@ class Otp extends Model
             ->where('is_used', false)
             ->delete();
 
-        // Generate 6-digit OTP
-        $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        // Generate OTP with specified length
+        $max = pow(10, $length) - 1;
+        $otp = str_pad(rand(0, $max), $length, '0', STR_PAD_LEFT);
+
+        // Get OTP settings for expiry
+        $otpSettings = \App\Models\OtpSetting::getSettings();
+        $expiryMinutes = $otpSettings->otp_expiry_minutes;
 
         // Create new OTP record
         return self::create([
             'phone' => $phone,
             'otp' => $otp,
             'type' => $type,
-            'expires_at' => now()->addMinutes(10), // OTP expires in 10 minutes
+            'expires_at' => now()->addMinutes($expiryMinutes),
         ]);
     }
 

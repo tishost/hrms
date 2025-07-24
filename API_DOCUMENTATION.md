@@ -102,6 +102,30 @@ Resend OTP to phone number (with 1-minute cooldown).
 }
 ```
 
+### 4. Get OTP Settings
+**GET** `/otp-settings`
+
+Get current OTP system settings.
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "settings": {
+    "is_enabled": true,
+    "registration_required": true,
+    "login_required": false,
+    "reset_required": false,
+    "profile_update_required": false,
+    "otp_length": 6,
+    "otp_expiry_minutes": 10
+  }
+}
+```
+  "expires_in": 10
+}
+```
+
 #### Error Response (429)
 ```json
 {
@@ -293,6 +317,273 @@ final response = await AuthService.registerOwner(
 );
 ```
 
+## Reports Endpoints
+
+### 1. Get Report Types
+**GET** `/reports/types`
+
+Get available report types and their descriptions.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "report_types": [
+    {
+      "id": "financial",
+      "name": "Financial Report",
+      "description": "Revenue, payments, and financial summary",
+      "endpoint": "/api/reports/financial",
+      "parameters": ["start_date", "end_date", "type"]
+    },
+    {
+      "id": "occupancy",
+      "name": "Occupancy Report",
+      "description": "Property and unit occupancy status",
+      "endpoint": "/api/reports/occupancy",
+      "parameters": []
+    },
+    {
+      "id": "tenant",
+      "name": "Tenant Report",
+      "description": "Tenant information and payment history",
+      "endpoint": "/api/reports/tenant",
+      "parameters": []
+    },
+    {
+      "id": "transaction",
+      "name": "Transaction Report",
+      "description": "Detailed transaction ledger",
+      "endpoint": "/api/reports/transaction",
+      "parameters": ["start_date", "end_date", "type"]
+    }
+  ]
+}
+```
+
+### 2. Financial Report
+**POST** `/reports/financial`
+
+Generate financial report with revenue and payment data.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+#### Request Body
+```json
+{
+  "start_date": "2024-01-01",
+  "end_date": "2024-12-31",
+  "type": "all"
+}
+```
+
+#### Validation Rules
+- `start_date`: Required, date format (YYYY-MM-DD)
+- `end_date`: Required, date format (YYYY-MM-DD), must be after start_date
+- `type`: Optional, must be one of: "rent", "charges", "all"
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "report": {
+    "period": {
+      "start_date": "2024-01-01",
+      "end_date": "2024-12-31",
+      "type": "all"
+    },
+    "summary": {
+      "total_invoiced": 50000,
+      "total_paid": 45000,
+      "total_unpaid": 5000,
+      "total_partial": 0,
+      "collection_rate": 90.0
+    },
+    "monthly_breakdown": {
+      "2024-01": {
+        "total": 5000,
+        "paid": 4500,
+        "unpaid": 500,
+        "count": 10
+      }
+    },
+    "property_breakdown": {
+      "1": {
+        "property_name": "Property A",
+        "total": 25000,
+        "paid": 22500,
+        "unpaid": 2500,
+        "count": 5
+      }
+    },
+    "generated_at": "2024-01-15 10:30:00"
+  }
+}
+```
+
+### 3. Occupancy Report
+**GET** `/reports/occupancy`
+
+Generate occupancy report showing property and unit status.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "report": {
+    "summary": {
+      "total_properties": 5,
+      "total_units": 20,
+      "total_occupied": 15,
+      "total_vacant": 5,
+      "overall_occupancy_rate": 75.0
+    },
+    "properties": [
+      {
+        "property_id": 1,
+        "property_name": "Property A",
+        "total_units": 10,
+        "occupied_units": 8,
+        "vacant_units": 2,
+        "occupancy_rate": 80.0,
+        "units": [
+          {
+            "unit_id": 1,
+            "unit_name": "Unit 1A",
+            "status": "rented",
+            "tenant_name": "John Doe",
+            "rent_amount": 5000
+          }
+        ]
+      }
+    ],
+    "generated_at": "2024-01-15 10:30:00"
+  }
+}
+```
+
+### 4. Tenant Report
+**GET** `/reports/tenant`
+
+Generate tenant report with payment history and statistics.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "report": {
+    "summary": {
+      "total_tenants": 15,
+      "active_tenants": 12,
+      "inactive_tenants": 3
+    },
+    "tenants": [
+      {
+        "tenant_id": 1,
+        "tenant_name": "John Doe",
+        "phone": "+1234567890",
+        "email": "john@example.com",
+        "property_name": "Property A",
+        "unit_name": "Unit 1A",
+        "rent_amount": 5000,
+        "move_in_date": "2024-01-01",
+        "status": "active",
+        "invoice_stats": {
+          "total_invoices": 12,
+          "paid_invoices": 10,
+          "unpaid_invoices": 2,
+          "total_amount": 60000,
+          "paid_amount": 50000,
+          "outstanding_amount": 10000,
+          "payment_rate": 83.33
+        }
+      }
+    ],
+    "generated_at": "2024-01-15 10:30:00"
+  }
+}
+```
+
+### 5. Transaction Report
+**POST** `/reports/transaction`
+
+Generate detailed transaction ledger report.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+#### Request Body
+```json
+{
+  "start_date": "2024-01-01",
+  "end_date": "2024-12-31",
+  "type": "all"
+}
+```
+
+#### Validation Rules
+- `start_date`: Required, date format (YYYY-MM-DD)
+- `end_date`: Required, date format (YYYY-MM-DD), must be after start_date
+- `type`: Optional, must be one of: "rent", "charges", "payment", "all"
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "report": {
+    "period": {
+      "start_date": "2024-01-01",
+      "end_date": "2024-12-31",
+      "type": "all"
+    },
+    "summary": {
+      "total_transactions": 100,
+      "total_debit": 50000,
+      "total_credit": 45000,
+      "net_amount": -5000
+    },
+    "transactions": [
+      {
+        "id": 1,
+        "date": "2024-01-15",
+        "tenant_name": "John Doe",
+        "property_name": "Property A",
+        "unit_name": "Unit 1A",
+        "transaction_type": "rent",
+        "description": "Monthly Rent",
+        "debit_amount": 5000,
+        "credit_amount": 0,
+        "balance": 5000,
+        "payment_status": "unpaid"
+      }
+    ],
+    "generated_at": "2024-01-15 10:30:00"
+  }
+}
+```
+
 ## Notes
 
 - The API uses Laravel Sanctum for authentication
@@ -302,7 +593,10 @@ final response = await AuthService.registerOwner(
 - The Owner role is automatically assigned to new owners
 - Each owner gets a unique `owner_uid` generated automatically
 - **Phone numbers must be unique** - no duplicate phone numbers allowed
-- **OTP verification is required** for owner registration
+- **OTP verification is required** for owner registration when OTP system is enabled
 - OTP expires after 10 minutes
 - OTP can be resent after 1 minute cooldown
-- For testing, OTP is returned in the response (remove in production) 
+- For testing, OTP is returned in the response (remove in production)
+- **Reports are owner-specific** - each owner can only see their own data
+- **Date ranges** for reports should be reasonable (not too long periods)
+- **Report generation** includes real-time data from the database 
