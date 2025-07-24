@@ -163,6 +163,58 @@ class TenantController extends Controller
     }
 
     /**
+     * Get all tenants for the authenticated owner
+     */
+    public function index()
+    {
+        try {
+            $user = Auth::user();
+
+            \Log::info('Tenant API - User: ' . ($user ? $user->email : 'null'));
+            \Log::info('Tenant API - User owner_id: ' . ($user ? $user->owner_id : 'null'));
+
+            // Get owner from user
+            $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+
+            if (!$user || !$owner) {
+                \Log::error('Tenant API - Unauthorized access. User: ' . ($user ? $user->email : 'null') . ', owner: ' . ($owner ? $owner->id : 'null'));
+                return response()->json([
+                    'error' => 'Unauthorized access'
+                ], 401);
+            }
+
+            $tenants = Tenant::whereHas('unit.property', function($query) use ($owner) {
+                $query->where('owner_id', $owner->id);
+            })
+            ->with(['unit.property'])
+            ->get()
+            ->map(function($tenant) {
+                return [
+                    'id' => $tenant->id,
+                    'name' => $tenant->first_name . ' ' . $tenant->last_name,
+                    'mobile' => $tenant->mobile,
+                    'email' => $tenant->email,
+                    'property_name' => $tenant->unit->property->name ?? 'No Property',
+                    'unit_name' => $tenant->unit->name ?? 'No Unit',
+                    'rent' => $tenant->unit->rent ?? 0,
+                    'status' => $tenant->status ?? 'active',
+                    'created_at' => $tenant->created_at,
+                ];
+            });
+
+            return response()->json([
+                'tenants' => $tenants
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching tenants: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to fetch tenants'
+            ], 500);
+        }
+    }
+
+    /**
      * Test endpoint for debugging
      */
     public function testEndpoint()

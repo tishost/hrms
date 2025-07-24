@@ -208,6 +208,8 @@ class AuthController extends Controller
                 'country' => $owner ? $owner->country : null,
                 'gender' => $owner ? $owner->gender : null,
                 'phone_verified' => $owner ? (bool)$owner->phone_verified : false,
+                'owner_id' => $owner ? $owner->id : null,
+                'tenant_id' => $user->tenant_id,
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Unauthorized'], 401);
