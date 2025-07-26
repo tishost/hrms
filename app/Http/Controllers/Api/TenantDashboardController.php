@@ -64,6 +64,11 @@ class TenantDashboardController extends Controller
                 'request_method' => $request->method()
             ]);
 
+            // Additional debug for status field
+            foreach($invoices as $invoice) {
+                \Log::info("Invoice {$invoice->id} status: {$invoice->status}");
+            }
+
             return response()->json([
                 'success' => true,
                 'invoices' => $invoices

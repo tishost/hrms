@@ -9,14 +9,66 @@ use Illuminate\Support\Facades\Auth;
 
 class OwnerController extends Controller
 {
-    // Download invoice PDF file (API version for mobile)
+        // Download invoice PDF file (API version for mobile)
     public function downloadInvoicePDF(Request $request, $id)
     {
         try {
             $user = $request->user();
 
+                                    // Handle token from query parameter for WebView compatibility
+            if (!$user && $request->has('token')) {
+                $token = $request->get('token');
+                \Log::info("Token from query parameter: " . substr($token, 0, 20) . "...");
+
+                // Parse token format: ID|TOKEN
+                $parts = explode('|', $token);
+                if (count($parts) == 2) {
+                    $tokenId = $parts[0];
+                    $tokenValue = $parts[1];
+
+                    \Log::info("Token ID: $tokenId, Token Value: " . substr($tokenValue, 0, 20) . "...");
+
+                    $tokenModel = \Laravel\Sanctum\PersonalAccessToken::find($tokenId);
+                    if ($tokenModel) {
+                        \Log::info("Token model found, stored hash: " . substr($tokenModel->token, 0, 20) . "...");
+                        \Log::info("Calculated hash: " . substr(hash('sha256', $tokenValue), 0, 20) . "...");
+
+                        if (hash('sha256', $tokenValue) === $tokenModel->token) {
+                            $user = $tokenModel->tokenable;
+                            \Log::info("User authenticated via token: " . ($user ? $user->name : 'No user'));
+                            \Log::info("User owner_id: " . ($user ? $user->owner_id : 'No owner_id'));
+                        } else {
+                            \Log::error("Token hash mismatch!");
+                            // Try alternative approach - use the token value directly
+                            $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($tokenValue);
+                            if ($tokenModel) {
+                                $user = $tokenModel->tokenable;
+                                \Log::info("User authenticated via direct token lookup: " . ($user ? $user->name : 'No user'));
+                            }
+                        }
+                    } else {
+                        \Log::error("Token model not found for ID: $tokenId");
+                        // Try direct token lookup
+                        $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($tokenValue);
+                        if ($tokenModel) {
+                            $user = $tokenModel->tokenable;
+                            \Log::info("User authenticated via direct token lookup: " . ($user ? $user->name : 'No user'));
+                        }
+                    }
+                } else {
+                    \Log::error("Invalid token format, parts count: " . count($parts));
+                    // Try direct token lookup
+                    $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                    if ($tokenModel) {
+                        $user = $tokenModel->tokenable;
+                        \Log::info("User authenticated via direct token: " . ($user ? $user->name : 'No user'));
+                    }
+                }
+            }
+
             // Check if user is owner
-            if (!$user->owner) {
+            if (!$user || !$user->owner) {
+                \Log::error("Authentication failed - User: " . ($user ? $user->name : 'No user') . ", Has owner: " . ($user && $user->owner ? 'Yes' : 'No'));
                 return response()->json([
                     'success' => false,
                     'message' => 'User is not an owner'
@@ -38,8 +90,18 @@ class OwnerController extends Controller
                 ], 404);
             }
 
-            // Use the same PDF generation as web owner (working approach)
+            // Optimized PDF generation for mobile
             $pdf = \PDF::loadView('owner.invoices.pdf', compact('invoice'));
+
+            // Configure PDF for smaller size
+            $pdf->setPaper('a4', 'portrait');
+            $pdf->setOption('dpi', 72); // Lower DPI for smaller file size
+            $pdf->setOption('image-dpi', 72);
+            $pdf->setOption('image-quality', 60); // Lower image quality
+            $pdf->setOption('enable-local-file-access', false);
+            $pdf->setOption('isRemoteEnabled', false);
+            $pdf->setOption('isHtml5ParserEnabled', true);
+            $pdf->setOption('isFontSubsettingEnabled', true);
 
             // Set proper headers for PDF download (mobile compatible)
             return response($pdf->output(), 200, [

@@ -13,11 +13,16 @@ class UnitController extends Controller
     public function index(Request $request)
     {
         $ownerId = $request->user()->owner->id;
-        $units = Unit::whereHas('property', function($q) use ($ownerId) {
+        $query = Unit::whereHas('property', function($q) use ($ownerId) {
             $q->where('owner_id', $ownerId);
-        })
-        ->with(['property', 'charges', 'tenant'])
-        ->get();
+        });
+
+        // Filter by property_id if provided
+        if ($request->has('property_id')) {
+            $query->where('property_id', $request->property_id);
+        }
+
+        $units = $query->with(['property', 'charges', 'tenant'])->get();
         $unitsTransformed = $units->map(function($unit) {
             return [
                 'id' => $unit->id,

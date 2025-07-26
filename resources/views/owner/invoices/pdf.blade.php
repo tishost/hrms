@@ -5,20 +5,19 @@
   <title>Invoice {{ $invoice->invoice_number }}</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f4f6f8;
+      background: #fff;
       color: #333;
-      font-size: 12px;
+      font-size: 10px;
     }
     .invoice-box {
-      max-width: 700px;
-      margin: 20px auto;
+      max-width: 600px;
+      margin: 10px auto;
       background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      padding: 15px;
+      border: 1px solid #ddd;
     }
     h1 {
       font-size: 20px;

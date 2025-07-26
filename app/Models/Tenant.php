@@ -46,6 +46,8 @@ class Tenant extends Model
         'business_name',
         'frequency',
         'nid_picture',
+        'nid_front_picture',
+        'nid_back_picture',
     ];
 
     protected $casts = [

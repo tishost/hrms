@@ -86,6 +86,9 @@ class AuthController extends Controller
                 'phone_verified' => $requiresOtp ? true : false, // Set based on OTP requirement
             ]);
 
+            // Update user with owner_id
+            $user->update(['owner_id' => $owner->id]);
+
             // Generate token
             $token = $user->createToken('api-token')->plainTextToken;
 
@@ -140,9 +143,16 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            // Check role
+            // Check role and set owner_id if needed
             if ($user->hasRole('owner')) {
                 $role = 'owner';
+                // Ensure owner_id is set
+                if (!$user->owner_id) {
+                    $owner = Owner::where('user_id', $user->id)->first();
+                    if ($owner) {
+                        $user->update(['owner_id' => $owner->id]);
+                    }
+                }
             } elseif ($user->hasRole('tenant')) {
                 $role = 'tenant';
             } else {
