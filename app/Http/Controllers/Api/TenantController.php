@@ -70,7 +70,7 @@ class TenantController extends Controller
             // Get available units (not assigned to any tenant)
             $units = Unit::where('property_id', $propertyId)
                 ->whereDoesntHave('tenant')
-                ->select('id', 'name', 'floor', 'rent_amount')
+                ->select('id', 'name', 'floor', 'rent')
                 ->get();
 
             return response()->json([
@@ -108,7 +108,7 @@ class TenantController extends Controller
             $properties = Property::where('owner_id', $user->owner_id)
                 ->with(['units' => function($query) {
                     $query->whereDoesntHave('tenant')
-                        ->select('id', 'property_id', 'name', 'floor', 'rent_amount');
+                        ->select('id', 'property_id', 'name', 'floor', 'rent');
                 }])
                 ->select('id', 'name', 'address')
                 ->get();
@@ -165,7 +165,7 @@ class TenantController extends Controller
     /**
      * Get all tenants for the authenticated owner
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $user = Auth::user();
@@ -183,12 +183,31 @@ class TenantController extends Controller
                 ], 401);
             }
 
-            $tenants = Tenant::whereHas('unit.property', function($query) use ($owner) {
+            // Build query
+            $query = Tenant::whereHas('unit.property', function($query) use ($owner) {
                 $query->where('owner_id', $owner->id);
-            })
-            ->with(['unit.property'])
-            ->get()
-            ->map(function($tenant) {
+            })->with(['unit.property']);
+
+            // Apply status filter
+            if ($request->has('status') && $request->status !== 'all') {
+                $status = $request->status;
+                if ($status === 'active') {
+                    $query->where('status', 'active');
+                } elseif ($status === 'inactive') {
+                    $query->whereIn('status', ['inactive', 'checked_out']);
+                } elseif ($status === 'pending') {
+                    $query->whereIn('status', ['pending', 'pending_approval']);
+                }
+            }
+
+            // Apply property filter
+            if ($request->has('property') && $request->property !== 'all') {
+                $query->whereHas('unit.property', function($query) use ($request) {
+                    $query->where('name', $request->property);
+                });
+            }
+
+            $tenants = $query->get()->map(function($tenant) {
                 return [
                     'id' => $tenant->id,
                     'name' => $tenant->first_name . ' ' . $tenant->last_name,
@@ -276,16 +295,30 @@ class TenantController extends Controller
                     'family_types' => $tenant->family_types,
                     'child_qty' => $tenant->child_qty,
                     'total_family_member' => $tenant->total_family_member,
-                    'property_id' => $tenant->unit->property->id,
-                    'property_name' => $tenant->unit->property->name,
-                    'unit_id' => $tenant->unit->id,
-                    'unit_name' => $tenant->unit->name,
-                    'advance_amount' => $tenant->security_deposit,
+                    'security_deposit' => $tenant->security_deposit,
                     'start_month' => $tenant->check_in_date ? $tenant->check_in_date->format('m-Y') : null,
                     'frequency' => $tenant->frequency,
                     'remarks' => $tenant->remarks,
                     'nid_front_picture' => $tenant->nid_front_picture,
                     'nid_back_picture' => $tenant->nid_back_picture,
+                    'unit' => [
+                        'id' => $tenant->unit->id,
+                        'name' => $tenant->unit->name,
+                        'unit_number' => $tenant->unit->unit_number,
+                        'unit_type' => $tenant->unit->unit_type,
+                        'floor' => $tenant->unit->floor,
+                        'rent_amount' => $tenant->unit->rent_amount,
+                        'description' => $tenant->unit->description,
+                    ],
+                    'property' => [
+                        'id' => $tenant->unit->property->id,
+                        'name' => $tenant->unit->property->name,
+                        'address' => $tenant->unit->property->address,
+                        'city' => $tenant->unit->property->city,
+                        'state' => $tenant->unit->property->state,
+                        'zip' => $tenant->unit->property->zip,
+                        'country' => $tenant->unit->property->country,
+                    ]
                 ]
             ];
 
@@ -298,6 +331,100 @@ class TenantController extends Controller
             \Log::error('Error fetching tenant details: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to fetch tenant details'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get outstanding amount for a tenant
+     */
+    public function getOutstandingAmount($id)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->owner_id) {
+                return response()->json([
+                    'error' => 'Unauthorized access'
+                ], 401);
+            }
+
+            $tenant = Tenant::whereHas('unit.property', function($query) use ($user) {
+                $query->where('owner_id', $user->owner_id);
+            })->find($id);
+
+            if (!$tenant) {
+                return response()->json([
+                    'error' => 'Tenant not found'
+                ], 404);
+            }
+
+                        // Get all due bills (unpaid invoices and partial payments)
+            $dueBills = [];
+
+                        // Get unpaid invoices with details
+            $unpaidInvoices = \DB::table('invoices')
+                ->where('tenant_id', $id)
+                ->where('unit_id', $tenant->unit_id)
+                ->where('owner_id', $user->owner_id)
+                ->whereIn('status', ['Unpaid', 'Partial'])
+                ->get();
+
+            \Log::info("Found " . $unpaidInvoices->count() . " unpaid invoices for tenant $id");
+
+            foreach ($unpaidInvoices as $invoice) {
+                \Log::info("Invoice: " . $invoice->invoice_number . " - Amount: " . $invoice->amount);
+                $dueBills[] = [
+                    'type' => 'invoice',
+                    'description' => 'Rent Invoice - ' . $invoice->invoice_number,
+                    'invoice_number' => $invoice->invoice_number,
+                    'amount' => $invoice->amount,
+                    'due_date' => $invoice->due_date,
+                ];
+            }
+
+                        // Get partial payments with details
+            $partialPayments = \DB::table('rent_payments')
+                ->where('tenant_id', $id)
+                ->where('unit_id', $tenant->unit_id)
+                ->where('owner_id', $user->owner_id)
+                ->where('status', 'Partial')
+                ->get();
+
+            \Log::info("Found " . $partialPayments->count() . " partial payments for tenant $id");
+
+            foreach ($partialPayments as $payment) {
+                $remainingAmount = $payment->amount_due - $payment->amount_paid;
+                \Log::info("Partial Payment: Amount Due: " . $payment->amount_due . " - Amount Paid: " . $payment->amount_paid . " - Remaining: " . $remainingAmount);
+                if ($remainingAmount > 0) {
+                    $dueBills[] = [
+                        'type' => 'partial_payment',
+                        'description' => 'Partial Payment - ' . $payment->payment_date,
+                        'invoice_number' => 'N/A',
+                        'amount' => $remainingAmount,
+                        'due_date' => $payment->payment_date,
+                    ];
+                }
+            }
+
+            // Calculate total outstanding
+            $totalOutstanding = collect($dueBills)->sum('amount');
+
+            \Log::info("Outstanding calculation for tenant $id:");
+            \Log::info("Total due bills: " . count($dueBills));
+            \Log::info("Total outstanding: $totalOutstanding");
+            \Log::info("Due bills data: " . json_encode($dueBills));
+
+            return response()->json([
+                'success' => true,
+                'outstanding_amount' => $totalOutstanding,
+                'due_bills' => $dueBills
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching outstanding amount: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to fetch outstanding amount'
             ], 500);
         }
     }
@@ -475,7 +602,7 @@ class TenantController extends Controller
         try {
             // Get unit charges and rent
             $charges = $unit->charges ?? collect();
-            $totalRent = $unit->rent_amount ?? 0;
+            $totalRent = $unit->rent ?? 0;
 
             // Calculate total amount including rent and charges
             $totalAmount = $totalRent;
@@ -500,7 +627,7 @@ class TenantController extends Controller
                     'type' => 'advance',
                     'amount' => $tenant->security_deposit,
                     'paid_amount' => 0,
-                    'status' => 'due',
+                    'status' => 'Unpaid',
                     'issue_date' => now(),
                     'due_date' => now(),
                     'notes' => 'Advance payment on unit assignment',
@@ -544,7 +671,7 @@ class TenantController extends Controller
                 'type' => 'rent',
                 'amount' => $totalAmount,
                 'paid_amount' => 0,
-                'status' => 'due',
+                'status' => 'Unpaid',
                 'issue_date' => now(),
                 'due_date' => $currentMonth->endOfMonth(),
                 'notes' => 'First month rent invoice on unit assignment',
@@ -567,7 +694,7 @@ class TenantController extends Controller
         try {
             // Get unit charges and rent
             $charges = $unit->charges ?? collect();
-            $totalRent = $unit->rent_amount ?? 0;
+            $totalRent = $unit->rent ?? 0;
 
             // Calculate total amount including rent and charges
             $totalAmount = $totalRent;

@@ -9,7 +9,8 @@ use App\Models\Owner;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\UnitCharge;
-use App\Helpers\SettingHelper; // Assuming you have a SettingHelper for settings
+use App\Helpers\SettingHelper;
+use App\Services\PackageLimitService;
 
 
 class OwnerPropertyController extends Controller
@@ -26,13 +27,22 @@ class OwnerPropertyController extends Controller
 
     public function create()
     {
-       $countries = CountryHelper::countryList();
+        $countries = CountryHelper::countryList();
+        $owner = auth()->user()->owner;
+        $packageLimitService = new PackageLimitService();
 
-        $limit = setting('default_building_limit', 5);
-        $current = auth()->user()->owner->properties()->count();
+        // Check package limits
+        if (!$packageLimitService->canPerformAction($owner, 'properties')) {
+            $stats = $packageLimitService->getUsageStats($owner);
+            $propertyStats = $stats['properties'] ?? null;
 
-        if ($current >= $limit) {
-            return back()->with('error', 'You reached the building creation limit.');
+            $message = 'You have reached your property limit. ';
+            if ($propertyStats) {
+                $message .= "Current: {$propertyStats['current']}, Limit: {$propertyStats['max']}. ";
+            }
+            $message .= 'Please upgrade your plan to add more properties.';
+
+            return back()->with('error', $message);
         }
 
         return view('owner.property.create', compact('countries'));
@@ -43,17 +53,46 @@ class OwnerPropertyController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'type' => 'nullable|string',
-            'address' => 'nullable|string|max:255',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zip_code' => 'required|string|max:20',
             'country' => 'required|string',
+            'total_units' => 'required|integer|min:1|max:100',
+            'description' => 'nullable|string|max:500',
         ]);
 
-        $property = new Property($request->only(['name', 'type', 'address', 'country']));
-        $property->owner_id = $ownerId = auth()->user()->owner->id;
-        $property->unit_limit = setting('default_unit_limit', 10);;
+        $owner = auth()->user()->owner;
+        $packageLimitService = new PackageLimitService();
+
+        // Check package limits before creating property
+        if (!$packageLimitService->canPerformAction($owner, 'properties')) {
+            $stats = $packageLimitService->getUsageStats($owner);
+            $propertyStats = $stats['properties'] ?? null;
+
+            $message = 'You have reached your property limit. ';
+            if ($propertyStats) {
+                $message .= "Current: {$propertyStats['current']}, Limit: {$propertyStats['max']}. ";
+            }
+            $message .= 'Please upgrade your plan to add more properties.';
+
+            return back()->with('error', $message);
+        }
+
+                $property = new Property($request->only([
+            'name', 'address', 'city', 'state', 'zip_code', 'country',
+            'total_units', 'description'
+        ]));
+        $property->property_type = $request->type ?? 'residential';
+        $property->owner_id = $owner->id;
         $property->save();
 
-        // ✅ Redirect to unit setup after save
-        return redirect()->route('owner.units.setup', $property->id);
+        // Increment usage after successful creation
+        $packageLimitService->incrementUsage($owner, 'properties');
+
+        // ✅ Redirect to property list after save
+        return redirect()->route('owner.property.index')
+                        ->with('success', 'Property created successfully!');
     }
     public function edit(Property $property)
     {
@@ -72,7 +111,6 @@ class OwnerPropertyController extends Controller
 
         // Update building
         $property->update($request->only(['name', 'type', 'address', 'country']));
-        $property->features = json_encode($request->input('facilities', []));
         $property->save();
 
         // Update each unit

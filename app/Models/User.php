@@ -55,7 +55,7 @@ class User extends Authenticatable
 
     public function owner()
     {
-        return $this->hasOne(Owner::class);
+        return $this->hasOne(Owner::class, 'user_id')->withTrashed();
     }
 
     public function tenant()
@@ -63,4 +63,35 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
+    public function subscription()
+    {
+        return $this->hasOne(OwnerSubscription::class, 'owner_id');
+    }
+
+    public function activeSubscription()
+    {
+        return $this->hasOne(OwnerSubscription::class, 'owner_id')
+            ->where('status', 'active')
+            ->where('end_date', '>=', now());
+    }
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class, 'owner_id');
+    }
+
+    public function units()
+    {
+        return $this->hasManyThrough(Unit::class, Property::class, 'owner_id', 'property_id');
+    }
+
+    public function tenants()
+    {
+        return $this->hasMany(Tenant::class, 'owner_id');
+    }
+
+    public function billing()
+    {
+        return $this->hasMany(Billing::class, 'owner_id');
+    }
 }

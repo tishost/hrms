@@ -33,6 +33,7 @@ return new class extends Migration
                 'cleaning_payment',       // Cleaning payment
                 'other_charge',           // Other charges
                 'other_payment',          // Other payments
+                'invoice_payment',        // Invoice payment
                 'adjustment',             // Manual adjustment
                 'checkout_settlement'     // Final settlement on checkout
             ]);

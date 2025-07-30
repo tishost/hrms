@@ -31,6 +31,7 @@ class OwnerRegisterController extends Controller
             'phone'    => 'nullable|string|max:20',
             'address'  => 'nullable|string|max:255',
             'country'  => 'nullable|string|max:100',
+            'gender'   => 'required|in:male,female,other',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -48,10 +49,11 @@ class OwnerRegisterController extends Controller
             'phone'    => $request->phone,
             'address'  => $request->address,
             'country'  => $request->country,
-           
+            'gender'   => $request->gender,
+
         ]);
 
-       
+
 
         return redirect()->route('login')->with('success', 'Registration successful. Please login.');
     }

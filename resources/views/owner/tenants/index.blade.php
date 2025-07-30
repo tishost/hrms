@@ -63,15 +63,11 @@
             padding: 8px 14px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            margin-bottom: 18px;
             font-size: 16px;
-            float: right;
         }
         @media (max-width: 768px) {
             .live-search-input {
-                float: none;
                 width: 100%;
-                margin-bottom: 14px;
             }
         }
         .btn-view {
@@ -124,23 +120,7 @@
             color: #fff;
             box-shadow: 0 4px 12px rgba(72,149,239,0.12);
         }
-        .table-header-row {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        @media (max-width: 768px) {
-            .table-header-row {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            .add-tenant-btn {
-                width: 100%;
-                text-align: center;
-            }
-        }
+
         .btn-assign {
             background: #43aa8b;
             color: #fff;
@@ -157,16 +137,58 @@
             background: #277c5d;
             color: #fff;
         }
+        .filter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fff;
+            font-size: 14px;
+            min-width: 120px;
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .filter-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-container {
+                order: 2;
+            }
+        }
     </style>
 @endsection
 
 @section('content')
 <div class="container mt-4">
     <h2 class="mb-3">Tenant List</h2>
-    <div class="table-header-row">
-        <a href="{{ route('owner.tenants.create') }}" class="add-tenant-btn">+ Add Tenant</a>
+
+    <div class="filter-container">
+        <div class="search-container">
+            <input type="text" id="liveSearch" class="live-search-input" placeholder="Search tenants...">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="statusFilter" style="font-weight: 500; color: #333;">Filter:</label>
+            <select id="statusFilter" class="filter-select" onchange="filterTenants()">
+                <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Active Tenants</option>
+                <option value="inactive" {{ $statusFilter === 'inactive' ? 'selected' : '' }}>Inactive Tenants</option>
+                <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>All Tenants</option>
+            </select>
+
+            <a href="{{ route('owner.tenants.create') }}" class="add-tenant-btn">+ Add Tenant</a>
+        </div>
     </div>
-    <input type="text" id="liveSearch" class="live-search-input" placeholder="Search tenants...">
     <table class="responsive-table">
         <thead>
             <tr>
@@ -217,5 +239,12 @@ document.getElementById('liveSearch').addEventListener('keyup', function() {
         row.style.display = text.includes(value) ? '' : 'none';
     });
 });
+
+function filterTenants() {
+    let statusFilter = document.getElementById('statusFilter').value;
+    let currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('status', statusFilter);
+    window.location.href = currentUrl.toString();
+}
 </script>
 @endsection

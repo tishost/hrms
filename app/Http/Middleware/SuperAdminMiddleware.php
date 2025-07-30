@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Owner;
 
 class SuperAdminMiddleware
 {
@@ -22,9 +21,14 @@ class SuperAdminMiddleware
         }
 
         $user = Auth::user();
-        $owner = Owner::where('user_id', $user->id)->first();
 
-        if (!$owner || !$owner->is_super_admin) {
+        // Check if user has super_admin role
+        if (!$user->hasRole('super_admin')) {
+            // Check if user is super admin through owner relationship
+            if ($user->owner && $user->owner->is_super_admin) {
+                return $next($request);
+            }
+
             return redirect('/dashboard')->with('error', 'Access denied. Super admin privileges required.');
         }
 

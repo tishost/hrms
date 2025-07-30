@@ -70,6 +70,28 @@
             </ul>
         </li>
 
+        <li class="has-submenu {{ request()->routeIs('owner.subscription.*') ? 'open' : '' }}">
+            <a href="javascript:void(0);" class="submenu-toggle">
+                <span class="menu-icon">📦</span>
+                Subscription
+                <span class="submenu-arrow">▼</span>
+            </a>
+            <ul class="submenu">
+                <li class="{{ request()->routeIs('owner.subscription.current') ? 'active' : '' }}">
+                    <a href="{{ route('owner.subscription.current') }}">📊 Current Plan</a>
+                </li>
+                <li class="{{ request()->routeIs('owner.subscription.plans') ? 'active' : '' }}">
+                    <a href="{{ route('owner.subscription.plans') }}">🛒 Available Plans</a>
+                </li>
+                <li class="{{ request()->routeIs('owner.subscription.billing') ? 'active' : '' }}">
+                    <a href="{{ route('owner.subscription.billing') }}">💳 Billing History</a>
+                </li>
+                <li class="{{ request()->routeIs('owner.subscription.payment') ? 'active' : '' }}">
+                    <a href="{{ route('owner.subscription.payment') }}">💸 Payment Methods</a>
+                </li>
+            </ul>
+        </li>
+
         <li class="{{ request()->routeIs('owner.settings.*') ? 'active' : '' }}">
             <a href="">
                 <span class="menu-icon">⚙️</span>

@@ -20,7 +20,7 @@
                 <th>Address</th>
                 <th>Country</th>
                 <th>Total Units</th>
-                <th>Facilities</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -33,14 +33,9 @@
                 <td>{{ $property->country }}</td>
                 <td>{{ $property->units->count() }}</td>
                 <td>
-                    @php
-                        $facilities = json_decode($property->features ?? '[]');
-                    @endphp
-                    @if($facilities)
-                        {{ implode(', ', $facilities) }}
-                    @else
-                        <em>None</em>
-                    @endif
+                    <span class="badge badge-{{ $property->status == 'active' ? 'success' : ($property->status == 'inactive' ? 'warning' : 'info') }}">
+                        {{ ucfirst($property->status) }}
+                    </span>
                 </td>
                 <td>
                     <a href="{{ route('owner.units.setup', $property->id) }}" class="action-btn add">Add Units</a>

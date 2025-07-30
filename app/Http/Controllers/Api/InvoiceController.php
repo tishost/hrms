@@ -22,11 +22,45 @@ class InvoiceController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($invoice) {
-                // Parse breakdown JSON to get fees
+                // Parse breakdown JSON to get fees with detailed descriptions
                 $breakdown = [];
                 if ($invoice->breakdown) {
                     try {
                         $breakdown = json_decode($invoice->breakdown, true) ?? [];
+
+                        // Add descriptions for common fee types
+                        foreach ($breakdown as &$fee) {
+                            if (!isset($fee['description']) || empty($fee['description'])) {
+                                $feeName = strtolower($fee['name'] ?? '');
+
+                                // Add descriptions based on fee name
+                                if (strpos($feeName, 'base rent') !== false || strpos($feeName, 'monthly rent') !== false) {
+                                    $fee['description'] = 'Base monthly rent payment for the rental unit';
+                                } elseif (strpos($feeName, 'rent') !== false) {
+                                    $fee['description'] = 'Monthly rent payment for the unit';
+                                } elseif (strpos($feeName, 'electricity') !== false || strpos($feeName, 'power') !== false || strpos($feeName, 'electric') !== false) {
+                                    $fee['description'] = 'Electricity bill charges for the month';
+                                } elseif (strpos($feeName, 'gas') !== false || strpos($feeName, 'gas bill') !== false) {
+                                    $fee['description'] = 'Gas bill charges for the month';
+                                } elseif (strpos($feeName, 'water') !== false || strpos($feeName, 'water bill') !== false) {
+                                    $fee['description'] = 'Water bill charges for the month';
+                                } elseif (strpos($feeName, 'cleaning') !== false) {
+                                    $fee['description'] = 'Cleaning and maintenance charges';
+                                } elseif (strpos($feeName, 'maintenance') !== false) {
+                                    $fee['description'] = 'Building maintenance and repair charges';
+                                } elseif (strpos($feeName, 'late') !== false || strpos($feeName, 'penalty') !== false) {
+                                    $fee['description'] = 'Late payment penalty charges';
+                                } elseif (strpos($feeName, 'security') !== false || strpos($feeName, 'deposit') !== false) {
+                                    $fee['description'] = 'Security deposit or related charges';
+                                } elseif (strpos($feeName, 'utility') !== false) {
+                                    $fee['description'] = 'Utility service charges (electricity, water, gas)';
+                                } elseif (strpos($feeName, 'service') !== false) {
+                                    $fee['description'] = 'Additional service charges';
+                                } else {
+                                    $fee['description'] = 'Additional service or charge';
+                                }
+                            }
+                        }
                     } catch (Exception $e) {
                         $breakdown = [];
                     }
@@ -203,11 +237,45 @@ class InvoiceController extends Controller
                 ], 404);
             }
 
-            // Parse breakdown
+            // Parse breakdown with detailed descriptions
             $breakdown = [];
             if ($invoice->breakdown) {
                 try {
                     $breakdown = json_decode($invoice->breakdown, true) ?? [];
+
+                    // Add descriptions for common fee types
+                    foreach ($breakdown as &$fee) {
+                        if (!isset($fee['description']) || empty($fee['description'])) {
+                            $feeName = strtolower($fee['name'] ?? '');
+
+                            // Add descriptions based on fee name
+                            if (strpos($feeName, 'base rent') !== false || strpos($feeName, 'monthly rent') !== false) {
+                                $fee['description'] = 'Base monthly rent payment for the rental unit';
+                            } elseif (strpos($feeName, 'rent') !== false) {
+                                $fee['description'] = 'Monthly rent payment for the unit';
+                            } elseif (strpos($feeName, 'electricity') !== false || strpos($feeName, 'power') !== false || strpos($feeName, 'electric') !== false) {
+                                $fee['description'] = 'Electricity bill charges for the month';
+                            } elseif (strpos($feeName, 'gas') !== false || strpos($feeName, 'gas bill') !== false) {
+                                $fee['description'] = 'Gas bill charges for the month';
+                            } elseif (strpos($feeName, 'water') !== false || strpos($feeName, 'water bill') !== false) {
+                                $fee['description'] = 'Water bill charges for the month';
+                            } elseif (strpos($feeName, 'cleaning') !== false) {
+                                $fee['description'] = 'Cleaning and maintenance charges';
+                            } elseif (strpos($feeName, 'maintenance') !== false) {
+                                $fee['description'] = 'Building maintenance and repair charges';
+                            } elseif (strpos($feeName, 'late') !== false || strpos($feeName, 'penalty') !== false) {
+                                $fee['description'] = 'Late payment penalty charges';
+                            } elseif (strpos($feeName, 'security') !== false || strpos($feeName, 'deposit') !== false) {
+                                $fee['description'] = 'Security deposit or related charges';
+                            } elseif (strpos($feeName, 'utility') !== false) {
+                                $fee['description'] = 'Utility service charges (electricity, water, gas)';
+                            } elseif (strpos($feeName, 'service') !== false) {
+                                $fee['description'] = 'Additional service charges';
+                            } else {
+                                $fee['description'] = 'Additional service or charge';
+                            }
+                        }
+                    }
                 } catch (Exception $e) {
                     $breakdown = [];
                 }
@@ -239,6 +307,8 @@ class InvoiceController extends Controller
                 'property' => [
                     'name' => $invoice->property ? $invoice->property->name : 'N/A',
                     'address' => $invoice->property ? $invoice->property->address : 'N/A',
+                    'email' => $invoice->property ? $invoice->property->email : 'sales@samitpark.com',
+                    'mobile' => $invoice->property ? $invoice->property->mobile : '9611 677170',
                 ],
                 'owner' => $user->owner ? [
                     'name' => $user->owner->name ?? 'N/A',
@@ -251,6 +321,8 @@ class InvoiceController extends Controller
             // Generate PDF
             $pdf = PDF::loadView('pdf.invoice', $pdfData);
             $pdf->setPaper('A4', 'portrait');
+            $pdf->setOption('dpi', 72);
+            $pdf->setOption('image-dpi', 72);
 
             // Return PDF as response
             return $pdf->stream("invoice-{$invoice->invoice_number}.pdf");

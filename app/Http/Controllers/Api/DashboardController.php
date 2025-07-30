@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\Property;
 use App\Models\Invoice;
 use App\Models\TenantLedger;
+use App\Models\CheckoutRecord;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -43,6 +44,14 @@ class DashboardController extends Controller
             $q->where('owner_id', $ownerId);
         })->where('status', 'rented')->count();
 
+        // Get checkout stats
+        $totalCheckouts = CheckoutRecord::where('owner_id', $ownerId)->count();
+        $pendingCheckouts = Tenant::where('owner_id', $ownerId)
+            ->where('status', 'active')
+            ->whereHas('unit', function($q) {
+                $q->where('status', 'rented');
+            })->count();
+
         return response()->json([
             'stats' => [
                 'total_tenants' => $totalTenants,
@@ -52,6 +61,8 @@ class DashboardController extends Controller
                 'total_dues' => $totalDues,
                 'vacant_units' => $vacantUnits,
                 'rented_units' => $rentedUnits,
+                'total_checkouts' => $totalCheckouts,
+                'pending_checkouts' => $pendingCheckouts,
             ]
         ]);
     }

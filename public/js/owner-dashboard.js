@@ -1,16 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all dashboard functionality
-    
+
     // 1. Sidebar Toggle Functionality
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('ownerSidebar');
-    
+
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('show');
             localStorage.setItem('sidebarState', sidebar.classList.contains('show') ? 'expanded' : 'collapsed');
         });
-        
+
         // Check localStorage for saved state
         if (window.innerWidth >= 992) {
             const savedState = localStorage.getItem('sidebarState');
@@ -22,10 +22,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. Initialize Charts
     initializeCharts();
-    
+
     // 3. Notification Badge Animation
     animateNotificationBadge();
-    
+
     // 4. Active Menu Item Highlighting
     highlightActiveMenu();
 });
@@ -129,7 +129,7 @@ function animateNotificationBadge() {
     if (badge) {
         // Pulse animation for new notifications
         badge.style.animation = 'pulse 2s infinite';
-        
+
         // Click handler for notifications
         document.querySelector('.notification-badge').addEventListener('click', function() {
             badge.style.animation = 'none';
@@ -153,6 +153,34 @@ function highlightActiveMenu() {
                 parentToggle.setAttribute('aria-expanded', 'true');
             }
         }
+    });
+
+    // Subscription submenu functionality
+    const submenuToggles = document.querySelectorAll('.submenu-toggle');
+    submenuToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const parent = this.closest('.has-submenu');
+            const submenu = parent.querySelector('.submenu');
+            const arrow = this.querySelector('.submenu-arrow');
+
+            // Close other submenus
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                if (item !== parent) {
+                    item.classList.remove('open');
+                    const otherArrow = item.querySelector('.submenu-arrow');
+                    if (otherArrow) {
+                        otherArrow.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+
+            // Toggle current submenu
+            parent.classList.toggle('open');
+            if (arrow) {
+                arrow.style.transform = parent.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        });
     });
 }
 

@@ -29,17 +29,7 @@
                     <div class="input-error">{{ $message }}</div>
                 @enderror
             </div>
-            <div style="flex:1; min-width:220px;">
-                <label class="form-label">Facilities</label><br>
-                <div class="form-check" style="display:inline-block; margin-right:18px;">
-                    <input type="checkbox" name="facilities[]" value="Lift" class="form-check-input" id="lift">
-                    <label for="lift" class="form-label" style="font-weight:400; color:var(--dark)">Lift</label>
-                </div>
-                <div class="form-check" style="display:inline-block;">
-                    <input type="checkbox" name="facilities[]" value="Garage" class="form-check-input" id="garage">
-                    <label for="garage" class="form-label" style="font-weight:400; color:var(--dark)">Garage</label>
-                </div>
-            </div>
+
         </div>
         <button type="submit" class="form-btn btn-save" style="margin-top:24px; margin-bottom:32px;"><span class="btn-icon">⚙️</span> Generate Units</button>
     </form>
@@ -75,7 +65,7 @@
                         @enderror
                     </td>
                     <td>
-                        <input type="number" name="units[{{ $unit['id'] }}][rent]" class="form-input rent-input" data-unit="{{ $unit['id'] }}" required value="{{ old('units.' . $unit['id'] . '.rent', $unit['rent']) }}">
+                        <input type="number" name="units[{{ $unit['id'] }}][rent]" class="form-input rent-input" data-unit="{{ $unit['id'] }}" required value="{{ old('units.' . $unit['id'] . '.rent', $unit['rent'] ?? 0) }}">
                         @error('units.' . $unit['id'] . '.rent')
                             <div class="input-error">{{ $message }}</div>
                         @enderror
@@ -86,7 +76,15 @@
                         </div>
                     </td>
                     <td>
-                        <button type="button" class="form-btn btn-add btn-sm" onclick="addCharge({{ $unit['id'] }})"><span class="btn-icon">➕</span></button>
+                        <div class="d-flex gap-1">
+                            <button type="button" class="form-btn btn-add btn-sm" onclick="addCharge({{ $unit['id'] }})"><span class="btn-icon">➕</span></button>
+                            <select class="form-select form-select-sm predefined-charge-select" data-unit="{{ $unit['id'] }}" style="width: auto; min-width: 120px;">
+                                <option value="">Select Predefined</option>
+                                @foreach($predefined_charges as $charge)
+                                    <option value="{{ $charge->label }}" data-amount="{{ $charge->amount }}">{{ $charge->label }} (৳{{ $charge->amount }})</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </td>
                     <td>
                         <span style="font-weight:600; color:var(--primary)" id="total_{{ $unit['id'] }}">৳ 0</span>
@@ -151,18 +149,62 @@ function removeUnit(button) {
 function addUnit() {
     const unitTable = document.getElementById('unit_table');
     const newId = Date.now();
+    const predefinedOptions = `@foreach($predefined_charges as $charge)<option value="{{ $charge->label }}" data-amount="{{ $charge->amount }}">{{ $charge->label }} (৳{{ $charge->amount }})</option>@endforeach`;
     const html = `
     <tr class="unit-row" data-unit="${newId}">
         <td><input type="text" name="units[${newId}][name]" value="Unit-${newId}" class="form-input" required></td>
         <td><input type="number" name="units[${newId}][rent]" class="form-input rent-input" data-unit="${newId}" required></td>
         <td><div id="charges_${newId}"></div></td>
-        <td><button type="button" class="form-btn btn-add btn-sm" onclick="addCharge(${newId})"><span class="btn-icon">➕</span></button></td>
+        <td>
+            <div class="d-flex gap-1">
+                <button type="button" class="form-btn btn-add btn-sm" onclick="addCharge(${newId})"><span class="btn-icon">➕</span></button>
+                <select class="form-select form-select-sm predefined-charge-select" data-unit="${newId}" style="width: auto; min-width: 120px;">
+                    <option value="">Select Predefined</option>
+                    ${predefinedOptions}
+                </select>
+            </div>
+        </td>
         <td><span class="fw-bold text-success" id="total_${newId}">৳ 0</span></td>
         <td><button type="button" class="form-btn btn-remove btn-sm" onclick="removeUnit(this)"><span class="btn-icon">❌</span></button></td>
     </tr>`;
     unitTable.insertAdjacentHTML('beforeend', html);
     attachSumEvents();
+    attachPredefinedChargeEvents();
 }
 attachSumEvents();
+attachPredefinedChargeEvents();
+
+function attachPredefinedChargeEvents() {
+    document.querySelectorAll('.predefined-charge-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const unitId = this.dataset.unit;
+            const selectedOption = this.options[this.selectedIndex];
+
+            if (selectedOption.value) {
+                const label = selectedOption.value;
+                const amount = selectedOption.dataset.amount;
+
+                // Add the predefined charge
+                addPredefinedCharge(unitId, label, amount);
+
+                // Reset selection
+                this.value = '';
+            }
+        });
+    });
+}
+
+function addPredefinedCharge(unitId, label, amount) {
+    const wrapper = document.getElementById('charges_' + unitId);
+    const index = wrapper.children.length;
+    const html = `
+    <div class="d-flex mb-1 charge-group">
+        <input type="text" name="units[${unitId}][charges][${index}][label]" class="form-input me-2" value="${label}" readonly>
+        <input type="number" name="units[${unitId}][charges][${index}][amount]" class="form-input charge-input" data-unit="${unitId}" value="${amount}" readonly>
+        <button type="button" class="form-btn btn-remove btn-sm ms-2" onclick="removeCharge(this)"><span class="btn-icon">❌</span></button>
+    </div>`;
+    wrapper.insertAdjacentHTML('beforeend', html);
+    calculateTotal(unitId);
+}
 </script>
 @endsection

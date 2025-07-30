@@ -1,0 +1,31 @@
+{
+  "name": "HRMS Development",
+  "host": "139.99.33.181",
+  "username": "barimanager",
+  "password": "*euSlN(C71+2LRz9",
+  "port": 22,
+  "remotePath": "/home/barimanager/public_html",
+  "uploadOnSave": true,
+  "syncMode": "update",
+  "ignore": [
+    ".vscode",
+    ".git",
+    ".DS_Store",
+    "node_modules",
+    "vendor",
+    "storage/logs",
+    "storage/framework/cache",
+    "storage/framework/sessions",
+    "storage/framework/views",
+    ".env",
+    "composer.lock",
+    "package-lock.json"
+  ],
+  "watcher": {
+    "files": "**/*",
+    "autoUpload": true,
+    "autoDelete": true
+  },
+  "concurrency": 4,
+  "ignoreFile": ".sftpignore"
+}

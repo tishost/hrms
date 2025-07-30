@@ -9,6 +9,7 @@ use App\Helpers\CountryHelper;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Helpers\NotificationHelper;
 
 class OwnerController extends Controller
 {
@@ -56,6 +57,13 @@ class OwnerController extends Controller
             'status' => 'active',
             'is_super_admin' => false,
         ]);
+
+        // Send welcome notification
+        try {
+            NotificationHelper::sendWelcomeNotification($user);
+        } catch (\Exception $e) {
+            \Log::error('Welcome notification failed: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.owners.index')->with('success', 'Owner created successfully!');
     }

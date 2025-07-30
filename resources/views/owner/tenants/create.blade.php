@@ -301,14 +301,14 @@
 
         if (propertyId) {
             // Fetch units for selected property
-            fetch(`/api/properties/${propertyId}/units`)
+            fetch(`/owner/units-by-building/${propertyId}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success && data.units.length > 0) {
-                        data.units.forEach(unit => {
+                    if (data && Object.keys(data).length > 0) {
+                        Object.keys(data).forEach(unitId => {
                             const option = document.createElement('option');
-                            option.value = unit.id;
-                            option.textContent = `${unit.name} - Floor ${unit.floor} (Rent: ${unit.rent_amount})`;
+                            option.value = unitId;
+                            option.textContent = data[unitId];
                             unitSelect.appendChild(option);
                         });
                         unitSelect.disabled = false;

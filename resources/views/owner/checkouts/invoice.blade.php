@@ -60,9 +60,18 @@
         }
         .settlement-table th,
         .settlement-table td {
-            padding: 12px;
+            padding: 15px 12px;
             text-align: left;
             border-bottom: 1px solid #eee;
+            vertical-align: top;
+            line-height: 1.4;
+        }
+
+        .settlement-table td small {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            line-height: 1.3;
         }
         .settlement-table th {
             background: #f8f9fa;
@@ -171,27 +180,51 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Security Deposit</td>
+                        <td>
+                            <strong>Security Deposit Return</strong><br>
+                            <small style="color: #666;">Original deposit amount to be returned</small>
+                        </td>
                         <td class="amount">+{{ number_format($checkout->security_deposit, 2) }}</td>
                     </tr>
                     <tr>
-                        <td>Outstanding Dues</td>
+                        <td>
+                            <strong>Outstanding Dues Deduction</strong><br>
+                            <small style="color: #666;">Unpaid rent and invoice amounts</small>
+                        </td>
                         <td class="amount deduction">-{{ number_format($checkout->outstanding_dues, 2) }}</td>
                     </tr>
                     <tr>
-                        <td>Utility Bills</td>
+                        <td>
+                            <strong>Utility Bills Deduction</strong><br>
+                            <small style="color: #666;">Pending utility charges (electricity, water, gas, etc.)</small>
+                        </td>
                         <td class="amount deduction">-{{ number_format($checkout->utility_bills, 2) }}</td>
                     </tr>
                     <tr>
-                        <td>Cleaning Charges</td>
+                        <td>
+                            <strong>Cleaning Charges Deduction</strong><br>
+                            <small style="color: #666;">Unit cleaning and maintenance costs</small>
+                        </td>
                         <td class="amount deduction">-{{ number_format($checkout->cleaning_charges, 2) }}</td>
                     </tr>
                     <tr>
-                        <td>Other Charges</td>
+                        <td>
+                            <strong>Other Charges Deduction</strong><br>
+                            <small style="color: #666;">Additional charges (damages, late fees, etc.)</small>
+                        </td>
                         <td class="amount deduction">-{{ number_format($checkout->other_charges, 2) }}</td>
                     </tr>
                     <tr class="total {{ $checkout->final_settlement_amount < 0 ? 'negative' : '' }}">
-                        <td><strong>Final Settlement Amount</strong></td>
+                        <td>
+                            <strong>Final Settlement Amount</strong><br>
+                            <small style="color: #666;">
+                                @if($checkout->final_settlement_amount >= 0)
+                                    Amount to be paid to tenant
+                                @else
+                                    Amount tenant owes to owner
+                                @endif
+                            </small>
+                        </td>
                         <td class="amount">
                             <strong>{{ $checkout->final_settlement_amount >= 0 ? '+' : '' }}{{ number_format($checkout->final_settlement_amount, 2) }}</strong>
                         </td>
@@ -203,6 +236,30 @@
                 <span class="status-badge status-{{ $checkout->settlement_status }}">
                     {{ ucfirst($checkout->settlement_status) }}
                 </span>
+            </div>
+
+            <div class="settlement-breakdown" style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin-bottom: 15px; color: #333;">📋 Settlement Breakdown</h4>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h5 style="color: #666; margin-bottom: 10px;">Check-out Details</h5>
+                        <p><strong>Reason:</strong> {{ $checkout->check_out_reason }}</p>
+                        <p><strong>Date:</strong> {{ $checkout->check_out_date->format('M d, Y') }}</p>
+                        <p><strong>Unit:</strong> {{ $checkout->unit->name ?? 'N/A' }}</p>
+                    </div>
+
+                    <div>
+                        <h5 style="color: #666; margin-bottom: 10px;">Financial Summary</h5>
+                        <p><strong>Total Deductions:</strong> ৳{{ number_format($checkout->outstanding_dues + $checkout->utility_bills + $checkout->cleaning_charges + $checkout->other_charges, 2) }}</p>
+                        <p><strong>Net Return:</strong> ৳{{ number_format($checkout->final_settlement_amount, 2) }}</p>
+                        <p><strong>Status:</strong>
+                            <span style="color: {{ $checkout->final_settlement_amount >= 0 ? '#28a745' : '#dc3545' }}; font-weight: bold;">
+                                {{ $checkout->final_settlement_amount >= 0 ? 'Refund Due' : 'Payment Due' }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
             </div>
 
             @if($checkout->handover_condition)

@@ -1,5 +1,9 @@
 @extends('layouts.owner')
 
+@php
+    use Illuminate\Support\Facades\Auth;
+@endphp
+
 @section('title', 'Dashboard')
 
 @section('content')
@@ -51,6 +55,73 @@
             </div>
             <div class="stat-icon sales">
                 <i class="fas fa-door-open"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Package Limits Widget -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie"></i> Package Usage
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @php
+                        $packageLimitService = new \App\Services\PackageLimitService();
+                        $owner = Auth::user()->owner;
+                        $stats = $packageLimitService->getUsageStats($owner);
+                    @endphp
+
+                    @foreach(['properties', 'units', 'tenants', 'sms'] as $type)
+                        @if(isset($stats[$type]))
+                            @php $stat = $stats[$type]; @endphp
+                            <div class="col-md-3 mb-3">
+                                <div class="usage-card">
+                                    <div class="usage-header">
+                                        <h6>{{ ucfirst($type) }}</h6>
+                                        <span class="badge badge-{{ $stat['color'] }}">
+                                            {{ $stat['current'] }}/{{ $stat['max'] }}
+                                        </span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-{{ $stat['color'] }}"
+                                             style="width: {{ $stat['percentage'] }}%">
+                                            {{ round($stat['percentage']) }}%
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ $stat['remaining'] }} remaining
+                                        @if($stat['reset_date'])
+                                            <br>Resets: {{ $stat['reset_date']->format('M d, Y') }}
+                                        @endif
+                                    </small>
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+
+                @php
+                    $suggestions = $packageLimitService->getUpgradeSuggestions($owner);
+                @endphp
+
+                @if(count($suggestions) > 0)
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Upgrade Suggestions</h6>
+                        <ul class="mb-0">
+                            @foreach($suggestions as $suggestion)
+                                <li>{{ ucfirst($suggestion['type']) }}: {{ $suggestion['percentage'] }}% used</li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('owner.subscription.plans') }}" class="btn btn-sm btn-warning mt-2">
+                            <i class="fas fa-arrow-up"></i> Upgrade Plan
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

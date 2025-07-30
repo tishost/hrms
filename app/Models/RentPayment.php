@@ -2,22 +2,40 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class RentPayment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'owner_id',
         'tenant_id',
-        'unit_id',
-        'invoice_id',
         'amount',
-        'amount_due',
-        'amount_paid',
         'payment_date',
-        'payment_method',
-        'reference_number',
-        'notes',
         'status',
+        'notes',
+        'type',
+        'month',
+        'year'
     ];
+
+    protected $casts = [
+        'payment_date' => 'date',
+    ];
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function property()
+    {
+        return $this->belongsTo(Property::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
 }

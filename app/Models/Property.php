@@ -21,6 +21,8 @@ class Property extends Model
         'country',
         'total_units',
         'description',
+        'email',
+        'mobile',
         'status',
     ];
 

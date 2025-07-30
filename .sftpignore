@@ -1,0 +1,66 @@
+# SFTP Ignore File for HRMS Project
+# Files and folders to ignore during SFTP sync
+
+# Dependencies
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+yarn.lock
+
+# Laravel specific
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+storage/framework/testing/
+bootstrap/cache/
+
+# Environment files
+.env
+.env.backup
+.env.example
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git
+.git/
+.gitignore
+
+# Build files
+public/hot/
+public/storage/
+public/mix-manifest.json
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Backup files
+*.bak
+*.backup
+*_backup/
+
+# Cache files
+*.cache
+cache/
+
+# Test files
+.phpunit.result.cache
+coverage/
+
+# Docker
+docker-compose.override.yml
+Dockerfile
+.dockerignore

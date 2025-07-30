@@ -34,18 +34,7 @@
                                     <small class="form-text text-muted">Maximum number of buildings an owner can create</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="default_unit_limit">
-                                        <i class="fas fa-home"></i> Default Unit Limit (per Building)
-                                    </label>
-                                    <input type="number" class="form-control" id="default_unit_limit"
-                                           name="default_unit_limit"
-                                           value="{{ $settings['default_unit_limit'] ?? 10 }}"
-                                           min="1" max="100" required>
-                                    <small class="form-text text-muted">Maximum number of units per building</small>
-                                </div>
-                            </div>
+
                         </div>
 
                         <div class="row">
@@ -73,17 +62,27 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <a href="{{ route('admin.otp-settings.index') }}" class="btn btn-warning btn-block">
                                 <i class="fas fa-mobile-alt"></i> OTP Settings
                             </a>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('admin.settings.payment-gateway') }}" class="btn btn-primary btn-block">
+                                <i class="fas fa-credit-card"></i> Payment Gateway
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('admin.settings.notifications') }}" class="btn btn-warning btn-block">
+                                <i class="fas fa-bell"></i> Notification Settings
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <a href="{{ route('admin.owners.index') }}" class="btn btn-info btn-block">
                                 <i class="fas fa-users"></i> Owner Management
                             </a>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <a href="{{ route('admin.dashboard') }}" class="btn btn-success btn-block">
                                 <i class="fas fa-tachometer-alt"></i> Dashboard
                             </a>
@@ -102,16 +101,9 @@ $(document).ready(function() {
     // Form validation
     $('form').submit(function(e) {
         const buildingLimit = parseInt($('#default_building_limit').val());
-        const unitLimit = parseInt($('#default_unit_limit').val());
 
         if (buildingLimit < 1 || buildingLimit > 50) {
             alert('Building limit must be between 1 and 50');
-            e.preventDefault();
-            return false;
-        }
-
-        if (unitLimit < 1 || unitLimit > 100) {
-            alert('Unit limit must be between 1 and 100');
             e.preventDefault();
             return false;
         }

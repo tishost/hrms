@@ -10,30 +10,73 @@ use App\Models\Unit;
 use App\Models\Property;
 use App\Helpers\CountryHelper;
 use App\Models\Owner;
+use App\Services\PackageLimitService;
 
 class TenantController extends Controller
 {
 
     public function index(Request $request)
     {
-        // Show all tenants, regardless of unit/property
-        $tenants = Tenant::with(['unit.property'])->paginate(10);
-        return view('owner.tenants.index', compact('tenants'));
+        // Get filter parameter
+        $statusFilter = $request->get('status', 'active');
+
+        // Build query based on filter
+        $query = Tenant::with(['unit.property']);
+
+        if ($statusFilter === 'active') {
+            $query->where('status', 'active');
+        } elseif ($statusFilter === 'inactive') {
+            $query->where('status', 'inactive');
+        }
+        // If 'all' is selected, no where clause is added
+
+        $tenants = $query->paginate(10);
+        return view('owner.tenants.index', compact('tenants', 'statusFilter'));
     }
     public function create()
     {
         $countries = CountryHelper::countryList();
-        // Owner-specific building list (optional filter by auth user)
-       $ownerId = auth()->user()->owner->id;
-       $buildings = Property::where('owner_id', $ownerId)->get();
+        $owner = auth()->user()->owner;
+        $packageLimitService = new PackageLimitService();
 
+        // Check package limits
+        if (!$packageLimitService->canPerformAction($owner, 'tenants')) {
+            $stats = $packageLimitService->getUsageStats($owner);
+            $tenantStats = $stats['tenants'] ?? null;
+
+            $message = 'You have reached your tenant limit. ';
+            if ($tenantStats) {
+                $message .= "Current: {$tenantStats['current']}, Limit: {$tenantStats['max']}. ";
+            }
+            $message .= 'Please upgrade your plan to add more tenants.';
+
+            return back()->with('error', $message);
+        }
+
+        // Owner-specific building list (optional filter by auth user)
+        $buildings = Property::where('owner_id', $owner->id)->get();
 
         return view('owner.tenants.create', compact('buildings', 'countries'));
     }
     public function store(StoreTenantRequest $request)
     {
         $validated = $request->validated();
-        $ownerId = auth()->user()->owner->id;
+        $owner = auth()->user()->owner;
+        $packageLimitService = new PackageLimitService();
+
+        // Check package limits before creating tenant
+        if (!$packageLimitService->canPerformAction($owner, 'tenants')) {
+            $stats = $packageLimitService->getUsageStats($owner);
+            $tenantStats = $stats['tenants'] ?? null;
+
+            $message = 'You have reached your tenant limit. ';
+            if ($tenantStats) {
+                $message .= "Current: {$tenantStats['current']}, Limit: {$tenantStats['max']}. ";
+            }
+            $message .= 'Please upgrade your plan to add more tenants.';
+
+            return back()->with('error', $message);
+        }
 
         $tenant = Tenant::create([
             'first_name'          => $validated['first_name'],
@@ -55,7 +98,7 @@ class TenantController extends Controller
             'check_in_date'       => $validated['check_in_date'],
             'security_deposit'    => $validated['security_deposit'],
             'remarks'             => $validated['remarks'] ?? null,
-            'owner_id'            => $ownerId,
+            'owner_id'            => $owner->id,
             'status'              => 'active',
         ]);
 
@@ -69,6 +112,9 @@ class TenantController extends Controller
                 ]);
             }
         }
+
+        // Increment usage after successful creation
+        $packageLimitService->incrementUsage($owner, 'tenants');
 
         return redirect()->route('owner.rents.create', $tenant->id)
             ->with('success', 'Tenant added successfully! Now assign rent.');
@@ -89,9 +135,14 @@ class TenantController extends Controller
 
             $units = Unit::where('property_id', $building->id)
                 ->whereDoesntHave('tenant')
-                ->pluck('name', 'id');
+                ->get(['id', 'name', 'rent']);
 
-            return response()->json($units);
+            $unitData = [];
+            foreach ($units as $unit) {
+                $unitData[$unit->id] = $unit->name . ' (Rent: ৳' . number_format($unit->rent) . ')';
+            }
+
+            return response()->json($unitData);
     }
 
 }

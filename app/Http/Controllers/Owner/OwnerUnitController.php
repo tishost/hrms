@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\UnitCharge;
 use App\Helpers\SettingHelper; // Assuming you have a SettingHelper for settings
 use App\Models\TempData;
+use App\Services\PackageLimitService;
 
 
 class OwnerUnitController extends Controller
@@ -44,7 +45,11 @@ class OwnerUnitController extends Controller
             ->where(function($q){ $q->whereNull('expires_at')->orWhere('expires_at', '>', now()); })
             ->first();
         $generated_units = $draft ? $draft->data : null;
-        return view('owner.units.setup', compact('property', 'generated_units'));
+
+        // Load predefined charges
+        $predefined_charges = \App\Models\Charge::all();
+
+        return view('owner.units.setup', compact('property', 'generated_units', 'predefined_charges'));
     }
 
 
@@ -71,13 +76,24 @@ class OwnerUnitController extends Controller
         $request->validate([
             'total_floors' => 'required|integer|min:1',
             'total_units' => 'required|integer|min:1',
-            'facilities' => 'nullable|array',
         ]);
-        $limit = setting('default_unit_limit', 10);
-        if ($request->total_units > $limit) {
-            return back()->with('error', "You can only add up to {$limit} units in this plan.");
+
+        $owner = auth()->user()->owner;
+        $packageLimitService = new PackageLimitService();
+
+        // Check package limits for units
+        if (!$packageLimitService->canPerformAction($owner, 'units', $request->total_units)) {
+            $stats = $packageLimitService->getUsageStats($owner);
+            $unitStats = $stats['units'] ?? null;
+
+            $message = 'You have reached your unit limit. ';
+            if ($unitStats) {
+                $message .= "Current: {$unitStats['current']}, Limit: {$unitStats['max']}. ";
+            }
+            $message .= 'Please upgrade your plan to add more units.';
+
+            return back()->with('error', $message);
         }
-        $property->features = json_encode($request->facilities ?? []);
         $property->save();
         $units = [];
         for ($i = 1; $i <= $request->total_units; $i++) {
@@ -85,6 +101,7 @@ class OwnerUnitController extends Controller
             $unit = [
                 'id' => $i,
                 'name' => $unitName,
+                'rent' => 0, // Default rent value
             ];
             $units[] = $unit;
         }
@@ -108,7 +125,25 @@ class OwnerUnitController extends Controller
     // Step 3: Save rent & utility charges for each unit
     public function saveFees(Request $request, Property $property)
     {
+        $owner = auth()->user()->owner;
+        $packageLimitService = new PackageLimitService();
         $units = $request->input('units');
+        $totalUnits = count($units);
+
+        // Check package limits before creating units
+        if (!$packageLimitService->canPerformAction($owner, 'units', $totalUnits)) {
+            $stats = $packageLimitService->getUsageStats($owner);
+            $unitStats = $stats['units'] ?? null;
+
+            $message = 'You have reached your unit limit. ';
+            if ($unitStats) {
+                $message .= "Current: {$unitStats['current']}, Limit: {$unitStats['max']}. ";
+            }
+            $message .= 'Please upgrade your plan to add more units.';
+
+            return back()->with('error', $message);
+        }
+
         foreach ($units as $index => $unitData) {
             $unit = Unit::create([
                 'property_id' => $property->id,
@@ -125,6 +160,10 @@ class OwnerUnitController extends Controller
                 }
             }
         }
+
+        // Increment usage after successful creation
+        $packageLimitService->incrementUsage($owner, 'units', $totalUnits);
+
         // Remove temp data after saving
         TempData::where('user_id', auth()->id())
             ->where('key', 'unit_draft')

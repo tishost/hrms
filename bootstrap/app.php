@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'refresh.session' => \App\Http\Middleware\RefreshSession::class,
+            'check.limits' => \App\Http\Middleware\CheckPackageLimits::class,
         ]);
 
         // Enable CORS for API rourtes

@@ -83,4 +83,19 @@ class Tenant extends Model
     {
         return $this->belongsTo(Owner::class);
     }
+
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    public function getPhoneAttribute()
+    {
+        return $this->mobile;
+    }
+
+    public function getEmailAttribute()
+    {
+        return $this->email ?? 'N/A';
+    }
 }

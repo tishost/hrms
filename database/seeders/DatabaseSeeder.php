@@ -8,6 +8,11 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\SystemSettingSeeder;
 use Database\Seeders\ChargeSeeder;
 use Database\Seeders\SuperAdminSeeder;
+use Database\Seeders\SubscriptionPlanSeeder;
+use Database\Seeders\AdminUserSeeder;
+use Database\Seeders\RoleSeeder;
+use Database\Seeders\PaymentMethodSeeder;
+use Database\Seeders\BkashPaymentMethodSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,13 +23,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         $this->call([
+            RoleSeeder::class,
             SuperAdminSeeder::class,
             SystemSettingSeeder::class,
             ChargeSeeder::class,
-        ]);
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            SubscriptionPlanSeeder::class,
+            AdminUserSeeder::class,
+            PaymentMethodSeeder::class,
+            BkashPaymentMethodSeeder::class,
         ]);
     }
 }

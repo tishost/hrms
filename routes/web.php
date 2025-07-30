@@ -12,7 +12,7 @@ use App\Http\Controllers\Owner\TenantController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Owner\TenantRentController;
 use App\Http\Controllers\Owner\RentPaymentController;
-use App\Http\Controllers\Owner\InvoiceController;
+
 use App\Http\Controllers\Owner\CheckoutController;
 Route::get('/', function () {
     return view('welcome');
@@ -40,7 +40,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('/property/index', [OwnerPropertyController::class, 'index'])->name('property.index');
     Route::get('/properties/{property}/edit', [OwnerPropertyController::class, 'edit'])->name('property.edit');
     Route::post('/properties/{property}', [OwnerPropertyController::class, 'update'])->name('property.update');
-    Route::post('/properties', [OwnerPropertyController::class, 'store'])->name('property.store');
+    Route::post('/properties', [OwnerPropertyController::class, 'store'])
+        ->name('property.store')
+        ->middleware('check.limits:properties');
     Route::get('units', [OwnerUnitController::class, 'index'])->name('units.index');
     Route::get('units/{unit}/edit', [OwnerUnitController::class, 'edit'])->name('units.edit');
     Route::delete('units/{unit}', [OwnerUnitController::class, 'destroy'])->name('units.destroy');
@@ -49,7 +51,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('units/generate/{property}', [OwnerUnitController::class, 'generate'])->name('units.generate');
     Route::post('units/saveFees/{property}', [OwnerUnitController::class, 'saveFees'])->name('units.saveFees');
     Route::get('/units-by-building/{id}', [TenantController::class, 'getUnitsByBuilding'])->name('units.byBuilding');
-    Route::post('/tenants/store', [TenantController::class, 'store'])->name('tenants.store');
+    Route::post('/tenants/store', [TenantController::class, 'store'])
+        ->name('tenants.store')
+        ->middleware('check.limits:tenants');
     Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
     Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
@@ -60,9 +64,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('rent-payments/create',[RentPaymentController::class, 'create'])->name('rent_payments.create');
     Route::post('rent-payments', [RentPaymentController::class, 'store'])->name('rent_payments.store');
     Route::get('rent-payments/fees-dues', [RentPaymentController::class, 'getFeesAndDues'])->name('rent_payments.fees_dues');
-    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+
+    // Invoice routes
+    Route::get('invoices', [App\Http\Controllers\Owner\InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('invoices/{invoice}', [App\Http\Controllers\Owner\InvoiceController::class, 'show'])->name('invoices.show');
 
     // Checkout routes
     Route::get('checkouts', [CheckoutController::class, 'index'])->name('checkouts.index');
@@ -71,6 +76,24 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('checkouts/{checkout}', [CheckoutController::class, 'show'])->name('checkouts.show');
     Route::get('checkouts/{checkout}/invoice', [CheckoutController::class, 'generateInvoice'])->name('checkouts.invoice');
 
+               // Subscription routes
+    Route::get('subscription/current', [App\Http\Controllers\Owner\SubscriptionController::class, 'currentPlan'])->name('subscription.current');
+    Route::get('subscription/plans', [App\Http\Controllers\Owner\SubscriptionController::class, 'availablePlans'])->name('subscription.plans');
+    Route::post('subscription/purchase', [App\Http\Controllers\Owner\SubscriptionController::class, 'purchasePlan'])->name('subscription.purchase');
+    Route::get('subscription/billing', [App\Http\Controllers\Owner\SubscriptionController::class, 'billingHistory'])->name('subscription.billing');
+    Route::get('subscription/payment', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentMethods'])->name('subscription.payment');
+    Route::match(['GET', 'POST'], 'subscription/initiate-gateway', [App\Http\Controllers\Owner\SubscriptionController::class, 'initiatePaymentGateway'])->name('subscription.initiate-gateway');
+    Route::post('subscription/{subscriptionId}/payment', [App\Http\Controllers\Owner\SubscriptionController::class, 'processPayment'])->name('subscription.process-payment');
+
+    // Invoice PDF routes
+    Route::get('invoice/{billingId}/download', [App\Http\Controllers\Owner\Subscription\InvoiceController::class, 'downloadInvoice'])->name('invoice.download');
+    Route::get('invoice/{billingId}/view', [App\Http\Controllers\Owner\Subscription\InvoiceController::class, 'viewInvoice'])->name('invoice.view');
+
+           // Payment gateway callback routes
+           Route::get('subscription/payment/success', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentSuccess'])->name('subscription.payment.success');
+           Route::get('subscription/payment/cancel', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentCancel'])->name('subscription.payment.cancel');
+           Route::get('subscription/payment/fail', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentFail'])->name('subscription.payment.fail');
+
 });
 
 
@@ -78,32 +101,80 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
 Route::post('/owner/profile/update', [App\Http\Controllers\Admin\OwnerController::class, 'update']);
 
 
-// Admin Routes
-Route::get('/admin/login', function () {
-    return view('admin.auth.login');
-})->name('admin.login');
-
+// Admin Login Routes (Public)
+Route::get('/admin/login', [App\Http\Controllers\Admin\AuthController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [App\Http\Controllers\Admin\AuthController::class, 'login'])->name('admin.login.post');
+Route::post('/admin/logout', [App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('admin.logout');
 
-Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+// Admin Routes
+Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Owner Management Routes
-    Route::get('/owners', [App\Http\Controllers\Admin\OwnerController::class, 'index'])->name('owners.index');
-    Route::get('/owners/create', [App\Http\Controllers\Admin\OwnerController::class, 'create'])->name('owners.create');
-    Route::post('/owners', [App\Http\Controllers\Admin\OwnerController::class, 'store'])->name('owners.store');
-    Route::get('/owners/{owner}/edit', [App\Http\Controllers\Admin\OwnerController::class, 'edit'])->name('owners.edit');
-    Route::put('/owners/{owner}', [App\Http\Controllers\Admin\OwnerController::class, 'update'])->name('owners.update');
-    Route::delete('/owners/{owner}', [App\Http\Controllers\Admin\OwnerController::class, 'destroy'])->name('owners.destroy');
+    // Subscription Plans
+    Route::resource('plans', App\Http\Controllers\Admin\PlanController::class);
+    Route::post('plans/{plan}/toggle-status', [App\Http\Controllers\Admin\PlanController::class, 'toggleStatus'])->name('plans.toggle-status');
 
-    // Settings Routes
-    Route::get('/settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'update'])->name('settings.update');
+    // Subscriptions
+    Route::get('subscriptions', [App\Http\Controllers\Admin\AdminDashboardController::class, 'subscriptions'])->name('subscriptions');
 
-    // OTP Settings Routes
-    Route::get('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'index'])->name('otp-settings.index');
-    Route::put('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'update'])->name('otp-settings.update');
-    Route::post('/otp-settings/toggle', [App\Http\Controllers\Admin\OtpSettingsController::class, 'toggle'])->name('otp-settings.toggle');
+    // Billing
+    Route::get('billing', [App\Http\Controllers\Admin\AdminDashboardController::class, 'billing'])->name('billing.index');
+
+    // Owners
+    Route::get('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'owners'])->name('owners.index');
+    Route::get('owners/create', [App\Http\Controllers\Admin\AdminDashboardController::class, 'createOwner'])->name('owners.create');
+    Route::post('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'storeOwner'])->name('owners.store');
+
+    // Settings
+    Route::get('settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'index'])->name('settings.index');
+    Route::put('settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'update'])->name('settings.update');
+    Route::get('settings/payment-gateway', [App\Http\Controllers\Admin\AdminSettingController::class, 'paymentGateway'])->name('settings.payment-gateway');
+    Route::post('settings/payment-gateway', [App\Http\Controllers\Admin\AdminSettingController::class, 'updatePaymentGateway'])->name('settings.payment-gateway.update');
+    Route::post('settings/bkash', [App\Http\Controllers\Admin\AdminSettingController::class, 'updateBkashSettings'])->name('settings.bkash.update');
+    Route::post('settings/bkash/test', [App\Http\Controllers\Admin\AdminSettingController::class, 'testBkashConnection'])->name('settings.bkash.test');
+    Route::post('settings/bkash/test-payment', [App\Http\Controllers\Admin\AdminSettingController::class, 'testBkashPaymentCreation'])->name('settings.bkash.test-payment');
+    Route::get('settings/bkash/status', [App\Http\Controllers\Admin\AdminSettingController::class, 'getBkashConfigurationStatus'])->name('settings.bkash.status');
+
+    // Test route for debugging
+    Route::get('test-super-admin', function() {
+        $user = auth()->user();
+        if ($user) {
+            return response()->json([
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'has_super_admin_role' => $user->hasRole('super_admin'),
+                'roles' => $user->roles->pluck('name'),
+                'is_super_admin' => $user->owner->is_super_admin ?? false
+            ]);
+        }
+        return response()->json(['error' => 'Not authenticated']);
+    })->name('test.super.admin');
+
+    // Test admin settings route
+    Route::get('test-admin-settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'index'])->name('test.admin.settings');
+    Route::get('debug-admin', [App\Http\Controllers\Admin\AdminSettingController::class, 'debug'])->name('debug.admin');
+
+    // OTP Settings
+    Route::get('otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'index'])->name('otp-settings.index');
+    Route::put('otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'update'])->name('otp-settings.update');
+    Route::post('otp-settings/toggle', [App\Http\Controllers\Admin\OtpSettingsController::class, 'toggle'])->name('otp-settings.toggle');
+
+    // Notification Settings
+    Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('settings.notifications');
+    Route::put('settings/notifications/email', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateEmailSettings'])->name('notifications.email.update');
+    Route::put('settings/notifications/sms', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsSettings'])->name('notifications.sms.update');
+    Route::post('settings/notifications/email/test', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testEmail'])->name('notifications.email.test');
+    Route::post('settings/notifications/sms/test', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testSms'])->name('notifications.sms.test');
+Route::post('settings/notifications/sms/reset', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'resetSmsCount'])->name('notifications.sms.reset');
+    Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get');
+    Route::post('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save');
+    Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
+
+    // Payment routes
+    Route::get('payments/{invoiceId}', [App\Http\Controllers\Admin\PaymentController::class, 'showPaymentForm'])->name('payments.form');
+    Route::post('payments/{invoiceId}', [App\Http\Controllers\Admin\PaymentController::class, 'processPayment'])->name('payments.process');
+    Route::post('payments/{invoiceId}/mark-paid', [App\Http\Controllers\Admin\PaymentController::class, 'markAsPaid'])->name('payments.mark-paid');
 });
 
 // API OTP Settings Route (Public)

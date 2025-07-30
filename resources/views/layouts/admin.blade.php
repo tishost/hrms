@@ -79,22 +79,60 @@
                         <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.owners.*') ? 'active' : '' }}"
-                       href="{{ route('admin.owners.index') }}">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.owners.*') ? 'active' : '' }}"
+                       href="#" id="ownersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-users me-2"></i>Owners
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="ownersDropdown">
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.owners.index') ? 'active' : '' }}"
+                               href="{{ route('admin.owners.index') }}">
+                                <i class="fas fa-list me-2"></i>Owner List
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.owners.create') ? 'active' : '' }}"
+                               href="{{ route('admin.owners.create') }}">
+                                <i class="fas fa-plus me-2"></i>Add New Owner
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('admin.subscriptions') }}">
+                                <i class="fas fa-credit-card me-2"></i>View Subscriptions
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}"
+                       href="{{ route('admin.plans.index') }}">
+                        <i class="fas fa-cube me-2"></i>Subscription Plans
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.subscriptions') ? 'active' : '' }}"
+                       href="{{ route('admin.subscriptions') }}">
+                        <i class="fas fa-credit-card me-2"></i>Subscriptions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.billing.index') ? 'active' : '' }}"
+                       href="{{ route('admin.billing.index') }}">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Billing
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
                        href="{{ route('admin.settings.index') }}">
-                        <i class="fas fa-cog me-2"></i>Settings
+                        <i class="fas fa-cog me-2"></i>System Settings
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
                        href="{{ route('admin.otp-settings.index') }}">
-                        <i class="fas fa-mobile-alt me-2"></i>OTP Settings
+                        <i class="fas fa-mobile-alt me-2"></i>SMS Settings
                     </a>
                 </li>
             </ul>

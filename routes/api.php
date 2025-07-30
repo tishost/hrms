@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRegistrationController;
 use App\Http\Controllers\Api\TenantDashboardController;
+use App\Http\Controllers\Api\CheckoutController;
 
 
 // Tenant Registration Routes
@@ -55,9 +56,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tenants', [TenantController::class, 'index']);
     Route::get('/tenants/dashboard', [TenantController::class, 'dashboard']);
     Route::get('/tenants/{id}', [TenantController::class, 'show']);
+    Route::get('/tenants/{id}/outstanding', [TenantController::class, 'getOutstandingAmount']);
     Route::post('/tenants', [TenantController::class, 'store']);
     Route::put('/tenants/{id}', [TenantController::class, 'update']);
     Route::delete('/tenants/{id}', [TenantController::class, 'destroy']);
+
+    // Checkouts
+    Route::get('/checkouts', [CheckoutController::class, 'index']);
+    Route::post('/checkouts', [CheckoutController::class, 'store']);
+    Route::get('/checkouts/{id}', [CheckoutController::class, 'show']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

@@ -1,198 +1,176 @@
 <!-- filepath: resources/views/admin/owners/index.blade.php -->
 @extends('layouts.admin')
 
+@section('title', 'Manage Owners')
+
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">Owner Management</h3>
-                    <a href="{{ route('admin.owners.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add New Owner
-                    </a>
-                </div>
-                <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success">
-                            {{ session('success') }}
-                        </div>
-                    @endif
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Owner List</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.owners.create') }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50"></i> Add New Owner
+            </a>
+            <a href="{{ route('admin.subscriptions') }}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
+                <i class="fas fa-credit-card fa-sm text-white-50"></i> View Subscriptions
+            </a>
+        </div>
+    </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Country</th>
-                                    <th>Status</th>
-                                    <th>Super Admin</th>
-                                    <th>Properties</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($owners as $owner)
-                                <tr>
-                                    <td>{{ $owner->id }}</td>
-                                    <td>{{ $owner->name }}</td>
-                                    <td>{{ $owner->email }}</td>
-                                    <td>{{ $owner->phone }}</td>
-                                    <td>{{ $owner->country }}</td>
-                                    <td>
-                                        <span class="badge badge-{{ $owner->status === 'active' ? 'success' : ($owner->status === 'inactive' ? 'warning' : 'danger') }}">
-                                            {{ ucfirst($owner->status) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if($owner->is_super_admin)
-                                            <span class="badge badge-primary">Super Admin</span>
-                                        @else
-                                            <span class="badge badge-secondary">Owner</span>
+    <!-- Owners Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">All Owners ({{ $owners->total() }})</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="ownersTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Country</th>
+                            <th>Gender</th>
+                            <th>Current Plan</th>
+                            <th>Subscription Status</th>
+                            <th>Expiry Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($owners as $owner)
+                        <tr>
+                            <td>{{ $owner->name }}</td>
+                            <td>{{ $owner->email }}</td>
+                            <td>{{ $owner->phone }}</td>
+                            <td>
+                                @if($owner->owner)
+                                    <span class="badge badge-info">{{ $owner->owner->country }}</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($owner->owner)
+                                    <span class="badge badge-secondary">{{ ucfirst($owner->owner->gender) }}</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($owner->subscription && $owner->subscription->plan)
+                                    <span class="badge badge-primary">{{ $owner->subscription->plan->name }}</span>
+                                    @if($owner->subscription->plan->price > 0)
+                                        <small class="text-muted d-block">৳{{ number_format($owner->subscription->plan->price) }}/year</small>
+                                    @else
+                                        <small class="text-muted d-block">Free</small>
+                                    @endif
+                                @else
+                                    <span class="badge badge-secondary">No Plan</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($owner->subscription)
+                                    @if($owner->subscription->status === 'active')
+                                        <span class="badge badge-success">Active</span>
+                                    @elseif($owner->subscription->status === 'pending')
+                                        <span class="badge badge-warning">Pending Payment</span>
+                                        @if($owner->subscription->getPendingInvoice())
+                                            <small class="text-muted d-block">Invoice: {{ $owner->subscription->getPendingInvoice()->invoice_number }}</small>
                                         @endif
-                                    </td>
-                                    <td>{{ $owner->properties->count() }}</td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-info" onclick="editOwner({{ $owner->id }})">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            @if(!$owner->is_super_admin)
-                                            <form action="{{ route('admin.owners.destroy', $owner->id) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this owner?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                    @elseif($owner->subscription->status === 'expired')
+                                        <span class="badge badge-danger">Expired</span>
+                                    @elseif($owner->subscription->status === 'suspended')
+                                        <span class="badge badge-warning">Suspended</span>
+                                    @elseif($owner->subscription->status === 'cancelled')
+                                        <span class="badge badge-danger">Cancelled</span>
+                                    @else
+                                        <span class="badge badge-secondary">{{ ucfirst($owner->subscription->status) }}</span>
+                                    @endif
+                                @else
+                                    <span class="badge badge-secondary">No Subscription</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($owner->subscription)
+                                    @if($owner->subscription->status === 'active' && $owner->subscription->end_date)
+                                        {{ $owner->subscription->end_date->format('M d, Y') }}
+                                        <small class="text-muted d-block">
+                                            @if($owner->subscription->daysUntilExpiry() !== null)
+                                                {{ $owner->subscription->daysUntilExpiry() }} days left
+                                            @else
+                                                Active
                                             @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                        </small>
+                                    @elseif($owner->subscription->status === 'pending')
+                                        <span class="text-warning">Payment Required</span>
+                                        @if($owner->subscription->getPendingInvoice())
+                                            <small class="text-muted d-block">
+                                                Due: {{ $owner->subscription->getPendingInvoice()->due_date->format('M d, Y') }}
+                                            </small>
+                                        @endif
+                                    @elseif($owner->subscription->status === 'expired' && $owner->subscription->end_date)
+                                        <span class="text-danger">{{ $owner->subscription->end_date->format('M d, Y') }}</span>
+                                        <small class="text-muted d-block">Expired</small>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="#" class="btn btn-sm btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    @if($owner->subscription && $owner->subscription->status === 'pending')
+                                        <a href="#" class="btn btn-sm btn-danger" title="View Invoice">
+                                            <i class="fas fa-file-invoice"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-success" title="Mark as Paid">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                    @else
+                                        <a href="#" class="btn btn-sm btn-primary" title="Manage Subscription">
+                                            <i class="fas fa-credit-card"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="9" class="text-center">No owners found</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+
+            <!-- Pagination -->
+            @if($owners->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                {{ $owners->links() }}
+            </div>
+            @endif
         </div>
     </div>
 </div>
-
-<!-- Edit Owner Modal -->
-<div class="modal fade" id="editOwnerModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Owner</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form id="editOwnerForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Name</label>
-                                <input type="text" class="form-control" name="name" id="edit_name" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" class="form-control" name="email" id="edit_email" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Phone</label>
-                                <input type="text" class="form-control" name="phone" id="edit_phone" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Country</label>
-                                <select class="form-control" name="country" id="edit_country" required>
-                                    @foreach($countries as $code => $name)
-                                        <option value="{{ $name }}">{{ $name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Gender</label>
-                                <select class="form-control" name="gender" id="edit_gender">
-                                    <option value="">Select Gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Address</label>
-                                <textarea class="form-control" name="address" id="edit_address" rows="3" required></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Update Owner</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@endsection
 
 @push('scripts')
 <script>
-function editOwner(ownerId) {
-    $.get(`/admin/owners/${ownerId}/edit`, function(data) {
-        $('#edit_name').val(data.owner.name);
-        $('#edit_email').val(data.owner.email);
-        $('#edit_phone').val(data.owner.phone);
-        $('#edit_country').val(data.owner.country);
-        $('#edit_gender').val(data.owner.gender);
-        $('#edit_address').val(data.owner.address);
-
-        $('#editOwnerForm').attr('action', `/admin/owners/${ownerId}`);
-        $('#editOwnerModal').modal('show');
-    });
-}
-
-$('#editOwnerForm').on('submit', function(e) {
-    e.preventDefault();
-
-    $.ajax({
-        url: $(this).attr('action'),
-        method: 'PUT',
-        data: $(this).serialize(),
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if(response.success) {
-                $('#editOwnerModal').modal('hide');
-                location.reload();
-            }
-        },
-        error: function(xhr) {
-            alert('Error updating owner');
-        }
+$(document).ready(function() {
+    $('#ownersTable').DataTable({
+        "pageLength": 25,
+        "order": [[ 0, "asc" ]]
     });
 });
 </script>
 @endpush
+@endsection

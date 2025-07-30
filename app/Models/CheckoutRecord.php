@@ -26,6 +26,9 @@ class CheckoutRecord extends Model
         'handover_date',
         'handover_condition',
         'notes',
+        'property_image',
+        'payment_reference',
+        'payment_method',
     ];
 
     protected $casts = [

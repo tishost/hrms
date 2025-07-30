@@ -80,7 +80,7 @@ class OwnerController extends Controller
             // Get invoice for this owner (same as web version but with owner permission)
             $invoice = \App\Models\Invoice::where('id', $id)
                 ->where('owner_id', $ownerId)
-                ->with(['tenant', 'unit', 'property'])
+                ->with(['tenant:id,first_name,last_name,mobile,email', 'unit:id,name', 'property:id,name,address,email,mobile'])
                 ->first();
 
             if (!$invoice) {
@@ -90,14 +90,60 @@ class OwnerController extends Controller
                 ], 404);
             }
 
+            // Process breakdown data for PDF
+            if ($invoice->breakdown) {
+                try {
+                    $breakdown = json_decode($invoice->breakdown, true) ?? [];
+
+                    // Add descriptions for common fee types
+                    foreach ($breakdown as &$fee) {
+                        if (!isset($fee['description']) || empty($fee['description'])) {
+                            $feeName = strtolower($fee['name'] ?? '');
+
+                            // Add descriptions based on fee name
+                            if (strpos($feeName, 'base rent') !== false || strpos($feeName, 'monthly rent') !== false) {
+                                $fee['description'] = 'Base monthly rent payment for the rental unit';
+                            } elseif (strpos($feeName, 'rent') !== false) {
+                                $fee['description'] = 'Monthly rent payment for the unit';
+                            } elseif (strpos($feeName, 'electricity') !== false || strpos($feeName, 'power') !== false || strpos($feeName, 'electric') !== false) {
+                                $fee['description'] = 'Electricity bill charges for the month';
+                            } elseif (strpos($feeName, 'gas') !== false || strpos($feeName, 'gas bill') !== false) {
+                                $fee['description'] = 'Gas bill charges for the month';
+                            } elseif (strpos($feeName, 'water') !== false || strpos($feeName, 'water bill') !== false) {
+                                $fee['description'] = 'Water bill charges for the month';
+                            } elseif (strpos($feeName, 'cleaning') !== false) {
+                                $fee['description'] = 'Cleaning and maintenance charges';
+                            } elseif (strpos($feeName, 'maintenance') !== false) {
+                                $fee['description'] = 'Building maintenance and repair charges';
+                            } elseif (strpos($feeName, 'late') !== false || strpos($feeName, 'penalty') !== false) {
+                                $fee['description'] = 'Late payment penalty charges';
+                            } elseif (strpos($feeName, 'security') !== false || strpos($feeName, 'deposit') !== false) {
+                                $fee['description'] = 'Security deposit or related charges';
+                            } elseif (strpos($feeName, 'utility') !== false) {
+                                $fee['description'] = 'Utility service charges (electricity, water, gas)';
+                            } elseif (strpos($feeName, 'service') !== false) {
+                                $fee['description'] = 'Additional service charges';
+                            } else {
+                                $fee['description'] = 'Additional service or charge';
+                            }
+                        }
+                    }
+
+                    // Update invoice with processed breakdown
+                    $invoice->breakdown = json_encode($breakdown);
+                } catch (Exception $e) {
+                    // Keep original breakdown if processing fails
+                }
+            }
+
             // Optimized PDF generation for mobile
             $pdf = \PDF::loadView('owner.invoices.pdf', compact('invoice'));
 
-            // Configure PDF for smaller size
-            $pdf->setPaper('a4', 'portrait');
-            $pdf->setOption('dpi', 72); // Lower DPI for smaller file size
+            // Configure PDF for A4 size
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOption('dpi', 72);
             $pdf->setOption('image-dpi', 72);
-            $pdf->setOption('image-quality', 60); // Lower image quality
+            $pdf->setOption('image-quality', 60);
             $pdf->setOption('enable-local-file-access', false);
             $pdf->setOption('isRemoteEnabled', false);
             $pdf->setOption('isHtml5ParserEnabled', true);

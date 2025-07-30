@@ -14,6 +14,14 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
+        // Check if super admin already exists
+        $existingUser = User::where('email', 'admin@hrms.com')->first();
+
+        if ($existingUser) {
+            $this->command->info('Super Admin already exists!');
+            return;
+        }
+
         // Create Super Admin User
         $superAdmin = User::create([
             'name' => 'Super Admin',

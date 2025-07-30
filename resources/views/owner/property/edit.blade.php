@@ -52,23 +52,7 @@
             </div>
         </div>
 
-        {{-- Facilities --}}
-        <div class="form-group">
-            <label class="form-label">Facilities</label><br>
-            @php $features = json_decode($property->features ?? '[]'); @endphp
-            <div class="form-check">
-                <input type="checkbox" name="facilities[]" value="Lift" class="form-check-input"
-                       {{ in_array('Lift', $features ?? []) ? 'checked' : '' }}>
-                <label class="form-label" style="font-weight:400; color:var(--dark)">Lift</label>
-            </div>
-            <div class="form-check">
-                <input type="checkbox" name="facilities[]" value="Garage" class="form-check-input"
-                       {{ in_array('Garage', $features ?? []) ? 'checked' : '' }}>
-                <label class="form-label" style="font-weight:400; color:var(--dark)">Garage</label>
-            </div>
-        </div>
 
-        <hr>
 
         {{-- Units & Charges --}}
         <h5 class="section-title mb-3"><span class="section-title-icon">🏠</span> <span class="section-title-text">Units & Fees</span></h5>
