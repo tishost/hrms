@@ -169,7 +169,7 @@
                                 <div class="mb-3">
                                     <label for="seo_schema_org" class="form-label">JSON-LD Schema</label>
                                     <textarea class="form-control" id="seo_schema_org" name="seo_schema_org" 
-                                              rows="8" placeholder='{"@context":"https://schema.org","@type":"SoftwareApplication",...}'>{{ $seoSettings['seo_schema_org'] }}</textarea>
+                                              rows="8" placeholder='{"context":"https://schema.org","type":"SoftwareApplication",...}'>{{ $seoSettings['seo_schema_org'] }}</textarea>
                                     <div class="form-text">Structured data for rich snippets (JSON-LD format)</div>
                                 </div>
                             </div>
