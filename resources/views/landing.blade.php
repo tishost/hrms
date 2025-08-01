@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('Bari Manager - House Rent Management System') }}</title>
+    
+    {!! \App\Services\SeoService::renderMetaTags('landing') !!}
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -177,6 +179,9 @@
             </div>
         </div>
     </nav>
+
+    <!-- Breadcrumb -->
+    {!! \App\Services\SeoService::renderBreadcrumbs() !!}
 
     <!-- Hero Section -->
     <section id="home" class="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden">

@@ -234,10 +234,27 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('payments/{invoiceId}', [App\Http\Controllers\Admin\PaymentController::class, 'showPaymentForm'])->name('payments.form');
     Route::post('payments/{invoiceId}', [App\Http\Controllers\Admin\PaymentController::class, 'processPayment'])->name('payments.process');
     Route::post('payments/{invoiceId}/mark-paid', [App\Http\Controllers\Admin\PaymentController::class, 'markAsPaid'])->name('payments.mark-paid');
+
+    // SEO Settings
+    Route::get('settings/seo', [App\Http\Controllers\Admin\SeoSettingsController::class, 'index'])->name('settings.seo');
+    Route::put('settings/seo', [App\Http\Controllers\Admin\SeoSettingsController::class, 'update'])->name('settings.seo.update');
+    Route::post('settings/seo/sitemap', [App\Http\Controllers\Admin\SeoSettingsController::class, 'generateSitemap'])->name('settings.seo.sitemap');
+    Route::post('settings/seo/robots', [App\Http\Controllers\Admin\SeoSettingsController::class, 'generateRobotsTxt'])->name('settings.seo.robots');
+    Route::post('settings/seo/preview', [App\Http\Controllers\Admin\SeoSettingsController::class, 'previewSeo'])->name('settings.seo.preview');
 });
 
 // API OTP Settings Route (Public)
 Route::get('/api/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'getSettings']);
 
+// SEO Routes (Public)
+Route::get('/sitemap.xml', function() {
+    $sitemap = \App\Services\SeoService::generateSitemap();
+    return response($sitemap, 200, ['Content-Type' => 'application/xml']);
+});
+
+Route::get('/robots.txt', function() {
+    $robots = \App\Services\SeoService::generateRobotsTxt();
+    return response($robots, 200, ['Content-Type' => 'text/plain']);
+});
 
 require __DIR__.'/auth.php';

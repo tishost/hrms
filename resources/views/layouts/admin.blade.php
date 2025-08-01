@@ -263,6 +263,12 @@
                                 <i class="fas fa-mobile-alt me-2"></i>SMS Settings
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.seo') }}">
+                                <i class="fas fa-search me-2"></i>SEO Settings
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
