@@ -88,7 +88,7 @@ class NotificationSettingsController extends Controller
             'sms_provider' => 'required|string',
             'sms_api_key' => 'required|string',
             'sms_api_secret' => 'required|string',
-            'sms_sender_id' => 'required|string|max:11',
+            'sms_sender_id' => 'required|string|max:13',
             'sms_enabled' => 'boolean',
             'sms_monthly_limit' => 'required|integer|min:1',
         ]);

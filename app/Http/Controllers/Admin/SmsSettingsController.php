@@ -75,7 +75,7 @@ class SmsSettingsController extends Controller
         $request->validate([
             'sms_enabled' => 'boolean',
             'sms_api_token' => 'required_if:sms_enabled,1|string|max:255',
-            'sms_sender_id' => 'required_if:sms_enabled,1|string|max:20',
+            'sms_sender_id' => 'required_if:sms_enabled,1|string|max:13',
             'sms_rent_reminder_enabled' => 'boolean',
             'sms_maintenance_update_enabled' => 'boolean',
             'sms_welcome_message_enabled' => 'boolean',

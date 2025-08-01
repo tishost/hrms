@@ -32,6 +32,28 @@ class SmsService
     public function sendSms($phoneNumber, $message)
     {
         try {
+            // Validate configuration
+            if (empty($this->apiToken)) {
+                return [
+                    'success' => false,
+                    'message' => 'SMS API token is not configured'
+                ];
+            }
+
+            if (empty($this->senderId)) {
+                return [
+                    'success' => false,
+                    'message' => 'SMS Sender ID is not configured'
+                ];
+            }
+
+            if (empty($this->apiUrl)) {
+                return [
+                    'success' => false,
+                    'message' => 'SMS API URL is not configured'
+                ];
+            }
+
             $response = $this->makeApiRequest([
                 'api_token' => $this->apiToken,
                 'senderid' => $this->senderId,
@@ -144,18 +166,33 @@ class SmsService
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postString);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'BariManager/1.0');
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         curl_close($ch);
 
+        // Log the request and response for debugging
+        Log::info('SMS API Request', [
+            'url' => $this->apiUrl,
+            'post_data' => $postData,
+            'http_code' => $httpCode,
+            'response' => $response,
+            'error' => $error
+        ]);
+
         if ($error) {
             throw new \Exception('cURL Error: ' . $error);
         }
 
         if ($httpCode !== 200) {
-            throw new \Exception('HTTP Error: ' . $httpCode);
+            throw new \Exception('HTTP Error: ' . $httpCode . ' - Response: ' . $response);
+        }
+
+        // Check if response is HTML (error page)
+        if (strpos($response, '<html') !== false || strpos($response, '<!DOCTYPE') !== false) {
+            throw new \Exception('API returned HTML instead of JSON. This usually means the API endpoint is incorrect or there\'s an authentication issue. Response: ' . substr($response, 0, 500));
         }
 
         return $response;
@@ -166,6 +203,15 @@ class SmsService
      */
     private function processResponse($response)
     {
+        // Check if response is HTML (error page)
+        if (strpos($response, '<html') !== false || strpos($response, '<!DOCTYPE') !== false) {
+            return [
+                'success' => false,
+                'message' => 'API returned HTML instead of JSON. This usually means the API endpoint is incorrect or there\'s an authentication issue.',
+                'response' => substr($response, 0, 500)
+            ];
+        }
+
         // Clean response from unwanted characters
         $cleanResponse = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $response);
         $array = json_decode($cleanResponse, true);
@@ -173,7 +219,7 @@ class SmsService
         if (!$array) {
             return [
                 'success' => false,
-                'message' => 'Invalid response from SMS gateway',
+                'message' => 'Invalid JSON response from SMS gateway. Response: ' . substr($response, 0, 200),
                 'response' => $response
             ];
         }

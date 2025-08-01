@@ -199,7 +199,7 @@
                                                     </label>
                                                     <input type="text" class="form-control" id="sms_sender_id" name="sms_sender_id"
                                                            value="{{ $smsSettings['sms_sender_id'] ?? 'HRMS' }}" required>
-                                                    <small class="form-text text-muted">Sender name for SMS (max 11 characters)</small>
+                                                    <small class="form-text text-muted">Sender name for SMS (max 13 characters)</small>
                                                 </div>
                                             </div>
                                         </div>

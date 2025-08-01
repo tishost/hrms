@@ -80,8 +80,8 @@
                                         Sender ID
                                     </label>
                                     <input type="text" class="form-control" id="sms_sender_id" name="sms_sender_id" 
-                                           value="{{ $smsSettings['sms_sender_id'] }}" placeholder="BARI MANAGER" maxlength="11">
-                                    <small class="text-muted">Sender name (max 11 characters)</small>
+                                           value="{{ $smsSettings['sms_sender_id'] }}" placeholder="BARI MANAGER" maxlength="13">
+                                    <small class="text-muted">Sender name (max 13 characters)</small>
                                 </div>
                             </div>
 
