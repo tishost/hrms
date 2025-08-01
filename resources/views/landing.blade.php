@@ -1025,25 +1025,282 @@
             // Track last message timestamp for polling
             let lastMessageTimestamp = Date.now();
             
-            // Chat responses
-            const responses = {
-                'pricing': {
-                    message: 'Our pricing plans start from free! We offer:\n\n🆓 Free Plan: Up to 5 properties\n💰 Basic Plan: $9/month - 20 properties\n🚀 Pro Plan: $19/month - Unlimited properties\n\nWould you like to see detailed features?',
-                    intent: 'pricing'
-                },
-                'demo': {
-                    message: 'Great! I\'d be happy to arrange a demo for you. Please provide your email and preferred time, or you can schedule directly at: https://barimanager.com/demo',
-                    intent: 'demo'
-                },
-                'support': {
-                    message: 'For technical support, you can:\n\n📧 Email: support@barimanager.com\n📞 Phone: +880-1234-567890\n🕒 Hours: 9 AM - 6 PM (GMT+6)\n\nWhat specific issue are you facing?',
-                    intent: 'support'
-                },
-                'features': {
-                    message: 'Bari Manager includes:\n\n🏠 Property Management\n👥 Tenant Management\n💰 Rent Collection\n🛠️ Maintenance Tracking\n📊 Analytics & Reports\n📱 Mobile App\n\nWhich feature interests you most?',
-                    intent: 'features'
+            // Advanced Chatbot System
+            class AdvancedChatbot {
+                constructor() {
+                    this.conversationHistory = [];
+                    this.userContext = {
+                        name: null,
+                        email: null,
+                        propertyCount: null,
+                        interests: [],
+                        stage: 'greeting'
+                    };
+                    this.knowledgeBase = {
+                        pricing: {
+                            free: {
+                                price: 'Free',
+                                properties: 'Up to 5',
+                                features: ['Basic property management', 'Tenant profiles', 'Rent tracking', 'Email support'],
+                                limitations: ['No advanced analytics', 'No mobile app', 'Limited storage']
+                            },
+                            basic: {
+                                price: '$9/month',
+                                properties: 'Up to 20',
+                                features: ['Everything in Free', 'Advanced analytics', 'Maintenance tracking', 'Priority support'],
+                                limitations: ['No custom branding', 'Limited integrations']
+                            },
+                            pro: {
+                                price: '$19/month',
+                                properties: 'Unlimited',
+                                features: ['Everything in Basic', 'Custom branding', 'API access', 'White-label solution', 'Dedicated support'],
+                                limitations: []
+                            }
+                        },
+                        features: {
+                            property_management: {
+                                name: 'Property Management',
+                                description: 'Manage multiple properties, units, and their details',
+                                benefits: ['Centralized property database', 'Unit tracking', 'Property photos', 'Document storage']
+                            },
+                            tenant_management: {
+                                name: 'Tenant Management',
+                                description: 'Complete tenant profiles and communication tools',
+                                benefits: ['Tenant profiles', 'Rent history', 'Communication logs', 'Document sharing']
+                            },
+                            rent_collection: {
+                                name: 'Rent Collection',
+                                description: 'Automated rent tracking and payment reminders',
+                                benefits: ['Payment tracking', 'Automated reminders', 'Financial reports', 'Online payments']
+                            },
+                            maintenance: {
+                                name: 'Maintenance Tracking',
+                                description: 'Track maintenance requests and completion status',
+                                benefits: ['Request tracking', 'Photo attachments', 'Status updates', 'Cost tracking']
+                            },
+                            analytics: {
+                                name: 'Analytics & Reports',
+                                description: 'Comprehensive reports and business insights',
+                                benefits: ['Revenue reports', 'Occupancy rates', 'Expense tracking', 'Performance metrics']
+                            },
+                            mobile: {
+                                name: 'Mobile App',
+                                description: 'Access your system anywhere with mobile app',
+                                benefits: ['iOS & Android apps', 'Real-time notifications', 'Photo capture', 'Offline access']
+                            }
+                        },
+                        support: {
+                            email: 'support@barimanager.com',
+                            phone: '+880-1234-567890',
+                            hours: '9 AM - 6 PM (GMT+6)',
+                            response_time: 'Within 2 hours'
+                        }
+                    };
                 }
-            };
+
+                // Process user message and generate intelligent response
+                processMessage(message) {
+                    const lowerMessage = message.toLowerCase();
+                    this.conversationHistory.push({ role: 'user', message: message });
+
+                    // Update user context based on message
+                    this.updateContext(message);
+
+                    // Generate response based on context and message
+                    const response = this.generateResponse(lowerMessage);
+                    
+                    this.conversationHistory.push({ role: 'bot', message: response.message });
+                    return response;
+                }
+
+                // Update user context
+                updateContext(message) {
+                    const lowerMessage = message.toLowerCase();
+                    
+                    // Extract name
+                    if (lowerMessage.includes('my name is') || lowerMessage.includes('i am') || lowerMessage.includes('call me')) {
+                        const nameMatch = message.match(/(?:my name is|i am|call me)\s+([a-zA-Z\s]+)/i);
+                        if (nameMatch) {
+                            this.userContext.name = nameMatch[1].trim();
+                        }
+                    }
+
+                    // Extract email
+                    const emailMatch = message.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
+                    if (emailMatch) {
+                        this.userContext.email = emailMatch[0];
+                    }
+
+                    // Extract property count
+                    const propertyMatch = message.match(/(\d+)\s+(?:properties?|houses?|units?)/i);
+                    if (propertyMatch) {
+                        this.userContext.propertyCount = parseInt(propertyMatch[1]);
+                    }
+
+                    // Track interests
+                    if (lowerMessage.includes('pricing') || lowerMessage.includes('cost') || lowerMessage.includes('price')) {
+                        this.userContext.interests.push('pricing');
+                    }
+                    if (lowerMessage.includes('feature') || lowerMessage.includes('what can') || lowerMessage.includes('capabilities')) {
+                        this.userContext.interests.push('features');
+                    }
+                    if (lowerMessage.includes('demo') || lowerMessage.includes('show me') || lowerMessage.includes('tour')) {
+                        this.userContext.interests.push('demo');
+                    }
+                }
+
+                // Generate intelligent response
+                generateResponse(message) {
+                    // Greeting stage
+                    if (this.userContext.stage === 'greeting') {
+                        if (this.userContext.name) {
+                            this.userContext.stage = 'main';
+                            return {
+                                message: `Nice to meet you, ${this.userContext.name}! 👋 I'm here to help you with Bari Manager. What would you like to know about?\n\n💡 Quick options:\n• Pricing & Plans\n• Features & Capabilities\n• Request Demo\n• Technical Support`,
+                                intent: 'greeting',
+                                suggestions: ['Pricing & Plans', 'Features & Capabilities', 'Request Demo', 'Technical Support']
+                            };
+                        } else {
+                            return {
+                                message: `Hello! 👋 I'm your Bari Manager assistant. I can help you with pricing, features, demos, and support.\n\nWhat's your name?`,
+                                intent: 'greeting',
+                                suggestions: ['My name is...', 'I prefer to remain anonymous']
+                            };
+                        }
+                    }
+
+                    // Main conversation stage
+                    if (this.userContext.stage === 'main') {
+                        // Pricing queries
+                        if (message.includes('pricing') || message.includes('cost') || message.includes('price') || message.includes('plan')) {
+                            return this.handlePricingQuery(message);
+                        }
+
+                        // Feature queries
+                        if (message.includes('feature') || message.includes('what can') || message.includes('capabilities')) {
+                            return this.handleFeatureQuery(message);
+                        }
+
+                        // Demo requests
+                        if (message.includes('demo') || message.includes('show me') || message.includes('tour')) {
+                            return this.handleDemoRequest(message);
+                        }
+
+                        // Support queries
+                        if (message.includes('support') || message.includes('help') || message.includes('issue')) {
+                            return this.handleSupportQuery(message);
+                        }
+
+                        // Agent transfer
+                        if (message.includes('agent') || message.includes('human') || message.includes('person')) {
+                            return {
+                                message: 'I understand you\'d like to speak with a human agent. Let me transfer you to one of our support specialists.',
+                                intent: 'agent_transfer',
+                                transfer: true
+                            };
+                        }
+
+                        // Default response
+                        return {
+                            message: `I'm here to help you with Bari Manager! What would you like to know?\n\n💡 Quick options:\n• Pricing & Plans\n• Features & Capabilities\n• Request Demo\n• Technical Support`,
+                            intent: 'general',
+                            suggestions: ['Pricing & Plans', 'Features & Capabilities', 'Request Demo', 'Technical Support']
+                        };
+                    }
+
+                    return {
+                        message: 'I\'m here to help! What would you like to know about Bari Manager?',
+                        intent: 'general'
+                    };
+                }
+
+                // Handle pricing queries
+                handlePricingQuery(message) {
+                    const plans = this.knowledgeBase.pricing;
+                    
+                    if (message.includes('free') || message.includes('basic') || message.includes('pro')) {
+                        if (message.includes('free')) {
+                            return {
+                                message: `🆓 **Free Plan** (${plans.free.price})\n\n📊 Properties: ${plans.free.properties}\n✅ Features:\n${plans.free.features.map(f => `• ${f}`).join('\n')}\n\n${plans.free.limitations.length > 0 ? `⚠️ Limitations:\n${plans.free.limitations.map(l => `• ${l}`).join('\n')}` : ''}\n\nWould you like to know about our paid plans?`,
+                                intent: 'pricing_detail',
+                                suggestions: ['Tell me about Basic Plan', 'Tell me about Pro Plan', 'How do I sign up?']
+                            };
+                        } else if (message.includes('basic')) {
+                            return {
+                                message: `💰 **Basic Plan** (${plans.basic.price})\n\n📊 Properties: ${plans.basic.properties}\n✅ Features:\n${plans.basic.features.map(f => `• ${f}`).join('\n')}\n\n${plans.basic.limitations.length > 0 ? `⚠️ Limitations:\n${plans.basic.limitations.map(l => `• ${l}`).join('\n')}` : ''}\n\nPerfect for growing property managers!`,
+                                intent: 'pricing_detail',
+                                suggestions: ['Tell me about Pro Plan', 'How do I upgrade?', 'Request Demo']
+                            };
+                        } else if (message.includes('pro')) {
+                            return {
+                                message: `🚀 **Pro Plan** (${plans.pro.price})\n\n📊 Properties: ${plans.pro.properties}\n✅ Features:\n${plans.pro.features.map(f => `• ${f}`).join('\n')}\n\nPerfect for professional property management companies!`,
+                                intent: 'pricing_detail',
+                                suggestions: ['How do I sign up?', 'Request Demo', 'Contact Sales']
+                            };
+                        }
+                    }
+
+                    // General pricing overview
+                    return {
+                        message: `Here are our pricing plans:\n\n🆓 **Free Plan** (${plans.free.price})\n• ${plans.free.properties} properties\n• Basic features\n\n💰 **Basic Plan** (${plans.basic.price})\n• ${plans.basic.properties} properties\n• Advanced features\n\n🚀 **Pro Plan** (${plans.pro.price})\n• ${plans.pro.properties} properties\n• All features + custom branding\n\nWhich plan interests you most?`,
+                        intent: 'pricing_overview',
+                        suggestions: ['Tell me about Free Plan', 'Tell me about Basic Plan', 'Tell me about Pro Plan', 'Request Demo']
+                    };
+                }
+
+                // Handle feature queries
+                handleFeatureQuery(message) {
+                    const features = this.knowledgeBase.features;
+                    
+                    // Check for specific feature mentions
+                    for (const [key, feature] of Object.entries(features)) {
+                        if (message.includes(key.replace('_', ' ')) || message.includes(feature.name.toLowerCase())) {
+                            return {
+                                message: `✨ **${feature.name}**\n\n${feature.description}\n\n✅ Benefits:\n${feature.benefits.map(b => `• ${b}`).join('\n')}\n\nWould you like to know about other features or see pricing?`,
+                                intent: 'feature_detail',
+                                suggestions: ['Tell me about other features', 'Show me pricing', 'Request Demo']
+                            };
+                        }
+                    }
+
+                    // General features overview
+                    const featureList = Object.values(features).map(f => `• ${f.name}`).join('\n');
+                    return {
+                        message: `Bari Manager includes these powerful features:\n\n${featureList}\n\nWhich feature would you like to learn more about?`,
+                        intent: 'features_overview',
+                        suggestions: ['Property Management', 'Tenant Management', 'Rent Collection', 'Maintenance Tracking', 'Analytics & Reports', 'Mobile App']
+                    };
+                }
+
+                // Handle demo requests
+                handleDemoRequest(message) {
+                    if (this.userContext.email) {
+                        return {
+                            message: `Perfect! I'll arrange a personalized demo for you. Since I have your email (${this.userContext.email}), I'll send you a calendar link.\n\n📅 **Demo Details:**\n• Duration: 30 minutes\n• Format: Video call\n• What we'll cover: Your specific use case\n\nI'm sending you an email with scheduling options. Check your inbox!`,
+                            intent: 'demo_scheduled'
+                        };
+                    } else {
+                        return {
+                            message: `I'd be happy to arrange a personalized demo for you!\n\n📅 **Demo Details:**\n• Duration: 30 minutes\n• Format: Video call\n• What we'll cover: Your specific needs\n\nCould you please provide your email address so I can send you the scheduling link?`,
+                            intent: 'demo_request',
+                            suggestions: ['My email is...', 'I prefer to schedule later']
+                        };
+                    }
+                }
+
+                // Handle support queries
+                handleSupportQuery(message) {
+                    const support = this.knowledgeBase.support;
+                    return {
+                        message: `🛠️ **Technical Support**\n\n📧 Email: ${support.email}\n📞 Phone: ${support.phone}\n🕒 Hours: ${support.hours}\n⏱️ Response Time: ${support.response_time}\n\nWhat specific issue are you facing? I can help guide you or connect you with our support team.`,
+                        intent: 'support_info',
+                        suggestions: ['I have a technical issue', 'I need help with setup', 'Contact support team']
+                    };
+                }
+            }
+
+            // Initialize advanced chatbot
+            const chatbot = new AdvancedChatbot();
             
             // Store message in database
             async function storeMessage(message, messageType, intent = null) {
@@ -1133,10 +1390,15 @@
                     sendUserMessage(message);
                     chatInput.value = '';
                     
-                    // Simulate bot response
+                    // Process with advanced chatbot
                     setTimeout(() => {
-                        const botResponse = getBotResponse(message.toLowerCase());
+                        const botResponse = chatbot.processMessage(message);
                         sendBotMessage(botResponse.message, botResponse.intent);
+                        
+                        // Add suggestion buttons if available
+                        if (botResponse.suggestions) {
+                            addSuggestionButtons(botResponse.suggestions);
+                        }
                         
                         // Handle agent transfer
                         if (botResponse.transfer) {
@@ -1157,38 +1419,58 @@
             document.querySelectorAll('.quick-option').forEach(button => {
                 button.addEventListener('click', function() {
                     const option = this.dataset.option;
-                    const response = responses[option];
-                    if (response) {
-                        sendUserMessage(this.textContent);
-                        setTimeout(() => {
-                            sendBotMessage(response.message, response.intent);
-                        }, 500);
-                    }
+                    sendUserMessage(this.textContent);
+                    setTimeout(() => {
+                        const botResponse = chatbot.processMessage(this.textContent);
+                        sendBotMessage(botResponse.message, botResponse.intent);
+                        
+                        if (botResponse.suggestions) {
+                            addSuggestionButtons(botResponse.suggestions);
+                        }
+                    }, 500);
                 });
             });
             
-            // Get bot response based on user message
-            function getBotResponse(message) {
-                if (message.includes('price') || message.includes('cost') || message.includes('plan')) {
-                    return responses.pricing;
-                } else if (message.includes('demo') || message.includes('show') || message.includes('tour')) {
-                    return responses.demo;
-                } else if (message.includes('support') || message.includes('help') || message.includes('issue')) {
-                    return responses.support;
-                } else if (message.includes('feature') || message.includes('what') || message.includes('can')) {
-                    return responses.features;
-                } else if (message.includes('agent') || message.includes('human') || message.includes('person')) {
-                    return {
-                        message: 'I\'m transferring you to a human agent. Please wait a moment...',
-                        intent: 'agent_transfer',
-                        transfer: true
-                    };
-                } else {
-                    return {
-                        message: 'Thank you for your message! Our team will get back to you soon. In the meantime, you can check our pricing plans or request a demo. How else can I help you?',
-                        intent: 'general'
-                    };
-                }
+            // Add suggestion buttons
+            function addSuggestionButtons(suggestions) {
+                // Remove existing suggestion buttons
+                document.querySelectorAll('.suggestion-btn').forEach(btn => btn.remove());
+                
+                const suggestionDiv = document.createElement('div');
+                suggestionDiv.className = 'flex items-start space-x-2 mt-2';
+                suggestionDiv.innerHTML = `
+                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-lightbulb text-white text-sm"></i>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-3 max-w-xs">
+                        <p class="text-xs text-blue-800 mb-2">💡 Quick options:</p>
+                        <div class="flex flex-wrap gap-1">
+                            ${suggestions.map(suggestion => 
+                                `<button class="suggestion-btn text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors">${suggestion}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(suggestionDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Add event listeners to suggestion buttons
+                document.querySelectorAll('.suggestion-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const suggestion = this.textContent;
+                        sendUserMessage(suggestion);
+                        chatInput.value = '';
+                        
+                        setTimeout(() => {
+                            const botResponse = chatbot.processMessage(suggestion);
+                            sendBotMessage(botResponse.message, botResponse.intent);
+                            
+                            if (botResponse.suggestions) {
+                                addSuggestionButtons(botResponse.suggestions);
+                            }
+                        }, 500);
+                    });
+                });
             }
             
             // Request agent transfer
