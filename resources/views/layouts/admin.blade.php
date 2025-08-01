@@ -269,6 +269,12 @@
                                 <i class="fas fa-search me-2"></i>SEO Settings
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"
+                               href="{{ route('admin.chat.dashboard') }}">
+                                <i class="fas fa-comments me-2"></i>Chat Agent Dashboard
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
