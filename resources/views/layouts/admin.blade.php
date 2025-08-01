@@ -274,7 +274,7 @@
                                 </a>
                                 <a class="dropdown-item {{ request()->routeIs('admin.settings.sms.*') ? 'active' : '' }}"
                                    href="{{ route('admin.settings.sms') }}">
-                                    <i class="fas fa-sms me-2"></i>SMS Settings
+                                    <i class="fas fa-sms me-2"></i>OTP Settings
                                 </a>
                         </li>
                         <li>
