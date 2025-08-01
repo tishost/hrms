@@ -297,8 +297,6 @@
     </div>
 </div>
 
-@endsection
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -412,4 +410,6 @@ function generateRobotsTxt() {
     }
 }
 </script>
-@endpush 
+@endpush
+
+@endsection 
