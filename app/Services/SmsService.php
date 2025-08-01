@@ -255,11 +255,13 @@ class SmsService
             }
 
             return [
-                'success' => $array['status'] === 'SUCCESS',
+                'success' => $array['status'] === 'success',
                 'status' => $array['status'] ?? 'UNKNOWN',
-                'message' => $array['message'] ?? 'No message received',
-                'balance' => $array['balance'] ?? 0,
-                'currency' => $array['currency'] ?? 'BDT',
+                'message' => $array['message'] ?? 'Balance retrieved successfully',
+                'mask' => $array['mask'] ?? 0,
+                'nonmask' => $array['nonmask'] ?? 0,
+                'voice' => $array['voice'] ?? 0,
+                'total_balance' => ($array['mask'] ?? 0) + ($array['nonmask'] ?? 0) + ($array['voice'] ?? 0),
                 'response' => $array
             ];
 

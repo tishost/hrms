@@ -409,9 +409,18 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const balance = data.balance || 0;
-                    const currency = data.currency || 'BDT';
-                    showAlert(`SMS Balance: ${balance} ${currency}`, 'success');
+                    const mask = data.mask || 0;
+                    const nonmask = data.nonmask || 0;
+                    const voice = data.voice || 0;
+                    const total = data.total_balance || 0;
+                    
+                    const balanceMessage = `SMS Balance Details:\n\n` +
+                        `📱 Masking SMS: ${mask}\n` +
+                        `📞 Non-masking SMS: ${nonmask}\n` +
+                        `🎤 Voice SMS: ${voice}\n` +
+                        `💰 Total Balance: ${total} SMS`;
+                    
+                    showAlert(balanceMessage, 'success');
                 } else {
                     showAlert('Balance check failed: ' + data.message, 'error');
                 }
@@ -544,9 +553,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function showAlert(message, type) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    
+    // Handle multi-line messages
+    const formattedMessage = message.replace(/\n/g, '<br>');
+    
     alertDiv.innerHTML = `
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-        ${message}
+        <div style="white-space: pre-line;">${formattedMessage}</div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
@@ -554,7 +567,7 @@ function showAlert(message, type) {
     
     setTimeout(() => {
         alertDiv.remove();
-    }, 5000);
+    }, 8000); // Longer timeout for balance details
 }
 </script>
 @endpush 
