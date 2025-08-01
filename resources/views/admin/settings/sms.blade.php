@@ -276,6 +276,10 @@
                                             <i class="fas fa-paper-plane me-2"></i>
                                             Test SMS
                                         </button>
+                                        <button type="button" class="btn btn-success me-2" id="check-balance-btn">
+                                            <i class="fas fa-wallet me-2"></i>
+                                            Check Balance
+                                        </button>
                                         <button type="button" class="btn btn-secondary" id="bulk-sms-btn">
                                             <i class="fas fa-broadcast-tower me-2"></i>
                                             Bulk SMS
@@ -393,6 +397,31 @@ document.addEventListener('DOMContentLoaded', function() {
             .finally(() => {
                 this.disabled = false;
                 this.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+            });
+    });
+    
+    // Check balance
+    document.getElementById('check-balance-btn').addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Checking...';
+        
+        fetch('{{ route("admin.settings.sms.balance") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const balance = data.balance || 0;
+                    const currency = data.currency || 'BDT';
+                    showAlert(`SMS Balance: ${balance} ${currency}`, 'success');
+                } else {
+                    showAlert('Balance check failed: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Error checking balance: ' + error.message, 'error');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-wallet me-2"></i>Check Balance';
             });
     });
     

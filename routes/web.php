@@ -255,6 +255,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('settings/sms/test-connection', [App\Http\Controllers\Admin\SmsSettingsController::class, 'testConnection'])->name('settings.sms.test-connection');
     Route::get('settings/sms/settings', [App\Http\Controllers\Admin\SmsSettingsController::class, 'getSmsSettings'])->name('settings.sms.settings');
     Route::post('settings/sms/bulk', [App\Http\Controllers\Admin\SmsSettingsController::class, 'sendBulkSms'])->name('settings.sms.bulk');
+    Route::get('settings/sms/balance', [App\Http\Controllers\Admin\SmsSettingsController::class, 'checkBalance'])->name('settings.sms.balance');
 });
 
 // API OTP Settings Route (Public)

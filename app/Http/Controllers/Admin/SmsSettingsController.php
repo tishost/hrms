@@ -248,4 +248,21 @@ class SmsSettingsController extends Controller
             ]);
         }
     }
+
+    public function checkBalance()
+    {
+        $this->checkSuperAdmin();
+
+        try {
+            $smsService = new SmsService();
+            $result = $smsService->getBalance();
+            
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking balance: ' . $e->getMessage()
+            ]);
+        }
+    }
 } 

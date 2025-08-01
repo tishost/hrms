@@ -217,16 +217,60 @@ class SmsService
     }
 
     /**
-     * Get SMS balance (if API supports it)
+     * Get SMS balance from SMSinBD API
      */
     public function getBalance()
     {
-        // This would need to be implemented based on your SMS gateway's balance API
-        // For now, returning a placeholder
-        return [
-            'success' => false,
-            'message' => 'Balance checking not implemented for this gateway'
-        ];
+        try {
+            $balanceUrl = 'https://api.smsinbd.com/sms-api/balance?api_token=' . $this->apiToken;
+            
+            $ch = curl_init($balanceUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($error) {
+                throw new \Exception('cURL Error: ' . $error);
+            }
+
+            if ($httpCode !== 200) {
+                throw new \Exception('HTTP Error: ' . $httpCode);
+            }
+
+            // Clean response from unwanted characters
+            $cleanResponse = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $response);
+            $array = json_decode($cleanResponse, true);
+
+            if (!$array) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid response from balance API',
+                    'response' => $response
+                ];
+            }
+
+            return [
+                'success' => $array['status'] === 'SUCCESS',
+                'status' => $array['status'] ?? 'UNKNOWN',
+                'message' => $array['message'] ?? 'No message received',
+                'balance' => $array['balance'] ?? 0,
+                'currency' => $array['currency'] ?? 'BDT',
+                'response' => $array
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('SMS balance check failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'SMS balance check failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     /**
