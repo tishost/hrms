@@ -15,6 +15,11 @@ class SmsService
     {
         $this->apiToken = config('services.sms.api_token', '');
         $this->senderId = config('services.sms.sender_id', '');
+        
+        // Check if API token is configured
+        if (empty($this->apiToken)) {
+            Log::warning('SMS API token is not configured');
+        }
     }
 
     /**
@@ -281,21 +286,77 @@ class SmsService
     public function testConnection()
     {
         try {
-            $testResponse = $this->makeApiRequest([
-                'api_token' => $this->apiToken,
-                'senderid' => $this->senderId,
-                'contact_number' => '8801700000000', // Test number
-                'message' => 'Test SMS from Bari Manager',
+            // Check if API token is configured
+            if (empty($this->apiToken)) {
+                return [
+                    'success' => false,
+                    'message' => 'SMS API token is not configured. Please add your API token in the settings.'
+                ];
+            }
+            
+            // Use balance API to test connection instead of sending SMS
+            $balanceUrl = 'https://api.smsinbd.com/sms-api/balance?api_token=' . $this->apiToken;
+            
+            $ch = curl_init($balanceUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'BariManager/1.0');
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($error) {
+                throw new \Exception('cURL Error: ' . $error);
+            }
+
+            // Log the response for debugging
+            Log::info('SMS API Response', [
+                'http_code' => $httpCode,
+                'response' => $response,
+                'url' => $balanceUrl
             ]);
 
-            $result = $this->processResponse($testResponse);
+            if ($httpCode !== 200) {
+                throw new \Exception('HTTP Error: ' . $httpCode . ' - Response: ' . $response);
+            }
+
+            // Clean response from unwanted characters
+            $cleanResponse = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $response);
+            $array = json_decode($cleanResponse, true);
+
+            if (!$array) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid response from SMS gateway. Response: ' . $response,
+                    'response' => $response
+                ];
+            }
+
+            // Check if API token is valid
+            if ($array['status'] === 'success') {
+                return [
+                    'success' => true,
+                    'message' => 'SMS gateway connection successful! API token is valid.',
+                    'balance' => $array['mask'] ?? 0,
+                    'response' => $array
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'SMS gateway connection failed: ' . ($array['message'] ?? 'Unknown error'),
+                    'response' => $array
+                ];
+            }
             
-            return [
-                'success' => true,
-                'message' => 'SMS gateway connection test completed',
-                'test_result' => $result
-            ];
         } catch (\Exception $e) {
+            Log::error('SMS connection test failed', [
+                'error' => $e->getMessage(),
+                'api_token' => !empty($this->apiToken) ? 'configured' : 'not configured'
+            ]);
+            
             return [
                 'success' => false,
                 'message' => 'SMS gateway connection test failed: ' . $e->getMessage()
