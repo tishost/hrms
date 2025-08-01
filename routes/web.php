@@ -247,6 +247,14 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::put('settings/chat', [App\Http\Controllers\Admin\ChatSettingsController::class, 'update'])->name('settings.chat.update');
     Route::get('settings/chat/test', [App\Http\Controllers\Admin\ChatSettingsController::class, 'testChat'])->name('settings.chat.test');
     Route::get('settings/chat/settings', [App\Http\Controllers\Admin\ChatSettingsController::class, 'getChatSettings'])->name('settings.chat.settings');
+    
+    // SMS Settings Routes
+    Route::get('settings/sms', [App\Http\Controllers\Admin\SmsSettingsController::class, 'index'])->name('settings.sms');
+    Route::put('settings/sms', [App\Http\Controllers\Admin\SmsSettingsController::class, 'update'])->name('settings.sms.update');
+    Route::post('settings/sms/test', [App\Http\Controllers\Admin\SmsSettingsController::class, 'testSms'])->name('settings.sms.test');
+    Route::get('settings/sms/test-connection', [App\Http\Controllers\Admin\SmsSettingsController::class, 'testConnection'])->name('settings.sms.test-connection');
+    Route::get('settings/sms/settings', [App\Http\Controllers\Admin\SmsSettingsController::class, 'getSmsSettings'])->name('settings.sms.settings');
+    Route::post('settings/sms/bulk', [App\Http\Controllers\Admin\SmsSettingsController::class, 'sendBulkSms'])->name('settings.sms.bulk');
 });
 
 // API OTP Settings Route (Public)

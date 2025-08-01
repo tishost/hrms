@@ -272,6 +272,10 @@
                                    href="{{ route('admin.settings.chat') }}">
                                     <i class="fas fa-comments me-2"></i>Chat Settings
                                 </a>
+                                <a class="dropdown-item {{ request()->routeIs('admin.settings.sms.*') ? 'active' : '' }}"
+                                   href="{{ route('admin.settings.sms') }}">
+                                    <i class="fas fa-sms me-2"></i>SMS Settings
+                                </a>
                         </li>
                         <li>
                             <a class="dropdown-item {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"
