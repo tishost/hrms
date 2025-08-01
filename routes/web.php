@@ -265,7 +265,7 @@ Route::post('/chat/request-agent', [App\Http\Controllers\ChatController::class, 
 Route::get('/chat/agent-availability', [App\Http\Controllers\ChatController::class, 'checkAgentAvailability'])->name('chat.agent-availability');
 
 // Agent Routes
-Route::middleware(['auth', 'role:admin|agent'])->prefix('admin/chat')->name('admin.chat.')->group(function () {
+Route::middleware(['auth', 'role:admin|super_admin|agent'])->prefix('admin/chat')->name('admin.chat.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Admin\ChatAgentController::class, 'dashboard'])->name('dashboard');
     Route::get('/session/{sessionId}', [App\Http\Controllers\Admin\ChatAgentController::class, 'getSession'])->name('session');
     Route::post('/send-message', [App\Http\Controllers\Admin\ChatAgentController::class, 'sendMessage'])->name('send-message');
