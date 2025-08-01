@@ -1022,6 +1022,9 @@
             // Generate session ID
             const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             
+            // Track last message timestamp for polling
+            let lastMessageTimestamp = Date.now();
+            
             // Chat responses
             const responses = {
                 'pricing': {
@@ -1061,6 +1064,11 @@
                     
                     if (!response.ok) {
                         console.error('Failed to store chat message');
+                    } else {
+                        // Update timestamp for user messages
+                        if (messageType === 'user') {
+                            lastMessageTimestamp = Date.now();
+                        }
                     }
                 } catch (error) {
                     console.error('Error storing chat message:', error);
@@ -1113,6 +1121,9 @@
                 
                 // Store bot message
                 storeMessage(message, 'bot', intent);
+                
+                // Update timestamp for bot messages
+                lastMessageTimestamp = Date.now();
             }
             
             // Handle send button
@@ -1240,6 +1251,67 @@
                 }
             }
             
+            // Check for new messages from agents
+            async function checkForNewMessages() {
+                try {
+                    const response = await fetch(`{{ route('chat.session', 'SESSION_ID') }}`.replace('SESSION_ID', sessionId));
+                    const data = await response.json();
+                    
+                    if (data.success && data.data.messages) {
+                        const messages = data.data.messages;
+                        const newMessages = messages.filter(msg => 
+                            new Date(msg.created_at).getTime() > lastMessageTimestamp && 
+                            msg.message_type === 'agent'
+                        );
+                        
+                        if (newMessages.length > 0) {
+                            // Update timestamp
+                            lastMessageTimestamp = Math.max(...newMessages.map(msg => new Date(msg.created_at).getTime()));
+                            
+                            // Display new agent messages
+                            newMessages.forEach(message => {
+                                const messageDiv = document.createElement('div');
+                                messageDiv.className = 'flex items-start space-x-2';
+                                messageDiv.innerHTML = `
+                                    <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user-tie text-white text-sm"></i>
+                                    </div>
+                                    <div class="bg-green-100 rounded-lg p-3 max-w-xs">
+                                        <p class="text-sm text-gray-800 mb-1"><strong>Agent:</strong></p>
+                                        <p class="text-sm text-gray-800">${message.message}</p>
+                                        <small class="text-xs text-gray-500">${new Date(message.created_at).toLocaleTimeString()}</small>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(messageDiv);
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                
+                                // Play notification sound for agent messages
+                                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                                audio.play().catch(e => console.log('Audio play failed:', e));
+                            });
+                            
+                            // Show agent joined notification
+                            if (newMessages.length === 1) {
+                                const notificationDiv = document.createElement('div');
+                                notificationDiv.className = 'flex items-start space-x-2';
+                                notificationDiv.innerHTML = `
+                                    <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user-tie text-white text-sm"></i>
+                                    </div>
+                                    <div class="bg-green-100 rounded-lg p-3 max-w-xs">
+                                        <p class="text-sm text-green-800"><strong>🎉 Agent joined the conversation!</strong></p>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(notificationDiv);
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking for new messages:', error);
+                }
+            }
+            
             // Auto-hide chat after 30 seconds of inactivity
             let chatTimeout;
             function resetChatTimeout() {
@@ -1256,6 +1328,9 @@
             chatButton.addEventListener('click', resetChatTimeout);
             chatInput.addEventListener('input', resetChatTimeout);
             sendMessage.addEventListener('click', resetChatTimeout);
+            
+            // Start polling for new messages from agents
+            setInterval(checkForNewMessages, 3000); // Check every 3 seconds
         });
     </script>
 
