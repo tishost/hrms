@@ -260,7 +260,7 @@
                         <li>
                             <a class="dropdown-item {{ request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
                                href="{{ route('admin.otp-settings.index') }}">
-                                <i class="fas fa-mobile-alt me-2"></i>SMS Settings
+                                <i class="fas fa-mobile-alt me-2"></i>OTP Settings
                             </a>
                         </li>
                         <li>
