@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'OTP Settings')
+@section('title', 'SMS Settings')
 
 @section('content')
 <div class="container-fluid">
@@ -10,9 +10,9 @@
                 <div class="card-header">
                     <h4 class="card-title">
                         <i class="fas fa-sms me-2"></i>
-                        OTP Gateway Settings
+                        SMS Gateway Settings
                     </h4>
-                    <p class="text-muted mb-0">Configure your OTP gateway and automated messaging system</p>
+                    <p class="text-muted mb-0">Configure your SMS gateway and automated messaging system</p>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
