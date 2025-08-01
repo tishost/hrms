@@ -945,5 +945,246 @@
             });
         });
     </script>
+
+    <!-- Live Chat Widget -->
+    <div id="live-chat-widget" class="fixed bottom-4 right-4 z-50">
+        <!-- Chat Button -->
+        <div id="chat-button" class="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-4 shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-110">
+            <i class="fas fa-comments text-xl"></i>
+        </div>
+        
+        <!-- Chat Window -->
+        <div id="chat-window" class="hidden bg-white rounded-lg shadow-2xl w-80 h-96 mb-4 border border-gray-200">
+            <!-- Chat Header -->
+            <div class="bg-purple-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                    <span class="font-semibold">Bari Manager Support</span>
+                </div>
+                <button id="close-chat" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="h-64 overflow-y-auto p-4 space-y-3">
+                <!-- Welcome Message -->
+                <div class="flex items-start space-x-2">
+                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-headset text-white text-sm"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm text-gray-800">Hello! 👋 Welcome to Bari Manager. How can I help you today?</p>
+                    </div>
+                </div>
+                
+                <!-- Quick Options -->
+                <div class="flex items-start space-x-2">
+                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-headset text-white text-sm"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm text-gray-800 mb-2">Quick options:</p>
+                        <div class="space-y-1">
+                            <button class="quick-option text-xs bg-white px-2 py-1 rounded border hover:bg-gray-50" data-option="pricing">💰 Pricing & Plans</button>
+                            <button class="quick-option text-xs bg-white px-2 py-1 rounded border hover:bg-gray-50" data-option="demo">🎥 Request Demo</button>
+                            <button class="quick-option text-xs bg-white px-2 py-1 rounded border hover:bg-gray-50" data-option="support">🛠️ Technical Support</button>
+                            <button class="quick-option text-xs bg-white px-2 py-1 rounded border hover:bg-gray-50" data-option="features">✨ Features</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" placeholder="Type your message..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <button id="send-message" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-paper-plane text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Chat JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatButton = document.getElementById('chat-button');
+            const chatWindow = document.getElementById('chat-window');
+            const closeChat = document.getElementById('close-chat');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendMessage = document.getElementById('send-message');
+            
+            // Generate session ID
+            const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Chat responses
+            const responses = {
+                'pricing': {
+                    message: 'Our pricing plans start from free! We offer:\n\n🆓 Free Plan: Up to 5 properties\n💰 Basic Plan: $9/month - 20 properties\n🚀 Pro Plan: $19/month - Unlimited properties\n\nWould you like to see detailed features?',
+                    intent: 'pricing'
+                },
+                'demo': {
+                    message: 'Great! I\'d be happy to arrange a demo for you. Please provide your email and preferred time, or you can schedule directly at: https://barimanager.com/demo',
+                    intent: 'demo'
+                },
+                'support': {
+                    message: 'For technical support, you can:\n\n📧 Email: support@barimanager.com\n📞 Phone: +880-1234-567890\n🕒 Hours: 9 AM - 6 PM (GMT+6)\n\nWhat specific issue are you facing?',
+                    intent: 'support'
+                },
+                'features': {
+                    message: 'Bari Manager includes:\n\n🏠 Property Management\n👥 Tenant Management\n💰 Rent Collection\n🛠️ Maintenance Tracking\n📊 Analytics & Reports\n📱 Mobile App\n\nWhich feature interests you most?',
+                    intent: 'features'
+                }
+            };
+            
+            // Store message in database
+            async function storeMessage(message, messageType, intent = null) {
+                try {
+                    const response = await fetch('{{ route("chat.store") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            message: message,
+                            message_type: messageType,
+                            intent: intent
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        console.error('Failed to store chat message');
+                    }
+                } catch (error) {
+                    console.error('Error storing chat message:', error);
+                }
+            }
+            
+            // Toggle chat window
+            chatButton.addEventListener('click', function() {
+                chatWindow.classList.toggle('hidden');
+                chatButton.classList.toggle('hidden');
+            });
+            
+            closeChat.addEventListener('click', function() {
+                chatWindow.classList.add('hidden');
+                chatButton.classList.remove('hidden');
+            });
+            
+            // Send message
+            function sendUserMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex items-start space-x-2 justify-end';
+                messageDiv.innerHTML = `
+                    <div class="bg-purple-600 text-white rounded-lg p-3 max-w-xs">
+                        <p class="text-sm">${message}</p>
+                    </div>
+                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                `;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Store user message
+                storeMessage(message, 'user');
+            }
+            
+            function sendBotMessage(message, intent = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex items-start space-x-2';
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-headset text-white text-sm"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm text-gray-800 whitespace-pre-line">${message}</p>
+                    </div>
+                `;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Store bot message
+                storeMessage(message, 'bot', intent);
+            }
+            
+            // Handle send button
+            sendMessage.addEventListener('click', function() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    sendUserMessage(message);
+                    chatInput.value = '';
+                    
+                    // Simulate bot response
+                    setTimeout(() => {
+                        const botResponse = getBotResponse(message.toLowerCase());
+                        sendBotMessage(botResponse.message, botResponse.intent);
+                    }, 1000);
+                }
+            });
+            
+            // Handle enter key
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage.click();
+                }
+            });
+            
+            // Quick option buttons
+            document.querySelectorAll('.quick-option').forEach(button => {
+                button.addEventListener('click', function() {
+                    const option = this.dataset.option;
+                    const response = responses[option];
+                    if (response) {
+                        sendUserMessage(this.textContent);
+                        setTimeout(() => {
+                            sendBotMessage(response.message, response.intent);
+                        }, 500);
+                    }
+                });
+            });
+            
+            // Get bot response based on user message
+            function getBotResponse(message) {
+                if (message.includes('price') || message.includes('cost') || message.includes('plan')) {
+                    return responses.pricing;
+                } else if (message.includes('demo') || message.includes('show') || message.includes('tour')) {
+                    return responses.demo;
+                } else if (message.includes('support') || message.includes('help') || message.includes('issue')) {
+                    return responses.support;
+                } else if (message.includes('feature') || message.includes('what') || message.includes('can')) {
+                    return responses.features;
+                } else {
+                    return {
+                        message: 'Thank you for your message! Our team will get back to you soon. In the meantime, you can check our pricing plans or request a demo. How else can I help you?',
+                        intent: 'general'
+                    };
+                }
+            }
+            
+            // Auto-hide chat after 30 seconds of inactivity
+            let chatTimeout;
+            function resetChatTimeout() {
+                clearTimeout(chatTimeout);
+                chatTimeout = setTimeout(() => {
+                    if (!chatWindow.classList.contains('hidden')) {
+                        chatWindow.classList.add('hidden');
+                        chatButton.classList.remove('hidden');
+                    }
+                }, 30000);
+            }
+            
+            // Reset timeout on any interaction
+            chatButton.addEventListener('click', resetChatTimeout);
+            chatInput.addEventListener('input', resetChatTimeout);
+            sendMessage.addEventListener('click', resetChatTimeout);
+        });
+    </script>
+
 </body>
 </html>

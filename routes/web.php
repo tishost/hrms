@@ -257,4 +257,9 @@ Route::get('/robots.txt', function() {
     return response($robots, 200, ['Content-Type' => 'text/plain']);
 });
 
+// Chat Routes
+Route::post('/chat/message', [App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+Route::get('/chat/analytics', [App\Http\Controllers\ChatController::class, 'analytics'])->name('chat.analytics');
+Route::get('/chat/session/{sessionId}', [App\Http\Controllers\ChatController::class, 'session'])->name('chat.session');
+
 require __DIR__.'/auth.php';
