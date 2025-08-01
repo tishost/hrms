@@ -101,6 +101,10 @@ class SeoSettingsController extends Controller
         ]);
 
         try {
+            // Define all checkbox fields
+            $checkboxFields = ['seo_breadcrumb_enabled', 'seo_sitemap_enabled', 'seo_hreflang_enabled', 'seo_lazy_loading_enabled', 'seo_minify_enabled', 'seo_compression_enabled'];
+            
+            // Process all form fields
             foreach ($request->except(['_token', '_method']) as $key => $value) {
                 // Handle null values for checkboxes
                 if ($value === null) {
@@ -108,7 +112,7 @@ class SeoSettingsController extends Controller
                 }
                 
                 // Convert boolean values to string
-                if (in_array($key, ['seo_breadcrumb_enabled', 'seo_sitemap_enabled', 'seo_hreflang_enabled', 'seo_lazy_loading_enabled', 'seo_minify_enabled', 'seo_compression_enabled'])) {
+                if (in_array($key, $checkboxFields)) {
                     $value = $value ? '1' : '0';
                 }
                 
@@ -119,6 +123,13 @@ class SeoSettingsController extends Controller
                 }
                 
                 SystemSetting::updateOrCreate(['key' => $key], ['value' => $value]);
+            }
+            
+            // Handle unchecked checkboxes (they don't appear in request)
+            foreach ($checkboxFields as $checkboxField) {
+                if (!$request->has($checkboxField)) {
+                    SystemSetting::updateOrCreate(['key' => $checkboxField], ['value' => '0']);
+                }
             }
 
             // Clear cache
