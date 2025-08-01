@@ -10,11 +10,6 @@ use Illuminate\Http\JsonResponse;
 
 class ChatAgentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('role:admin|super_admin|agent');
-    }
 
     /**
      * Show agent dashboard
