@@ -141,7 +141,12 @@ class SmsSettingsController extends Controller
         ]);
 
         try {
-            $smsService = new SmsService();
+            // Get SMS settings from database
+            $settings = SystemSetting::where('key', 'like', 'sms_%')->pluck('value', 'key');
+            $apiToken = $settings['sms_api_token'] ?? '';
+            $senderId = $settings['sms_sender_id'] ?? '';
+            
+            $smsService = new SmsService($apiToken, $senderId);
             
             // Test the SMS gateway
             $result = $smsService->sendSms($request->test_number, $request->test_message);
@@ -172,7 +177,12 @@ class SmsSettingsController extends Controller
         $this->checkSuperAdmin();
 
         try {
-            $smsService = new SmsService();
+            // Get SMS settings from database
+            $settings = SystemSetting::where('key', 'like', 'sms_%')->pluck('value', 'key');
+            $apiToken = $settings['sms_api_token'] ?? '';
+            $senderId = $settings['sms_sender_id'] ?? '';
+            
+            $smsService = new SmsService($apiToken, $senderId);
             $result = $smsService->testConnection();
             
             return response()->json($result);
@@ -225,7 +235,12 @@ class SmsSettingsController extends Controller
         ]);
 
         try {
-            $smsService = new SmsService();
+            // Get SMS settings from database
+            $settings = SystemSetting::where('key', 'like', 'sms_%')->pluck('value', 'key');
+            $apiToken = $settings['sms_api_token'] ?? '';
+            $senderId = $settings['sms_sender_id'] ?? '';
+            
+            $smsService = new SmsService($apiToken, $senderId);
             
             // Split phone numbers by comma or space
             $phoneNumbers = preg_split('/[, ]+/', $request->phone_numbers);
@@ -254,7 +269,12 @@ class SmsSettingsController extends Controller
         $this->checkSuperAdmin();
 
         try {
-            $smsService = new SmsService();
+            // Get SMS settings from database
+            $settings = SystemSetting::where('key', 'like', 'sms_%')->pluck('value', 'key');
+            $apiToken = $settings['sms_api_token'] ?? '';
+            $senderId = $settings['sms_sender_id'] ?? '';
+            
+            $smsService = new SmsService($apiToken, $senderId);
             $result = $smsService->getBalance();
             
             return response()->json($result);

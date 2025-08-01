@@ -12,10 +12,11 @@ class SmsService
     private $senderId;
     private $balanceUrl;
 
-    public function __construct()
+    public function __construct($apiToken = null, $senderId = null)
     {
-        $this->apiToken = config('services.sms.api_token', '');
-        $this->senderId = config('services.sms.sender_id', '');
+        // If parameters are provided, use them; otherwise use config
+        $this->apiToken = $apiToken ?? config('services.sms.api_token', '');
+        $this->senderId = $senderId ?? config('services.sms.sender_id', '');
         $this->apiUrl = config('services.sms.api_url', '');
         $this->balanceUrl = config('services.sms.balance_url', '');
         
