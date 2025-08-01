@@ -349,7 +349,7 @@ async function openChat(sessionId) {
     document.getElementById('current-session-id').textContent = sessionId;
     
     try {
-        const response = await fetch(`{{ route('admin.chat.session', '') }}/${sessionId}`);
+        const response = await fetch(`{{ route('admin.chat.session', 'SESSION_ID') }}`.replace('SESSION_ID', sessionId));
         const data = await response.json();
         
         if (data.success) {
