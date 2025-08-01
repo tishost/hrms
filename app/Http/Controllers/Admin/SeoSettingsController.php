@@ -46,7 +46,7 @@ class SeoSettingsController extends Controller
             // Default SEO settings
             $seoSettings = [
                 'seo_meta_title' => $settings['seo_meta_title'] ?? 'Bari Manager - Complete Property Management Solution',
-                'seo_meta_description' => $settings['seo_meta_description'] ?? 'Manage your properties, tenants, and rentals with our comprehensive property management system. Features include tenant management, rent collection, maintenance tracking, and more.',
+                'seo_meta_description' => $settings['seo_meta_description'] ?? 'Manage your properties, tenants, and rentals with our comprehensive property management system. Features include tenant management and rent collection.',
                 'seo_meta_keywords' => $settings['seo_meta_keywords'] ?? 'property management, tenant management, rent collection, maintenance tracking, real estate software',
                 'seo_og_title' => $settings['seo_og_title'] ?? 'Bari Manager - Complete Property Management Solution',
                 'seo_og_description' => $settings['seo_og_description'] ?? 'Streamline your property management with our comprehensive solution. Manage tenants, collect rent, track maintenance, and more.',
