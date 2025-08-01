@@ -102,9 +102,20 @@ class SeoSettingsController extends Controller
 
         try {
             foreach ($request->except(['_token', '_method']) as $key => $value) {
+                // Handle null values for checkboxes
+                if ($value === null) {
+                    $value = '';
+                }
+                
                 // Convert boolean values to string
                 if (in_array($key, ['seo_breadcrumb_enabled', 'seo_sitemap_enabled', 'seo_hreflang_enabled', 'seo_lazy_loading_enabled', 'seo_minify_enabled', 'seo_compression_enabled'])) {
                     $value = $value ? '1' : '0';
+                }
+                
+                // Handle optional fields - delete if empty
+                if (empty($value) && in_array($key, ['seo_google_analytics', 'seo_facebook_pixel', 'seo_schema_org', 'seo_og_image', 'seo_twitter_image', 'seo_meta_keywords'])) {
+                    SystemSetting::where('key', $key)->delete();
+                    continue;
                 }
                 
                 SystemSetting::updateOrCreate(['key' => $key], ['value' => $value]);
