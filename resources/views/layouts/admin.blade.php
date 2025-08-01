@@ -264,10 +264,14 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.seo') }}">
-                                <i class="fas fa-search me-2"></i>SEO Settings
-                            </a>
+                                                            <a class="dropdown-item {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
+                                   href="{{ route('admin.settings.seo') }}">
+                                    <i class="fas fa-search me-2"></i>SEO Settings
+                                </a>
+                                <a class="dropdown-item {{ request()->routeIs('admin.settings.chat.*') ? 'active' : '' }}"
+                                   href="{{ route('admin.settings.chat') }}">
+                                    <i class="fas fa-comments me-2"></i>Chat Settings
+                                </a>
                         </li>
                         <li>
                             <a class="dropdown-item {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"

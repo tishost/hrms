@@ -241,6 +241,12 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('settings/seo/sitemap', [App\Http\Controllers\Admin\SeoSettingsController::class, 'generateSitemap'])->name('settings.seo.sitemap');
     Route::post('settings/seo/robots', [App\Http\Controllers\Admin\SeoSettingsController::class, 'generateRobotsTxt'])->name('settings.seo.robots');
     Route::post('settings/seo/preview', [App\Http\Controllers\Admin\SeoSettingsController::class, 'previewSeo'])->name('settings.seo.preview');
+    
+    // Chat Settings Routes
+    Route::get('settings/chat', [App\Http\Controllers\Admin\ChatSettingsController::class, 'index'])->name('settings.chat');
+    Route::put('settings/chat', [App\Http\Controllers\Admin\ChatSettingsController::class, 'update'])->name('settings.chat.update');
+    Route::get('settings/chat/test', [App\Http\Controllers\Admin\ChatSettingsController::class, 'testChat'])->name('settings.chat.test');
+    Route::get('settings/chat/settings', [App\Http\Controllers\Admin\ChatSettingsController::class, 'getChatSettings'])->name('settings.chat.settings');
 });
 
 // API OTP Settings Route (Public)

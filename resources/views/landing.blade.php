@@ -949,6 +949,12 @@
     </script>
 
     <!-- Live Chat Widget -->
+    @php
+        $chatSettings = \App\Models\SystemSetting::where('key', 'like', 'chat_%')->pluck('value', 'key');
+        $chatEnabled = $chatSettings['chat_enabled'] ?? '1';
+    @endphp
+    
+    @if($chatEnabled == '1')
     <div id="live-chat-widget" class="fixed bottom-4 right-4 z-50">
         <!-- Chat Button -->
         <div id="chat-button" class="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-4 shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-110">
@@ -961,7 +967,7 @@
             <div class="bg-purple-600 text-white p-4 rounded-t-lg flex justify-between items-center">
                 <div class="flex items-center">
                     <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
-                    <span class="font-semibold">Bari Manager Support</span>
+                    <span class="font-semibold">{{ $chatSettings['chat_bot_name'] ?? 'Bari Manager Support' }}</span>
                 </div>
                 <button id="close-chat" class="text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
@@ -976,7 +982,7 @@
                         <i class="fas fa-headset text-white text-sm"></i>
                     </div>
                     <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
-                        <p class="text-sm text-gray-800">Hello! 👋 Welcome to Bari Manager. How can I help you today?</p>
+                        <p class="text-sm text-gray-800">{{ $chatSettings['chat_welcome_message'] ?? 'Hello! 👋 Welcome to Bari Manager. How can I help you today?' }}</p>
                     </div>
                 </div>
                 
@@ -1615,6 +1621,7 @@
             setInterval(checkForNewMessages, 3000); // Check every 3 seconds
         });
     </script>
+    @endif
 
 </body>
 </html>
