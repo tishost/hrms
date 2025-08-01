@@ -10,11 +10,14 @@ class SmsService
     private $apiUrl = 'https://api.smsinbd.com/sms-api/sendsms';
     private $apiToken;
     private $senderId;
+    private $balanceUrl;
 
     public function __construct()
     {
         $this->apiToken = config('services.sms.api_token', '');
         $this->senderId = config('services.sms.sender_id', '');
+        $this->apiUrl = config('services.sms.api_url', '');
+        $this->balanceUrl = config('services.sms.balance_url', '');
         
         // Check if API token is configured
         if (empty($this->apiToken)) {
@@ -174,8 +177,16 @@ class SmsService
             ];
         }
 
+        // Check for success/error status based on API format
+        $isSuccess = false;
+        if (isset($array['status'])) {
+            // Check for success status (could be 'success', 'SUCCESS', or other variations)
+            $status = strtolower($array['status']);
+            $isSuccess = in_array($status, ['success', 'ok', 'sent', 'delivered']);
+        }
+
         $result = [
-            'success' => $array['status'] === 'SUCCESS',
+            'success' => $isSuccess,
             'status' => $array['status'] ?? 'UNKNOWN',
             'message' => $array['message'] ?? 'No message received',
             'response' => $array
@@ -227,7 +238,7 @@ class SmsService
     public function getBalance()
     {
         try {
-            $balanceUrl = 'https://api.smsinbd.com/sms-api/balance?api_token=' . $this->apiToken;
+            $balanceUrl = $this->balanceUrl . '?api_token=' . $this->apiToken;
             
             $ch = curl_init($balanceUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -295,7 +306,7 @@ class SmsService
             }
             
             // Use balance API to test connection instead of sending SMS
-            $balanceUrl = 'https://api.smsinbd.com/sms-api/balance?api_token=' . $this->apiToken;
+            $balanceUrl = $this->balanceUrl . '?api_token=' . $this->apiToken;
             
             $ch = curl_init($balanceUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -336,7 +347,8 @@ class SmsService
             }
 
             // Check if API token is valid
-            if ($array['status'] === 'success') {
+            $status = strtolower($array['status'] ?? '');
+            if (in_array($status, ['success', 'ok'])) {
                 return [
                     'success' => true,
                     'message' => 'SMS gateway connection successful! API token is valid.',

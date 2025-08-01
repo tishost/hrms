@@ -35,6 +35,7 @@ return [
         'api_token' => env('SMS_API_TOKEN', ''),
         'sender_id' => env('SMS_SENDER_ID', 'BARI MANAGER'),
         'api_url' => env('SMS_API_URL', 'https://api.smsinbd.com/sms-api/sendsms'),
+        'balance_url' => env('SMS_BALANCE_URL', 'https://api.smsinbd.com/sms-api/balance'),
     ],
 
 ];
