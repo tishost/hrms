@@ -16,11 +16,15 @@ return new class extends Migration
             $table->string('session_id')->index();
             $table->string('visitor_ip')->nullable();
             $table->string('visitor_user_agent')->nullable();
-            $table->enum('message_type', ['user', 'bot'])->default('user');
+            $table->enum('message_type', ['user', 'bot', 'agent'])->default('user');
             $table->text('message');
             $table->string('intent')->nullable(); // pricing, demo, support, features
+            $table->unsignedBigInteger('agent_id')->nullable(); // Agent who responded
+            $table->enum('status', ['active', 'waiting', 'resolved', 'transferred'])->default('active');
             $table->json('metadata')->nullable(); // Additional data
             $table->timestamps();
+            
+            $table->foreign('agent_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

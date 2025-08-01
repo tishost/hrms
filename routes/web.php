@@ -261,5 +261,19 @@ Route::get('/robots.txt', function() {
 Route::post('/chat/message', [App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
 Route::get('/chat/analytics', [App\Http\Controllers\ChatController::class, 'analytics'])->name('chat.analytics');
 Route::get('/chat/session/{sessionId}', [App\Http\Controllers\ChatController::class, 'session'])->name('chat.session');
+Route::post('/chat/request-agent', [App\Http\Controllers\ChatController::class, 'requestAgent'])->name('chat.request-agent');
+Route::get('/chat/agent-availability', [App\Http\Controllers\ChatController::class, 'checkAgentAvailability'])->name('chat.agent-availability');
+
+// Agent Routes
+Route::middleware(['auth', 'role:admin|agent'])->prefix('admin/chat')->name('admin.chat.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\ChatAgentController::class, 'dashboard'])->name('dashboard');
+    Route::get('/session/{sessionId}', [App\Http\Controllers\Admin\ChatAgentController::class, 'getSession'])->name('session');
+    Route::post('/send-message', [App\Http\Controllers\Admin\ChatAgentController::class, 'sendMessage'])->name('send-message');
+    Route::post('/take-session', [App\Http\Controllers\Admin\ChatAgentController::class, 'takeSession'])->name('take-session');
+    Route::post('/resolve-session', [App\Http\Controllers\Admin\ChatAgentController::class, 'resolveSession'])->name('resolve-session');
+    Route::get('/waiting-sessions', [App\Http\Controllers\Admin\ChatAgentController::class, 'getWaitingSessions'])->name('waiting-sessions');
+    Route::get('/my-sessions', [App\Http\Controllers\Admin\ChatAgentController::class, 'getMySessions'])->name('my-sessions');
+    Route::get('/analytics', [App\Http\Controllers\Admin\ChatAgentController::class, 'getAnalytics'])->name('analytics');
+});
 
 require __DIR__.'/auth.php';

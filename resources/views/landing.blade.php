@@ -1124,6 +1124,11 @@
                     setTimeout(() => {
                         const botResponse = getBotResponse(message.toLowerCase());
                         sendBotMessage(botResponse.message, botResponse.intent);
+                        
+                        // Handle agent transfer
+                        if (botResponse.transfer) {
+                            requestAgentTransfer();
+                        }
                     }, 1000);
                 }
             });
@@ -1159,11 +1164,40 @@
                     return responses.support;
                 } else if (message.includes('feature') || message.includes('what') || message.includes('can')) {
                     return responses.features;
+                } else if (message.includes('agent') || message.includes('human') || message.includes('person')) {
+                    return {
+                        message: 'I\'m transferring you to a human agent. Please wait a moment...',
+                        intent: 'agent_transfer',
+                        transfer: true
+                    };
                 } else {
                     return {
                         message: 'Thank you for your message! Our team will get back to you soon. In the meantime, you can check our pricing plans or request a demo. How else can I help you?',
                         intent: 'general'
                     };
+                }
+            }
+            
+            // Request agent transfer
+            async function requestAgentTransfer() {
+                try {
+                    const response = await fetch('{{ route("chat.request-agent") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            reason: 'User requested human agent'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        sendBotMessage('I\'m transferring you to a human agent. Please wait a moment...', 'agent_transfer');
+                    }
+                } catch (error) {
+                    console.error('Error requesting agent transfer:', error);
                 }
             }
             
