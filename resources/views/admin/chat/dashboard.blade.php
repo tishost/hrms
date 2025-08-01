@@ -267,8 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up event listeners
     setupEventListeners();
     
-    // Auto-refresh every 30 seconds
-    setInterval(refreshData, 30000);
+    // Auto-refresh every 10 seconds for real-time updates
+    setInterval(refreshData, 10000);
+    
+    // Check for new messages every 5 seconds
+    setInterval(checkNewMessages, 5000);
 });
 
 function setupEventListeners() {
@@ -463,6 +466,26 @@ async function refreshData() {
         
         if (data.success) {
             document.getElementById('waiting-sessions-count').textContent = data.data.length;
+            
+            // Update waiting sessions list
+            const waitingList = document.getElementById('waiting-sessions-list');
+            if (waitingList) {
+                waitingList.innerHTML = '';
+                data.data.forEach(session => {
+                    const sessionDiv = document.createElement('div');
+                    sessionDiv.className = 'd-flex justify-content-between align-items-center p-2 border-bottom';
+                    sessionDiv.innerHTML = `
+                        <div>
+                            <strong>Session: ${session.session_id}</strong><br>
+                            <small class="text-muted">${session.created_at}</small>
+                        </div>
+                        <button class="btn btn-sm btn-primary take-session-btn" data-session-id="${session.session_id}">
+                            <i class="fas fa-hand-paper"></i> Take
+                        </button>
+                    `;
+                    waitingList.appendChild(sessionDiv);
+                });
+            }
         }
     } catch (error) {
         console.error('Error refreshing data:', error);
@@ -475,9 +498,57 @@ async function refreshData() {
         
         if (data.success) {
             document.getElementById('my-sessions-count').textContent = data.data.length;
+            
+            // Update my sessions list
+            const mySessionsList = document.getElementById('my-sessions-list');
+            if (mySessionsList) {
+                mySessionsList.innerHTML = '';
+                data.data.forEach(session => {
+                    const sessionDiv = document.createElement('div');
+                    sessionDiv.className = 'd-flex justify-content-between align-items-center p-2 border-bottom';
+                    sessionDiv.innerHTML = `
+                        <div>
+                            <strong>Session: ${session.session_id}</strong><br>
+                            <small class="text-muted">${session.created_at}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-info open-chat-btn me-1" data-session-id="${session.session_id}">
+                                <i class="fas fa-comments"></i> Chat
+                            </button>
+                            <button class="btn btn-sm btn-success resolve-session-btn" data-session-id="${session.session_id}">
+                                <i class="fas fa-check"></i> Resolve
+                            </button>
+                        </div>
+                    `;
+                    mySessionsList.appendChild(sessionDiv);
+                });
+            }
         }
     } catch (error) {
         console.error('Error refreshing data:', error);
+    }
+    
+    // Re-attach event listeners after updating DOM
+    setupEventListeners();
+}
+
+async function checkNewMessages() {
+    try {
+        const response = await fetch('{{ route("admin.chat.waiting-sessions") }}');
+        const data = await response.json();
+        
+        if (data.success && data.data.length > 0) {
+            // Show notification for new waiting sessions
+            const currentCount = parseInt(document.getElementById('waiting-sessions-count').textContent || '0');
+            if (data.data.length > currentCount) {
+                showNotification('New chat session waiting!', 'info');
+                // Play notification sound
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+    } catch (error) {
+        console.error('Error checking new messages:', error);
     }
 }
 
@@ -494,6 +565,25 @@ function showAlert(message, type) {
     
     setTimeout(() => {
         alertDiv.remove();
+    }, 5000);
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'info' ? 'info-circle' : 'bell'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.remove();
     }, 5000);
 }
 </script>

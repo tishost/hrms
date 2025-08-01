@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('Bari Manager - House Rent Management System') }}</title>
     
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     {!! \App\Services\SeoService::renderMetaTags('landing') !!}
 
     <!-- Tailwind CSS -->
@@ -1195,9 +1197,46 @@
                     
                     if (response.ok) {
                         sendBotMessage('I\'m transferring you to a human agent. Please wait a moment...', 'agent_transfer');
+                        
+                        // Add a button to check agent availability
+                        const checkAgentDiv = document.createElement('div');
+                        checkAgentDiv.className = 'flex items-start space-x-2';
+                        checkAgentDiv.innerHTML = `
+                            <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-headset text-white text-sm"></i>
+                            </div>
+                            <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                                <p class="text-sm text-gray-800 mb-2">Checking agent availability...</p>
+                                <button id="check-agent-btn" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700">
+                                    Check Status
+                                </button>
+                            </div>
+                        `;
+                        chatMessages.appendChild(checkAgentDiv);
+                        
+                        // Add event listener to check agent button
+                        document.getElementById('check-agent-btn').addEventListener('click', checkAgentStatus);
                     }
                 } catch (error) {
                     console.error('Error requesting agent transfer:', error);
+                }
+            }
+            
+            // Check agent status
+            async function checkAgentStatus() {
+                try {
+                    const response = await fetch('{{ route("chat.agent-availability") }}');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.data.agent_available) {
+                            sendBotMessage('Great! An agent is available and will join the conversation shortly.', 'agent_status');
+                        } else {
+                            sendBotMessage('Agents are currently busy. Please wait or try again later.', 'agent_status');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking agent status:', error);
                 }
             }
             
