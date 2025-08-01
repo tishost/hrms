@@ -22,6 +22,13 @@ class RefreshSession
             Session::regenerate();
         }
 
+        // Regenerate CSRF token if it's expired
+        if ($request->isMethod('POST') || $request->isMethod('PUT') || $request->isMethod('PATCH') || $request->isMethod('DELETE')) {
+            if (!Session::has('_token') || !$request->hasValidSignature()) {
+                Session::regenerateToken();
+            }
+        }
+
         return $next($request);
     }
 }

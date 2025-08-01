@@ -121,11 +121,11 @@
                             </div>
 
                             <div class="form-actions">
-                                <a href="{{ route('owner.subscription.payment.success') }}?paymentID={{ $paymentData['paymentID'] }}&payerReference={{ $paymentData['invoice_number'] }}"
+                                <a href="{{ route('owner.subscription.payment.success') }}?paymentID={{ $paymentData['paymentID'] }}&payerReference={{ $paymentData['invoice_number'] }}&invoice_id={{ $paymentData['invoice_number'] }}"
                                    class="btn btn-success btn-lg" id="verify-payment-btn">
                                     <i class="fas fa-check"></i> Verify Payment
                                 </a>
-                                <a href="{{ route('owner.subscription.payment.cancel') }}" class="btn btn-secondary">
+                                <a href="{{ route('owner.subscription.payment.cancel') }}?paymentID={{ $paymentData['paymentID'] }}&payerReference={{ $paymentData['invoice_number'] }}&invoice_id={{ $paymentData['invoice_number'] }}" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Cancel Payment
                                 </a>
                             </div>

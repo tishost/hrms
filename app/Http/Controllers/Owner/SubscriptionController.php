@@ -51,9 +51,15 @@ class SubscriptionController extends Controller
             return redirect()->back()->with('error', 'You already have an active subscription. Please wait for it to expire before purchasing a new plan.');
         }
 
+        // Get the owner record for this user
+        $owner = $user->owner;
+        if (!$owner) {
+            return redirect()->back()->with('error', 'Owner profile not found. Please contact support.');
+        }
+
         // Create or update subscription
         $subscription = OwnerSubscription::updateOrCreate(
-            ['owner_id' => $user->id],
+            ['owner_id' => $owner->id],
             [
                 'plan_id' => $plan->id,
                 'status' => $plan->price > 0 ? 'pending' : 'active',
@@ -79,22 +85,94 @@ class SubscriptionController extends Controller
         return redirect()->route('owner.subscription.payment', ['invoice_id' => $invoice->id])->with('success', 'Invoice generated successfully. Please complete the payment.');
     }
 
-            public function billingHistory()
+    public function upgradePlan(Request $request)
     {
+        $request->validate([
+            'plan_id' => 'required|exists:subscription_plans,id'
+        ]);
+
         $user = Auth::user();
+        $newPlan = SubscriptionPlan::findOrFail($request->plan_id);
+        $currentSubscription = $user->activeSubscription;
 
-        // Load billing with all relationships
-        $billing = $user->billing()
-            ->with(['subscription.plan', 'paymentMethod'])
+        // Check if user has active subscription
+        if (!$currentSubscription || !$currentSubscription->isActive()) {
+            return redirect()->back()->with('error', 'No active subscription found.');
+        }
+
+        $currentPlan = $currentSubscription->plan;
+
+        // Check if it's an upgrade (higher price)
+        if ($newPlan->price <= $currentPlan->price) {
+            return redirect()->back()->with('error', 'You can only upgrade to a higher-priced plan.');
+        }
+
+        // Calculate price difference
+        $priceDifference = $newPlan->price - $currentPlan->price;
+
+        // Get the owner record
+        $owner = $user->owner;
+        if (!$owner) {
+            return redirect()->back()->with('error', 'Owner profile not found. Please contact support.');
+        }
+
+        // Create billing record for upgrade (unpaid status)
+        $billing = Billing::create([
+            'owner_id' => $owner->id,
+            'subscription_id' => $currentSubscription->id,
+            'invoice_number' => 'INV-UPGRADE-' . date('Y') . '-' . str_pad($currentSubscription->id, 6, '0', STR_PAD_LEFT),
+            'amount' => $priceDifference,
+            'status' => 'unpaid',
+            'payment_method' => 'upgrade',
+            'due_date' => now()->addDays(7),
+            'description' => "Upgrade from {$currentPlan->name} to {$newPlan->name} Plan"
+        ]);
+
+        // Update subscription plan but keep status pending until payment
+        $currentSubscription->update([
+            'plan_id' => $newPlan->id,
+            'status' => 'pending_upgrade'
+        ]);
+
+        // Redirect to payment page
+        return redirect()->route('owner.subscription.payment', ['invoice_id' => $billing->id])->with('success', 'Upgrade invoice generated. Please complete the payment to activate the new plan.');
+    }
+
+    public function billingHistory()
+    {
+        // Get the correct owner_id from the authenticated user
+        $user = Auth::user();
+        $owner = $user->owner;
+        $ownerId = $owner ? $owner->id : null;
+
+        if (!$ownerId) {
+            return redirect()->back()->with('error', 'Owner profile not found.');
+        }
+
+        $billingHistory = Billing::with(['subscription.plan', 'owner'])
+            ->where('owner_id', $ownerId)
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->get();
 
-        // Force load relationships for paginated results
-        $billing->getCollection()->load(['subscription.plan', 'paymentMethod']);
+        // Log for debugging
+        \Log::info('Billing History accessed', [
+            'user_id' => Auth::id(),
+            'owner_id' => $ownerId,
+            'user_owner_id' => Auth::user()->owner_id,
+            'total_bills' => $billingHistory->count(),
+            'bills' => $billingHistory->map(function($bill) {
+                return [
+                    'id' => $bill->id,
+                    'invoice_number' => $bill->invoice_number,
+                    'amount' => $bill->amount,
+                    'status' => $bill->status,
+                    'owner_id' => $bill->owner_id,
+                    'subscription_id' => $bill->subscription_id
+                ];
+            })->toArray()
+        ]);
 
-
-
-        return view('owner.subscription.billing', compact('billing'));
+        return view('owner.subscription.billing', compact('billingHistory'));
     }
 
     public function paymentMethods(Request $request)
@@ -102,21 +180,70 @@ class SubscriptionController extends Controller
         $invoiceId = $request->get('invoice_id');
         $pendingInvoice = null;
 
+        \Log::info('Payment page accessed', [
+            'invoice_id' => $invoiceId,
+            'user_id' => Auth::id(),
+            'user_email' => Auth::user()->email ?? 'not logged in'
+        ]);
+
         if ($invoiceId) {
+            // Get the correct owner_id from the authenticated user
+            $ownerId = Auth::user()->owner_id ?? Auth::id();
+
             $pendingInvoice = Billing::with(['subscription.plan', 'owner'])
                 ->where('id', $invoiceId)
-                ->where('owner_id', Auth::id())
-                ->where('status', 'pending')
+                ->where('owner_id', $ownerId)
+                ->whereIn('status', ['pending', 'unpaid', 'fail', 'cancel'])
                 ->first();
+
+            // Log for debugging
+            \Log::info('Payment page accessed with invoice_id', [
+                'invoice_id' => $invoiceId,
+                'pending_invoice_found' => $pendingInvoice ? true : false,
+                'user_id' => Auth::id(),
+                'owner_id' => $ownerId,
+                'user_owner_id' => Auth::user()->owner_id,
+                'invoice_details' => $pendingInvoice ? [
+                    'id' => $pendingInvoice->id,
+                    'amount' => $pendingInvoice->amount,
+                    'status' => $pendingInvoice->status,
+                    'owner_id' => $pendingInvoice->owner_id,
+                    'subscription_id' => $pendingInvoice->subscription_id
+                ] : null,
+                'query_conditions' => [
+                    'invoice_id' => $invoiceId,
+                    'owner_id' => $ownerId,
+                    'status' => ['pending', 'unpaid', 'fail', 'cancel']
+                ]
+            ]);
         } else {
+            // Get the correct owner_id from the authenticated user
+            $ownerId = Auth::user()->owner_id ?? Auth::id();
+
             // Get the most recent pending invoice
-            $pendingInvoice = Auth::user()->billing()
-                ->with(['subscription.plan'])
-                ->where('status', 'pending')
+            $pendingInvoice = Billing::with(['subscription.plan'])
+                ->where('owner_id', $ownerId)
+                ->whereIn('status', ['pending', 'unpaid', 'fail', 'cancel'])
                 ->latest()
                 ->first();
+
+            // Log for debugging
+            \Log::info('Payment page accessed without invoice_id', [
+                'pending_invoice_found' => $pendingInvoice ? true : false,
+                'user_id' => Auth::id(),
+                'owner_id' => $ownerId,
+                'user_owner_id' => Auth::user()->owner_id,
+                'invoice_details' => $pendingInvoice ? [
+                    'id' => $pendingInvoice->id,
+                    'amount' => $pendingInvoice->amount,
+                    'status' => $pendingInvoice->status,
+                    'owner_id' => $pendingInvoice->owner_id,
+                    'subscription_id' => $pendingInvoice->subscription_id
+                ] : null
+            ]);
         }
 
+        // Get payment methods
         $paymentMethods = PaymentMethod::where('is_active', true)->get();
 
         return view('owner.subscription.payment', compact('pendingInvoice', 'paymentMethods'));
@@ -163,39 +290,70 @@ class SubscriptionController extends Controller
 
     public function initiatePaymentGateway(Request $request)
     {
-        // Handle GET requests by redirecting to payment page
-        if ($request->isMethod('GET')) {
-            return redirect()->route('owner.subscription.payment');
-        }
+        // Log the request for debugging
+        \Log::info('initiatePaymentGateway method called', [
+            'method' => $request->method(),
+            'url' => $request->url(),
+            'invoice_id' => $request->input('invoice_id'),
+            'payment_method_id' => $request->input('payment_method_id'),
+            'all_data' => $request->all(),
+            'user_id' => Auth::id(),
+            'user_email' => Auth::user()->email ?? 'not logged in',
+            'headers' => $request->headers->all()
+        ]);
 
         $request->validate([
             'invoice_id' => 'required|exists:billing,id',
             'payment_method_id' => 'required|exists:payment_methods,id'
         ]);
 
-        $user = Auth::user();
-        $billing = Billing::with(['subscription.plan', 'paymentMethod'])
-            ->where('id', $request->invoice_id)
-            ->where('owner_id', $user->id)
-            ->where('status', 'pending')
-            ->firstOrFail();
+        // Handle GET requests by redirecting to payment page
+        if ($request->isMethod('GET')) {
+            \Log::info('GET request detected, redirecting to payment page');
+            return redirect()->route('owner.subscription.payment', ['invoice_id' => $request->invoice_id]);
+        }
 
-        $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
+        // Handle POST requests for payment processing
+        try {
+            $invoice = Billing::findOrFail($request->invoice_id);
+            $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
 
-        // Calculate total amount with fees
-        $invoiceAmount = $billing->amount;
-        $transactionFee = ($invoiceAmount * $paymentMethod->transaction_fee) / 100;
-        $totalAmount = $invoiceAmount + $transactionFee;
+            \Log::info('Payment processing started', [
+                'invoice_id' => $invoice->id,
+                'payment_method' => $paymentMethod->name,
+                'amount' => $invoice->amount
+            ]);
 
-        // Update billing with payment method
-        $billing->update([
-            'payment_method_id' => $paymentMethod->id,
-            'transaction_fee' => $transactionFee,
-            'net_amount' => $totalAmount
-        ]);
+            // Validate payment method
+            if (!$paymentMethod->is_active) {
+                throw new \Exception('Selected payment method is not active');
+            }
 
-        // Redirect to payment gateway based on payment method
-        return $this->redirectToPaymentGateway($billing, $paymentMethod);
+            // Calculate transaction fee
+            $transactionFee = ($invoice->amount * $paymentMethod->transaction_fee) / 100;
+            $totalAmount = $invoice->amount + $transactionFee;
+
+            // Update invoice with payment method
+            $invoice->update([
+                'payment_method_id' => $paymentMethod->id,
+                'transaction_fee' => $transactionFee,
+                'net_amount' => $totalAmount
+            ]);
+
+            \Log::info('Payment method updated', [
+                'invoice_id' => $invoice->id,
+                'payment_method_id' => $paymentMethod->id,
+                'transaction_fee' => $transactionFee,
+                'total_amount' => $totalAmount
+            ]);
+
+            // Redirect directly to payment gateway based on payment method
+            return $this->redirectToPaymentGateway($invoice, $paymentMethod);
+
+        } catch (\Exception $e) {
+            \Log::error('Payment processing error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Payment processing failed: ' . $e->getMessage());
+        }
     }
 
     private function redirectToPaymentGateway($billing, $paymentMethod)
@@ -307,18 +465,24 @@ class SubscriptionController extends Controller
             ]);
         }
 
-        $paymentData = [
-            'paymentID' => $paymentResult['paymentID'],
-            'bkashURL' => $paymentResult['bkashURL'],
-            'amount' => $amount,
-            'invoice_number' => $invoiceNumber,
-            'description' => $description,
-            'success_url' => route('owner.subscription.payment.success'),
-            'cancel_url' => route('owner.subscription.payment.cancel'),
-            'fail_url' => route('owner.subscription.payment.fail')
-        ];
+        // Redirect directly to bKash payment URL
+        if ($paymentResult['bkashURL'] && $paymentResult['bkashURL'] !== '#' && $paymentResult['bkashURL'] !== 'null') {
+            return redirect($paymentResult['bkashURL']);
+        } else {
+            // Fallback to manual payment page if URL is not available
+            $paymentData = [
+                'paymentID' => $paymentResult['paymentID'],
+                'bkashURL' => $paymentResult['bkashURL'],
+                'amount' => $amount,
+                'invoice_number' => $invoiceNumber,
+                'description' => $description,
+                'success_url' => route('owner.subscription.payment.success'),
+                'cancel_url' => route('owner.subscription.payment.cancel'),
+                'fail_url' => route('owner.subscription.payment.fail')
+            ];
 
-        return view('owner.subscription.payment_gateway.bkash', compact('paymentData'));
+            return view('owner.subscription.payment_gateway.bkash', compact('paymentData'));
+        }
     }
 
     private function redirectToNagad($amount, $invoiceNumber, $description)
@@ -365,149 +529,392 @@ class SubscriptionController extends Controller
         return view('owner.subscription.payment_gateway.bank_transfer', compact('billing'));
     }
 
-        public function paymentSuccess(Request $request)
+        /**
+     * Handle successful payment
+     */
+    public function paymentSuccess(Request $request)
     {
-        $paymentID = $request->get('paymentID');
+        \Log::info('Payment success page accessed', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
+        ]);
+
+        // Check bKash payment status
+        $paymentStatus = $request->get('status');
+        $paymentId = $request->get('paymentID');
         $payerReference = $request->get('payerReference');
-        $trxID = $request->get('trxID');
-        $status = $request->get('status');
+        $invoiceId = $request->get('invoice_id');
 
-        // Get stored payment data from session or localStorage
-        $sessionPaymentID = session('bkash_payment_id');
-        $sessionInvoiceNumber = session('bkash_invoice_number');
-        $sessionAmount = session('bkash_amount');
-        $sessionPayerReference = session('bkash_payer_reference');
-
-        // If paymentID is provided via URL (from bKash callback), use it
-        if ($paymentID && $status === 'success') {
-            $sessionPaymentID = $paymentID;
-            $sessionInvoiceNumber = $payerReference;
+        // If payment failed or cancelled, redirect to appropriate page
+        if ($paymentStatus === 'failure') {
+            \Log::info('Payment failed - redirecting to fail page', [
+                'payment_id' => $paymentId,
+                'status' => $paymentStatus,
+                'payer_reference' => $payerReference
+            ]);
+            
+            return redirect()->route('owner.subscription.payment.fail', [
+                'paymentID' => $paymentId,
+                'payerReference' => $payerReference,
+                'status' => $paymentStatus
+            ]);
         }
 
-        // If no session data, try to get from database using paymentID
-        if (!$sessionInvoiceNumber && $paymentID) {
-            // Try to find billing record by payment ID or create a test one
-            $billing = Billing::where('status', 'pending')
-                ->where('owner_id', Auth::id())
-                ->latest()
-                ->first();
+        // If payment cancelled, redirect to cancel page
+        if ($paymentStatus === 'cancel' || $paymentStatus === 'cancelled') {
+            \Log::info('Payment cancelled - redirecting to cancel page', [
+                'payment_id' => $paymentId,
+                'status' => 'unpaid',
+                'payer_reference' => $payerReference
+            ]);
+            
+            return redirect()->route('owner.subscription.payment.cancel', [
+                'paymentID' => $paymentId,
+                'payerReference' => $payerReference,
+                'status' => $paymentStatus
+            ]);
+        }
 
-            if ($billing) {
-                $sessionInvoiceNumber = $billing->invoice_number;
-                $sessionAmount = $billing->amount;
-                $sessionPayerReference = $billing->invoice_number;
+        // Find billing record by various methods
+        $billing = null;
+        
+        // Try to find by invoice_id
+        if ($invoiceId) {
+            $billing = Billing::with(['subscription.plan'])->find($invoiceId);
+        }
+        
+        // Try to find by payerReference (invoice number)
+        if (!$billing && $payerReference) {
+            $billing = Billing::with(['subscription.plan'])->where('invoice_number', $payerReference)->first();
+        }
+        
+        // Try to find by payment ID
+        if (!$billing && $paymentId) {
+            $billing = Billing::with(['subscription.plan'])->where('transaction_id', $paymentId)->first();
+        }
+
+        if ($billing) {
+            // Verify payment with bKash API
+            $paymentVerified = false;
+            $verificationDetails = null;
+            
+            if ($paymentId) {
+                try {
+                    $bkashService = new \App\Services\BkashTokenizedService();
+                    
+                    // Query payment status from bKash
+                    $verificationResult = $bkashService->queryTokenizedPayment($paymentId);
+                    
+                    if ($verificationResult['success']) {
+                        $transactionStatus = $verificationResult['transactionStatus'] ?? '';
+                        $statusCode = $verificationResult['statusCode'] ?? '';
+                        $statusMessage = $verificationResult['statusMessage'] ?? '';
+                        
+                        // Check if payment is actually completed
+                        if ($transactionStatus === 'Completed' || $statusCode === '0000') {
+                            $paymentVerified = true;
+                            $verificationDetails = $verificationResult;
+                            
+                            \Log::info('Payment verified with bKash API', [
+                                'payment_id' => $paymentId,
+                                'transaction_status' => $transactionStatus,
+                                'status_code' => $statusCode,
+                                'status_message' => $statusMessage,
+                                'trx_id' => $verificationResult['trxID'] ?? null,
+                                'amount' => $verificationResult['amount'] ?? null
+                            ]);
+                        } else {
+                            \Log::warning('Payment not verified - status indicates failure', [
+                                'payment_id' => $paymentId,
+                                'transaction_status' => $transactionStatus,
+                                'status_code' => $statusCode,
+                                'status_message' => $statusMessage
+                            ]);
+                        }
+                    } else {
+                        \Log::error('Payment verification failed', [
+                            'payment_id' => $paymentId,
+                            'error' => $verificationResult['error'] ?? 'Unknown error'
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Payment verification exception', [
+                        'payment_id' => $paymentId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            // Only update billing if payment is verified or if verification failed (fallback)
+            if ($paymentVerified || !$paymentId) {
+                // Update billing status to paid
+                $billing->update([
+                    'status' => 'paid',
+                    'paid_date' => now(),
+                    'transaction_id' => $paymentId ?? $billing->transaction_id,
+                    'verification_details' => $verificationDetails ? json_encode($verificationDetails) : null
+                ]);
+
+                \Log::info('Payment success - Billing updated', [
+                    'invoice_id' => $billing->id,
+                    'invoice_number' => $billing->invoice_number,
+                    'status' => 'paid',
+                    'payment_id' => $paymentId,
+                    'verified' => $paymentVerified
+                ]);
+            } else {
+                \Log::warning('Payment not verified - billing not updated', [
+                    'invoice_id' => $billing->id,
+                    'invoice_number' => $billing->invoice_number,
+                    'payment_id' => $paymentId
+                ]);
+                
+                // Redirect to payment fail page
+                return redirect()->route('owner.subscription.payment.fail', [
+                    'paymentID' => $paymentId,
+                    'payerReference' => $payerReference,
+                    'status' => 'verification_failed'
+                ]);
+            }
+
+            // Get the subscription
+            $subscription = $billing->subscription;
+            
+            if ($subscription) {
+                $newPlan = SubscriptionPlan::find($subscription->plan_id);
+                
+                // Check if this is an upgrade payment
+                if ($billing->payment_method === 'upgrade' && $subscription->status === 'pending_upgrade') {
+                    // Activate the upgrade
+                    if ($newPlan) {
+                        $subscription->update([
+                            'status' => 'active',
+                            'sms_credits' => $newPlan->sms_notification ? 200 : 0,
+                            'start_date' => now(),
+                            'end_date' => now()->addDays(30)
+                        ]);
+
+                        \Log::info('Upgrade activated after payment', [
+                            'subscription_id' => $subscription->id,
+                            'new_plan' => $newPlan->name,
+                            'user_id' => Auth::id()
+                        ]);
+                    }
+                } 
+                // Check if this is a new purchase payment
+                elseif ($subscription->status === 'pending') {
+                    // Activate the new subscription
+                    if ($newPlan) {
+                        $subscription->update([
+                            'status' => 'active',
+                            'sms_credits' => $newPlan->sms_notification ? 200 : 0,
+                            'start_date' => now(),
+                            'end_date' => now()->addDays(30)
+                        ]);
+
+                        \Log::info('New subscription activated after payment', [
+                            'subscription_id' => $subscription->id,
+                            'new_plan' => $newPlan->name,
+                            'user_id' => Auth::id()
+                        ]);
+                    }
+                }
             }
         }
 
-        // Log payment success attempt
-        \Log::info('bKash Payment Success Attempt', [
-            'paymentID' => $paymentID,
-            'sessionPaymentID' => $sessionPaymentID,
-            'payerReference' => $payerReference,
-            'trxID' => $trxID,
-            'sessionInvoiceNumber' => $sessionInvoiceNumber
+        return view('owner.subscription.payment-success');
+    }
+
+    /**
+     * Handle cancelled payment
+     */
+    public function paymentCancel(Request $request)
+    {
+        \Log::info('Payment cancelled', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
         ]);
 
-        if (!$paymentID || !$sessionPaymentID || $paymentID !== $sessionPaymentID) {
-            \Log::error('bKash Payment Verification Failed', [
-                'paymentID' => $paymentID,
-                'sessionPaymentID' => $sessionPaymentID
-            ]);
-            return redirect()->route('owner.subscription.current')->with('error', 'Invalid payment verification.');
-        }
+        // Get invoice details from request
+        $invoiceId = $request->get('invoice_id');
+        $paymentId = $request->get('paymentID');
+        $payerReference = $request->get('payerReference');
 
-        $bkashService = new BkashTokenizedService();
-
-        // Execute TokenizedCheckout payment
-        $executeResult = $bkashService->executeTokenizedPayment($paymentID, $sessionPayerReference ?? $payerReference);
-
-        \Log::info('bKash Payment Execution Result', [
-            'executeResult' => $executeResult
-        ]);
-
-        if (!$executeResult['success']) {
-            return redirect()->route('owner.subscription.current')->with('error', 'TokenizedCheckout payment execution failed: ' . ($executeResult['error'] ?? 'Unknown error'));
-        }
-
-        // Verify payment status
-        if ($executeResult['transactionStatus'] !== 'Completed') {
-            return redirect()->route('owner.subscription.current')->with('error', 'Payment not completed. Status: ' . $executeResult['transactionStatus']);
-        }
-
-        // Find billing record
+        // Find the billing record
         $billing = null;
-
-        if ($sessionInvoiceNumber) {
-            $billing = Billing::where('invoice_number', $sessionInvoiceNumber)
-                ->where('status', 'pending')
-                ->where('owner_id', Auth::id())
-                ->first();
+        if ($invoiceId) {
+            $billing = Billing::find($invoiceId);
+        } elseif ($payerReference) {
+            $billing = Billing::where('invoice_number', $payerReference)->first();
         }
 
-        // If still not found, try to find any pending billing for this user
-        if (!$billing) {
-            $billing = Billing::where('status', 'pending')
-                ->where('owner_id', Auth::id())
-                ->latest()
-                ->first();
+        // If still not found, try to find by payment ID in transaction_id
+        if (!$billing && $paymentId) {
+            $billing = Billing::where('transaction_id', $paymentId)->first();
         }
 
-        if (!$billing) {
-            \Log::error('bKash Payment - Billing record not found', [
-                'invoice_number' => $sessionInvoiceNumber,
-                'user_id' => Auth::id(),
-                'paymentID' => $paymentID
+        if ($billing) {
+            // Update billing status to cancel
+            $billing->update([
+                'status' => 'cancel',
+                'transaction_id' => $paymentId ?? null,
+                'updated_at' => now()
             ]);
-            return redirect()->route('owner.subscription.current')->with('error', 'Billing record not found. Please try again.');
+
+            \Log::info('Payment cancelled - Billing updated', [
+                'invoice_id' => $billing->id,
+                'invoice_number' => $billing->invoice_number,
+                'status' => 'cancel',
+                'payment_id' => $paymentId
+            ]);
         }
 
-        // Update billing record
-        $billing->update([
-            'transaction_id' => $trxID ?? $executeResult['trxID'] ?? $paymentID,
-            'paid_date' => now(),
-            'status' => 'paid',
-            'payment_method_id' => PaymentMethod::where('code', 'bkash')->first()->id ?? null
+        return redirect()->route('owner.subscription.payment')
+            ->with('error', 'Payment was cancelled.');
+    }
+
+    /**
+     * Handle failed payment
+     */
+    public function paymentFail(Request $request)
+    {
+        \Log::info('Payment failed', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
         ]);
 
-        // Activate subscription
-        $subscription = $billing->subscription;
-        $subscription->activateAfterPayment();
+        // Get invoice details from request
+        $invoiceId = $request->get('invoice_id');
+        $paymentId = $request->get('paymentID');
+        $payerReference = $request->get('payerReference');
 
-        // Send payment confirmation notification
+        // Find the billing record
+        $billing = null;
+        if ($invoiceId) {
+            $billing = Billing::find($invoiceId);
+        } elseif ($payerReference) {
+            $billing = Billing::where('invoice_number', $payerReference)->first();
+        }
+
+        // If still not found, try to find by payment ID in transaction_id
+        if (!$billing && $paymentId) {
+            $billing = Billing::where('transaction_id', $paymentId)->first();
+        }
+
+        if ($billing) {
+            // Update billing status to fail
+            $billing->update([
+                'status' => 'fail',
+                'transaction_id' => $paymentId ?? null,
+                'updated_at' => now()
+            ]);
+
+            \Log::info('Payment failed - Billing updated', [
+                'invoice_id' => $billing->id,
+                'invoice_number' => $billing->invoice_number,
+                'status' => 'fail',
+                'payment_id' => $paymentId
+            ]);
+        }
+
+        return redirect()->route('owner.subscription.payment')
+            ->with('error', 'Payment failed. Please try again.');
+    }
+
+    /**
+     * Handle payment gateway processing
+     */
+    public function paymentGateway(Request $request)
+    {
+        $invoiceId = $request->get('invoice_id');
+        $paymentMethodId = $request->get('payment_method_id');
+
+        \Log::info('Payment gateway accessed', [
+            'invoice_id' => $invoiceId,
+            'payment_method_id' => $paymentMethodId,
+            'user_id' => Auth::id()
+        ]);
+
         try {
-            $user = Auth::user();
-            $paymentMethod = PaymentMethod::where('code', 'bkash')->first();
-            $paymentMethodName = $paymentMethod ? $paymentMethod->name : 'bKash';
+            $invoice = Billing::with(['subscription.plan'])->findOrFail($invoiceId);
+            $paymentMethod = PaymentMethod::findOrFail($paymentMethodId);
 
-            NotificationHelper::sendPaymentConfirmation(
-                $user,
-                '৳' . number_format($billing->amount, 2),
-                $billing->invoice_number,
-                $paymentMethodName
-            );
+            // Validate that this invoice belongs to the current user
+            $ownerId = Auth::user()->owner_id ?? Auth::id();
+            if ($invoice->owner_id != $ownerId) {
+                throw new \Exception('Invoice does not belong to current user');
+            }
+
+            // Process payment based on payment method
+            switch ($paymentMethod->code) {
+                case 'bkash':
+                    return $this->processBkashPayment($invoice, $paymentMethod);
+                case 'nagad':
+                    return $this->processNagadPayment($invoice, $paymentMethod);
+                case 'rocket':
+                    return $this->processRocketPayment($invoice, $paymentMethod);
+                default:
+                    throw new \Exception('Unsupported payment method');
+            }
+
         } catch (\Exception $e) {
-            \Log::error('Payment confirmation notification failed: ' . $e->getMessage());
+            \Log::error('Payment gateway error: ' . $e->getMessage());
+            return redirect()->route('owner.subscription.payment', ['invoice_id' => $invoiceId])
+                ->with('error', 'Payment processing failed: ' . $e->getMessage());
         }
+    }
 
-        // Clear session data
-        session()->forget(['bkash_payment_id', 'bkash_invoice_number', 'bkash_amount', 'bkash_payer_reference']);
-
-        \Log::info('bKash Payment Successfully Completed', [
-            'billing_id' => $billing->id,
-            'subscription_id' => $subscription->id,
-            'transaction_id' => $trxID ?? $executeResult['trxID'] ?? $paymentID
+    /**
+     * Process bKash payment
+     */
+    private function processBkashPayment($invoice, $paymentMethod)
+    {
+        \Log::info('Processing bKash payment', [
+            'invoice_id' => $invoice->id,
+            'amount' => $invoice->amount
         ]);
 
-        return redirect()->route('owner.subscription.current')->with('success', 'Payment completed successfully! Your subscription is now active.');
+        // Redirect to bKash payment gateway
+        return $this->redirectToBkash(
+            $invoice->amount,
+            $invoice->invoice_number,
+            'Payment for invoice: ' . $invoice->invoice_number
+        );
     }
 
-    public function paymentCancel()
+    /**
+     * Process Nagad payment
+     */
+    private function processNagadPayment($invoice, $paymentMethod)
     {
-        return redirect()->route('owner.subscription.payment')->with('error', 'Payment was cancelled.');
+        \Log::info('Processing Nagad payment', [
+            'invoice_id' => $invoice->id,
+            'amount' => $invoice->amount
+        ]);
+
+        // Redirect to Nagad payment gateway
+        return $this->redirectToNagad(
+            $invoice->amount,
+            $invoice->invoice_number,
+            'Payment for invoice: ' . $invoice->invoice_number
+        );
     }
 
-    public function paymentFail()
+    /**
+     * Process Rocket payment
+     */
+    private function processRocketPayment($invoice, $paymentMethod)
     {
-        return redirect()->route('owner.subscription.payment')->with('error', 'Payment failed. Please try again.');
+        \Log::info('Processing Rocket payment', [
+            'invoice_id' => $invoice->id,
+            'amount' => $invoice->amount
+        ]);
+
+        // Redirect to Rocket payment gateway
+        return $this->redirectToRocket(
+            $invoice->amount,
+            $invoice->invoice_number,
+            'Payment for invoice: ' . $invoice->invoice_number
+        );
     }
 }

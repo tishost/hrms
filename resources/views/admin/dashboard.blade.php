@@ -24,6 +24,9 @@
             <a href="{{ route('admin.settings.index') }}" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm">
                 <i class="fas fa-cog fa-sm text-white-50"></i> System Settings
             </a>
+            <a href="{{ route('admin.tickets.index') }}" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm">
+                <i class="fas fa-ticket-alt fa-sm text-white-50"></i> View Tickets
+            </a>
         </div>
     </div>
 
@@ -47,23 +50,7 @@
             </div>
         </div>
 
-        <!-- Active Subscriptions -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active Subscriptions</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($activeSubscriptions ?? 0) }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Monthly Revenue -->
         <div class="col-xl-3 col-md-6 mb-4">
@@ -101,18 +88,72 @@
             </div>
         </div>
 
-        <!-- Expired Subscriptions -->
+        <!-- Contact Tickets -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Contact Tickets</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($totalTickets ?? 0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Tickets -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-danger shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Expired Subscriptions</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($expiredSubscriptions ?? 0) }}</div>
+                                Pending Tickets</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($pendingTickets ?? 0) }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paid Subscriptions -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Paid Subscriptions</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($paidSubscriptions ?? 0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Free Subscriptions -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Free Subscriptions</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($freeSubscriptions ?? 0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gift fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -170,11 +211,11 @@
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0">
                             <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center">
-                                <span class="text-white font-weight-bold">{{ substr($subscription->owner->name, 0, 1) }}</span>
+                                <span class="text-white font-weight-bold">{{ substr($subscription->owner->user->name, 0, 1) }}</span>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0">{{ $subscription->owner->name }}</h6>
+                            <h6 class="mb-0">{{ $subscription->owner->user->name }}</h6>
                             <small class="text-muted">{{ $subscription->plan->name }} Plan</small>
                         </div>
                         <div class="text-end">
@@ -201,7 +242,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0">{{ $payment->owner->name }}</h6>
+                            <h6 class="mb-0">{{ $payment->owner->user->name }}</h6>
                             <small class="text-muted">{{ $payment->formatted_amount }}</small>
                         </div>
                         <div class="text-end">

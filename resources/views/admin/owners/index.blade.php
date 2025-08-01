@@ -47,50 +47,50 @@
                             <td>{{ $owner->phone }}</td>
                             <td>
                                 @if($owner->owner)
-                                    <span class="badge badge-info">{{ $owner->owner->country }}</span>
+                                    <span class="badge bg-info">{{ $owner->owner->country }}</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($owner->owner)
-                                    <span class="badge badge-secondary">{{ ucfirst($owner->owner->gender) }}</span>
+                                    <span class="badge bg-secondary">{{ ucfirst($owner->owner->gender) }}</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($owner->subscription && $owner->subscription->plan)
-                                    <span class="badge badge-primary">{{ $owner->subscription->plan->name }}</span>
+                                    <span class="badge bg-primary">{{ $owner->subscription->plan->name }}</span>
                                     @if($owner->subscription->plan->price > 0)
                                         <small class="text-muted d-block">৳{{ number_format($owner->subscription->plan->price) }}/year</small>
                                     @else
                                         <small class="text-muted d-block">Free</small>
                                     @endif
                                 @else
-                                    <span class="badge badge-secondary">No Plan</span>
+                                    <span class="badge bg-secondary">No Plan</span>
                                 @endif
                             </td>
                             <td>
                                 @if($owner->subscription)
                                     @if($owner->subscription->status === 'active')
-                                        <span class="badge badge-success">Active</span>
+                                        <span class="badge bg-success">Active</span>
                                     @elseif($owner->subscription->status === 'pending')
-                                        <span class="badge badge-warning">Pending Payment</span>
+                                        <span class="badge bg-warning">Pending Payment</span>
                                         @if($owner->subscription->getPendingInvoice())
                                             <small class="text-muted d-block">Invoice: {{ $owner->subscription->getPendingInvoice()->invoice_number }}</small>
                                         @endif
                                     @elseif($owner->subscription->status === 'expired')
-                                        <span class="badge badge-danger">Expired</span>
+                                        <span class="badge bg-danger">Expired</span>
                                     @elseif($owner->subscription->status === 'suspended')
-                                        <span class="badge badge-warning">Suspended</span>
+                                        <span class="badge bg-warning">Suspended</span>
                                     @elseif($owner->subscription->status === 'cancelled')
-                                        <span class="badge badge-danger">Cancelled</span>
+                                        <span class="badge bg-danger">Cancelled</span>
                                     @else
-                                        <span class="badge badge-secondary">{{ ucfirst($owner->subscription->status) }}</span>
+                                        <span class="badge bg-secondary">{{ ucfirst($owner->subscription->status) }}</span>
                                     @endif
                                 @else
-                                    <span class="badge badge-secondary">No Subscription</span>
+                                    <span class="badge bg-secondary">No Subscription</span>
                                 @endif
                             </td>
                             <td>
@@ -138,9 +138,16 @@
                                         </a>
                                     @else
                                         <a href="#" class="btn btn-sm btn-primary" title="Manage Subscription">
-                                            <i class="fas fa-credit-card"></i>
+                                            <i class="fas fa-cog"></i>
                                         </a>
                                     @endif
+                                    <form action="{{ route('admin.owners.destroy', $owner->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to remove this owner? This action cannot be undone.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Remove Owner">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

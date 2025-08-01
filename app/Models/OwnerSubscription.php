@@ -30,7 +30,7 @@ class OwnerSubscription extends Model
 
     public function owner()
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(Owner::class, 'owner_id');
     }
 
     public function plan()
@@ -120,18 +120,36 @@ class OwnerSubscription extends Model
         // Generate unique invoice number
         $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
 
+        // Log before creating billing
+        \Log::info('Generating invoice', [
+            'subscription_id' => $this->id,
+            'owner_id' => $this->owner_id,
+            'plan_id' => $this->plan_id,
+            'plan_price' => $this->plan->price ?? 'N/A',
+            'invoice_number' => $invoiceNumber
+        ]);
+
         // Create billing record
         $billing = Billing::create([
             'owner_id' => $this->owner_id,
             'subscription_id' => $this->id,
             'amount' => $this->plan->price,
-            'status' => 'pending',
+            'status' => 'unpaid',
             'due_date' => now()->addDays(7), // 7 days to pay
             'invoice_number' => $invoiceNumber,
             'payment_method' => null,
             'transaction_id' => null,
             'transaction_fee' => 0,
             'net_amount' => $this->plan->price
+        ]);
+
+        // Log after creating billing
+        \Log::info('Invoice created', [
+            'billing_id' => $billing->id,
+            'owner_id' => $billing->owner_id,
+            'subscription_id' => $billing->subscription_id,
+            'amount' => $billing->amount,
+            'invoice_number' => $billing->invoice_number
         ]);
 
         return $billing;
@@ -164,11 +182,11 @@ class OwnerSubscription extends Model
 
     public function isPendingPayment()
     {
-        return $this->status === 'pending' && $this->billing()->where('status', 'pending')->exists();
+        return $this->status === 'pending' && $this->billing()->whereIn('status', ['pending', 'unpaid', 'fail', 'cancel'])->exists();
     }
 
     public function getPendingInvoice()
     {
-        return $this->billing()->where('status', 'pending')->first();
+        return $this->billing()->whereIn('status', ['pending', 'unpaid', 'fail', 'cancel'])->first();
     }
 }

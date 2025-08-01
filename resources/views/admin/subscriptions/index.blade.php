@@ -114,27 +114,27 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
-                                        <span class="text-white font-weight-bold">{{ substr($subscription->owner->name, 0, 1) }}</span>
+                                        <span class="text-white font-weight-bold">{{ substr($subscription->owner->user->name, 0, 1) }}</span>
                                     </div>
                                     <div>
-                                        <div class="font-weight-bold">{{ $subscription->owner->name }}</div>
-                                        <small class="text-muted">{{ $subscription->owner->email }}</small>
+                                        <div class="font-weight-bold">{{ $subscription->owner->user->name }}</div>
+                                        <small class="text-muted">{{ $subscription->owner->user->email }}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge badge-{{ $subscription->plan->name === 'Free' ? 'secondary' : ($subscription->plan->name === 'Lite' ? 'info' : 'primary') }}">
+                                <span class="badge bg-{{ $subscription->plan->name === 'Free' ? 'secondary' : ($subscription->plan->name === 'Lite' ? 'info' : 'primary') }}">
                                     {{ $subscription->plan->name }}
                                 </span>
                                 <div class="small text-muted">৳{{ number_format($subscription->plan->price) }}/year</div>
                             </td>
                             <td>
                                 @if($subscription->isActive())
-                                    <span class="badge badge-success">Active</span>
+                                    <span class="badge bg-success">Active</span>
                                 @elseif($subscription->isExpired())
-                                    <span class="badge badge-danger">Expired</span>
+                                    <span class="badge bg-danger">Expired</span>
                                 @else
-                                    <span class="badge badge-warning">{{ ucfirst($subscription->status) }}</span>
+                                    <span class="badge bg-warning">{{ ucfirst($subscription->status) }}</span>
                                 @endif
                             </td>
                             <td>{{ $subscription->start_date->format('M d, Y') }}</td>
@@ -152,9 +152,9 @@
                             </td>
                             <td>
                                 @if($subscription->auto_renew)
-                                    <span class="badge badge-success">Yes</span>
+                                    <span class="badge bg-success">Yes</span>
                                 @else
-                                    <span class="badge badge-secondary">No</span>
+                                    <span class="badge bg-secondary">No</span>
                                 @endif
                             </td>
                             <td>

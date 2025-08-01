@@ -14,14 +14,66 @@ use App\Http\Controllers\Owner\TenantRentController;
 use App\Http\Controllers\Owner\RentPaymentController;
 
 use App\Http\Controllers\Owner\CheckoutController;
-Route::get('/', function () {
+use Illuminate\Http\Request;
+Route::get('/', [App\Http\Controllers\LandingController::class, 'index'])->name('home');
+
+Route::get('/welcome', function () {
     return view('welcome');
+})->name('welcome');
+
+// Language switching route
+Route::get('/language/switch', function (Request $request) {
+    $lang = $request->get('lang');
+    if (in_array($lang, ['en', 'bn'])) {
+        session(['locale' => $lang]);
+        app()->setLocale($lang);
+    }
+    return redirect()->back();
+})->name('language.switch');
+
+// CSRF Token refresh route
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf.token');
+
+// Debug route for testing features_css
+Route::get('/debug-plans', function () {
+    $plans = \App\Models\SubscriptionPlan::all(['name', 'features', 'features_css']);
+    return response()->json($plans);
 });
 
+// Contact routes
+Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('contact');
+Route::post('/contact/submit', [App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+
+// Legal pages
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms');
+
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy');
+
+Route::get('/refund', function () {
+    return view('refund');
+})->name('refund');
 
 
 Route::get('/register/owner', [OwnerRegisterController::class, 'showForm'])->name('owner.register.form');
 Route::post('/register/owner', [OwnerRegisterController::class, 'register'])->name('owner.register');
+
+// Register with plan selection
+Route::get('/register/owner/plan/{plan}', function ($plan) {
+    session(['selected_plan' => $plan]);
+    return redirect()->route('owner.register.form');
+})->name('owner.register.with.plan');
+
+// Direct subscription after registration
+Route::get('/register/owner/plan/{plan}/subscribe', function ($plan) {
+    session(['selected_plan' => $plan, 'direct_subscribe' => true]);
+    return redirect()->route('owner.register.form');
+})->name('owner.register.with.plan.subscribe');
 
 
 
@@ -80,19 +132,18 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('subscription/current', [App\Http\Controllers\Owner\SubscriptionController::class, 'currentPlan'])->name('subscription.current');
     Route::get('subscription/plans', [App\Http\Controllers\Owner\SubscriptionController::class, 'availablePlans'])->name('subscription.plans');
     Route::post('subscription/purchase', [App\Http\Controllers\Owner\SubscriptionController::class, 'purchasePlan'])->name('subscription.purchase');
+    Route::post('subscription/upgrade', [App\Http\Controllers\Owner\SubscriptionController::class, 'upgradePlan'])->name('subscription.upgrade');
     Route::get('subscription/billing', [App\Http\Controllers\Owner\SubscriptionController::class, 'billingHistory'])->name('subscription.billing');
     Route::get('subscription/payment', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentMethods'])->name('subscription.payment');
     Route::match(['GET', 'POST'], 'subscription/initiate-gateway', [App\Http\Controllers\Owner\SubscriptionController::class, 'initiatePaymentGateway'])->name('subscription.initiate-gateway');
-    Route::post('subscription/{subscriptionId}/payment', [App\Http\Controllers\Owner\SubscriptionController::class, 'processPayment'])->name('subscription.process-payment');
+    Route::get('subscription/payment/gateway', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentGateway'])->name('subscription.payment.gateway');
+    Route::get('subscription/payment/success', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentSuccess'])->name('subscription.payment.success');
+    Route::get('subscription/payment/cancel', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentCancel'])->name('subscription.payment.cancel');
+    Route::get('subscription/payment/fail', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentFail'])->name('subscription.payment.fail');
 
-    // Invoice PDF routes
-    Route::get('invoice/{billingId}/download', [App\Http\Controllers\Owner\Subscription\InvoiceController::class, 'downloadInvoice'])->name('invoice.download');
-    Route::get('invoice/{billingId}/view', [App\Http\Controllers\Owner\Subscription\InvoiceController::class, 'viewInvoice'])->name('invoice.view');
-
-           // Payment gateway callback routes
-           Route::get('subscription/payment/success', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentSuccess'])->name('subscription.payment.success');
-           Route::get('subscription/payment/cancel', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentCancel'])->name('subscription.payment.cancel');
-           Route::get('subscription/payment/fail', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentFail'])->name('subscription.payment.fail');
+    // Invoice routes
+    Route::get('invoice/{billingId}/view', [App\Http\Controllers\Owner\InvoiceController::class, 'viewInvoice'])->name('invoice.view');
+    Route::get('invoice/{billingId}/download', [App\Http\Controllers\Owner\InvoiceController::class, 'downloadInvoice'])->name('invoice.download');
 
 });
 
@@ -112,8 +163,8 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Subscription Plans
-    Route::resource('plans', App\Http\Controllers\Admin\PlanController::class);
-    Route::post('plans/{plan}/toggle-status', [App\Http\Controllers\Admin\PlanController::class, 'toggleStatus'])->name('plans.toggle-status');
+    Route::resource('plans', App\Http\Controllers\Admin\SubscriptionPlanController::class);
+    Route::post('plans/{plan}/toggle-status', [App\Http\Controllers\Admin\SubscriptionPlanController::class, 'toggleStatus'])->name('plans.toggle-status');
 
     // Subscriptions
     Route::get('subscriptions', [App\Http\Controllers\Admin\AdminDashboardController::class, 'subscriptions'])->name('subscriptions');
@@ -125,6 +176,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'owners'])->name('owners.index');
     Route::get('owners/create', [App\Http\Controllers\Admin\AdminDashboardController::class, 'createOwner'])->name('owners.create');
     Route::post('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'storeOwner'])->name('owners.store');
+    Route::delete('owners/{id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'destroyOwner'])->name('owners.destroy');
 
     // Settings
     Route::get('settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'index'])->name('settings.index');
@@ -166,10 +218,17 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::put('settings/notifications/sms', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsSettings'])->name('notifications.sms.update');
     Route::post('settings/notifications/email/test', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testEmail'])->name('notifications.email.test');
     Route::post('settings/notifications/sms/test', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testSms'])->name('notifications.sms.test');
-Route::post('settings/notifications/sms/reset', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'resetSmsCount'])->name('notifications.sms.reset');
+    Route::post('settings/notifications/sms/reset', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'resetSmsCount'])->name('notifications.sms.reset');
     Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get');
     Route::post('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save');
     Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
+
+    // Tickets Management
+    Route::get('tickets', [App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets.index');
+    Route::get('tickets/{ticket}', [App\Http\Controllers\Admin\TicketController::class, 'show'])->name('tickets.show');
+    Route::patch('tickets/{ticket}/status', [App\Http\Controllers\Admin\TicketController::class, 'updateStatus'])->name('tickets.update-status');
+    Route::post('tickets/{ticket}/note', [App\Http\Controllers\Admin\TicketController::class, 'addNote'])->name('tickets.add-note');
+    Route::delete('tickets/{ticket}', [App\Http\Controllers\Admin\TicketController::class, 'destroy'])->name('tickets.destroy');
 
     // Payment routes
     Route::get('payments/{invoiceId}', [App\Http\Controllers\Admin\PaymentController::class, 'showPaymentForm'])->name('payments.form');

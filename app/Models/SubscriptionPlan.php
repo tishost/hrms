@@ -16,14 +16,19 @@ class SubscriptionPlan extends Model
         'units_limit',
         'tenants_limit',
         'sms_notification',
+        'sms_credit',
         'is_active',
-        'features'
+        'is_popular',
+        'features',
+        'features_css'
     ];
 
     protected $casts = [
         'sms_notification' => 'boolean',
         'is_active' => 'boolean',
-        'features' => 'array'
+        'is_popular' => 'boolean',
+        'features' => 'array',
+        'features_css' => 'array'
     ];
 
     public function subscriptions()

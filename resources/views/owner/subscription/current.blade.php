@@ -21,7 +21,7 @@
                                         <div class="plan-details">
                                             <div class="plan-detail-item">
                                                 <strong>Status:</strong>
-                                                <span class="badge badge-{{ $subscription->status === 'active' ? 'success' : ($subscription->status === 'pending' ? 'warning' : 'danger') }}">
+                                                <span class="badge bg-{{ $subscription->status === 'active' ? 'success' : ($subscription->status === 'pending' ? 'warning' : 'danger') }}">
                                                     {{ ucfirst($subscription->status) }}
                                                 </span>
                                             </div>
@@ -42,7 +42,7 @@
                                                 <div class="plan-details">
                                                     <div class="plan-detail-item">
                                                         <strong>Days Remaining:</strong>
-                                                        <span class="badge badge-{{ $subscription->daysUntilExpiry() > 30 ? 'success' : ($subscription->daysUntilExpiry() > 7 ? 'warning' : 'danger') }}">
+                                                        <span class="badge bg-{{ $subscription->daysUntilExpiry() > 30 ? 'success' : ($subscription->daysUntilExpiry() > 7 ? 'warning' : 'danger') }}">
                                                             {{ $subscription->daysUntilExpiry() }} days
                                                         </span>
                                                     </div>

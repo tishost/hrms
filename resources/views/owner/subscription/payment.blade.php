@@ -34,27 +34,16 @@
 
                         <div class="payment-methods">
                             <h5>Select Payment Method</h5>
-                            <div class="methods-grid">
-                                @foreach($paymentMethods as $method)
-                                    <div class="method-card" data-method-id="{{ $method->id }}" data-fee="{{ $method->transaction_fee }}">
-                                        <div class="method-icon">
-                                            <i class="fas fa-{{ $method->code === 'bkash' ? 'mobile-alt' : ($method->code === 'nagad' ? 'wallet' : ($method->code === 'rocket' ? 'rocket' : 'university')) }}"></i>
-                                        </div>
-                                        <div class="method-info">
-                                            <h6>{{ $method->name }}</h6>
-                                            <p>{{ $method->description }}</p>
-                                            @if($method->transaction_fee > 0)
-                                                <small class="fee">Fee: {{ $method->formatted_fee }}</small>
-                                            @else
-                                                <small class="fee">No Fee</small>
-                                            @endif
-                                        </div>
-                                        <div class="method-radio">
-                                            <input type="radio" name="payment_method_id" value="{{ $method->id }}" id="method_{{ $method->id }}">
-                                            <label for="method_{{ $method->id }}"></label>
-                                        </div>
-                                    </div>
-                                @endforeach
+                            <div class="form-group">
+                                <label for="payment_method" class="form-label">Select your preferred payment method</label>
+                                <select class="form-control" id="payment_method" name="payment_method_id">
+                                    <option value="">Choose a payment method</option>
+                                    @foreach($paymentMethods as $method)
+                                        <option value="{{ $method->id }}" data-fee="{{ $method->transaction_fee }}">
+                                            {{ $method->name }} (Fee: {{ $method->transaction_fee }}%)
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
 
@@ -73,22 +62,6 @@
                                 <span id="total-amount">৳{{ number_format($pendingInvoice->amount, 2) }}</span>
                             </div>
                         </div>
-
-                        <div class="payment-actions">
-                            <form action="{{ route('owner.subscription.initiate-gateway') }}" method="POST" id="payment-form">
-                                @csrf
-                                <input type="hidden" name="invoice_id" value="{{ $pendingInvoice->id }}">
-                                <input type="hidden" name="payment_method_id" id="selected_method">
-
-                                <button type="submit" class="btn btn-primary btn-lg" id="pay-button" disabled>
-                                    <i class="fas fa-credit-card"></i> Pay Now
-                                </button>
-                            </form>
-
-                            <a href="{{ route('owner.subscription.billing') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Billing
-                            </a>
-                        </div>
                     </div>
                 @else
                     <div class="text-center py-5">
@@ -98,6 +71,38 @@
                         <a href="{{ route('owner.subscription.plans') }}" class="btn btn-primary">
                             <i class="fas fa-shopping-cart"></i> Browse Plans
                         </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Actions Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                @if($pendingInvoice)
+                    <form action="{{ route('owner.subscription.initiate-gateway', ['invoice_id' => $pendingInvoice->id]) }}" method="POST" id="payment-form">
+                        @csrf
+                        <input type="hidden" name="invoice_id" value="{{ $pendingInvoice->id }}">
+                        <input type="hidden" name="payment_method_id" id="selected_method">
+
+                        <button type="submit" class="btn btn-primary btn-lg" id="pay-button">
+                            <i class="fas fa-credit-card"></i> Pay Now
+                        </button>
+                    </form>
+
+                    <div class="mt-3">
+                        <a href="{{ route('owner.subscription.billing') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Billing
+                        </a>
+                    </div>
+                @else
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>No Invoice Found:</strong> Please contact support if you believe this is an error.
                     </div>
                 @endif
             </div>
@@ -143,30 +148,27 @@
     margin-bottom: 24px;
 }
 
-.methods-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 16px;
-    margin-top: 16px;
+.payment-methods .form-group {
+    margin-bottom: 0;
 }
 
-.method-card {
+.payment-methods .form-control {
     border: 2px solid var(--gray-light);
     border-radius: 8px;
-    padding: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--white);
 }
 
-.method-card:hover {
+.payment-methods .form-control:focus {
     border-color: var(--primary);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-.method-card.selected {
-    border-color: var(--primary);
-    background: rgba(67, 97, 238, 0.05);
+.payment-methods .form-control option {
+    padding: 8px;
+    font-size: 0.95rem;
 }
 
 .method-icon {
@@ -277,7 +279,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const methodCards = document.querySelectorAll('.method-card');
+    const paymentMethodSelect = document.getElementById('payment_method');
     const paymentForm = document.getElementById('payment-form');
     const selectedMethodInput = document.getElementById('selected_method');
     const payButton = document.getElementById('pay-button');
@@ -286,31 +288,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const invoiceAmount = {{ $pendingInvoice ? $pendingInvoice->amount : 0 }};
 
-    methodCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Remove selected class from all cards
-            methodCards.forEach(c => c.classList.remove('selected'));
+    // Update payment method selection
+    paymentMethodSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const transactionFeePercent = parseFloat(selectedOption.getAttribute('data-fee') || 0);
+        const selectedMethodInput = document.getElementById('selected_method');
+        const payButton = document.getElementById('pay-button');
 
-            // Add selected class to clicked card
-            this.classList.add('selected');
+        // Set the payment method ID in the form
+        selectedMethodInput.value = this.value;
 
-            // Get method data
-            const methodId = this.dataset.methodId;
-            const fee = parseFloat(this.dataset.fee) || 0;
+        // Calculate and display fees
+        const invoiceAmount = {{ $pendingInvoice ? $pendingInvoice->amount : 0 }};
+        const transactionFeeAmount = invoiceAmount * (transactionFeePercent / 100);
+        const totalAmount = invoiceAmount + transactionFeeAmount;
 
-            // Update form
-            selectedMethodInput.value = methodId;
+        document.getElementById('fee-display').textContent = '৳' + transactionFeeAmount.toFixed(2);
+        document.getElementById('total-amount').textContent = '৳' + totalAmount.toFixed(2);
 
-            // Calculate and display fees
-            const feeAmount = (invoiceAmount * fee) / 100;
-            const total = invoiceAmount + feeAmount;
-
-            feeDisplay.querySelector('span:last-child').textContent = '৳' + feeAmount.toFixed(2);
-            totalAmount.textContent = '৳' + total.toFixed(2);
-
-            // Enable pay button
+        // Enable/disable pay button based on selection
+        if (this.value && this.value !== '') {
             payButton.disabled = false;
-        });
+            payButton.classList.remove('btn-secondary');
+            payButton.classList.add('btn-primary');
+            payButton.innerHTML = '<i class="fas fa-credit-card"></i> Pay Now';
+        } else {
+            payButton.disabled = true;
+            payButton.classList.remove('btn-primary');
+            payButton.classList.add('btn-secondary');
+            payButton.innerHTML = '<i class="fas fa-credit-card"></i> Select Payment Method';
+        }
     });
 
     // Form submission

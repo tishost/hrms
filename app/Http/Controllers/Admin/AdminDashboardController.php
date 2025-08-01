@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\OwnerSubscription;
 use App\Models\Billing;
 use App\Models\SubscriptionPlan;
+use App\Models\ContactTicket;
 use App\Helpers\CountryHelper;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -17,21 +18,18 @@ class AdminDashboardController extends Controller
     {
         try {
             // Subscription Statistics
-            $totalOwners = User::role('owner')
-                ->whereHas('owner', function($query) {
-                    $query->whereNull('deleted_at');
+            $totalOwners = User::role('owner')->count();
+            $expiredSubscriptions = OwnerSubscription::where('status', 'expired')->count();
+            
+            // Paid and Free Subscriptions
+            $paidSubscriptions = OwnerSubscription::where('status', 'active')
+                ->whereHas('plan', function($query) {
+                    $query->where('price', '>', 0);
                 })->count();
-            $activeSubscriptions = OwnerSubscription::where('status', 'active')
-                ->whereHas('owner', function($query) {
-                    $query->whereHas('owner', function($subQuery) {
-                        $subQuery->whereNull('deleted_at');
-                    });
-                })->count();
-            $expiredSubscriptions = OwnerSubscription::where('status', 'expired')
-                ->whereHas('owner', function($query) {
-                    $query->whereHas('owner', function($subQuery) {
-                        $subQuery->whereNull('deleted_at');
-                    });
+            
+            $freeSubscriptions = OwnerSubscription::where('status', 'active')
+                ->whereHas('plan', function($query) {
+                    $query->where('price', 0);
                 })->count();
 
         // Revenue Statistics
@@ -44,9 +42,15 @@ class AdminDashboardController extends Controller
             ->whereYear('paid_date', now()->year)
             ->sum('amount');
 
-        $pendingPayments = Billing::where('status', 'pending')->count();
-        $overduePayments = Billing::where('status', 'pending')
+        $pendingPayments = Billing::whereIn('status', ['pending', 'unpaid'])->count();
+        $overduePayments = Billing::whereIn('status', ['pending', 'unpaid'])
             ->where('due_date', '<', now())->count();
+
+        // Ticket Statistics
+        $totalTickets = ContactTicket::count();
+        $pendingTickets = ContactTicket::where('status', 'pending')->count();
+        $inProgressTickets = ContactTicket::where('status', 'in_progress')->count();
+        $resolvedTickets = ContactTicket::where('status', 'resolved')->count();
 
         // Plan Distribution
         $planDistribution = SubscriptionPlan::withCount(['subscriptions' => function($query) {
@@ -54,22 +58,12 @@ class AdminDashboardController extends Controller
         }])->get();
 
         // Recent Activities
-        $recentSubscriptions = OwnerSubscription::with(['owner', 'plan'])
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
-            })
+        $recentSubscriptions = OwnerSubscription::with(['owner.user', 'plan'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        $recentPayments = Billing::with(['owner', 'subscription.plan'])
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
-            })
+        $recentPayments = Billing::with(['owner.user', 'subscription.plan'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -81,11 +75,6 @@ class AdminDashboardController extends Controller
             $revenue = Billing::where('status', 'paid')
                 ->whereYear('paid_date', $month->year)
                 ->whereMonth('paid_date', $month->month)
-                ->whereHas('owner', function($query) {
-                    $query->whereHas('owner', function($subQuery) {
-                        $subQuery->whereNull('deleted_at');
-                    });
-                })
                 ->sum('amount');
 
             $monthlyRevenueData[] = [
@@ -98,12 +87,17 @@ class AdminDashboardController extends Controller
         } catch (\Exception $e) {
             // Return default values if there's an error
             $totalOwners = 0;
-            $activeSubscriptions = 0;
             $expiredSubscriptions = 0;
+            $paidSubscriptions = 0;
+            $freeSubscriptions = 0;
             $monthlyRevenue = 0;
             $yearlyRevenue = 0;
             $pendingPayments = 0;
             $overduePayments = 0;
+            $totalTickets = 0;
+            $pendingTickets = 0;
+            $inProgressTickets = 0;
+            $resolvedTickets = 0;
             $planDistribution = collect();
             $recentSubscriptions = collect();
             $recentPayments = collect();
@@ -112,12 +106,17 @@ class AdminDashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'totalOwners',
-            'activeSubscriptions',
             'expiredSubscriptions',
+            'paidSubscriptions',
+            'freeSubscriptions',
             'monthlyRevenue',
             'yearlyRevenue',
             'pendingPayments',
             'overduePayments',
+            'totalTickets',
+            'pendingTickets',
+            'inProgressTickets',
+            'resolvedTickets',
             'planDistribution',
             'recentSubscriptions',
             'recentPayments',
@@ -127,11 +126,9 @@ class AdminDashboardController extends Controller
 
     public function subscriptions()
     {
-        $subscriptions = OwnerSubscription::with(['owner', 'plan'])
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
+        $subscriptions = OwnerSubscription::with(['owner.user', 'plan'])
+            ->whereHas('owner.user', function($query) {
+                $query->whereNull('deleted_at');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -150,35 +147,27 @@ class AdminDashboardController extends Controller
 
     public function billing()
     {
-        $billing = Billing::with(['owner', 'subscription.plan', 'paymentMethod'])
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
+        $billing = Billing::with(['owner.user', 'subscription.plan', 'paymentMethod'])
+            ->whereHas('owner.user', function($query) {
+                $query->whereNull('deleted_at');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         // Calculate statistics
         $totalRevenue = Billing::where('status', 'paid')
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
+            ->whereHas('owner.user', function($query) {
+                $query->whereNull('deleted_at');
             })->sum('amount');
         $pendingAmount = Billing::where('status', 'pending')
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
+            ->whereHas('owner.user', function($query) {
+                $query->whereNull('deleted_at');
             })->sum('amount');
         $monthlyRevenue = Billing::where('status', 'paid')
             ->whereMonth('paid_date', now()->month)
             ->whereYear('paid_date', now()->year)
-            ->whereHas('owner', function($query) {
-                $query->whereHas('owner', function($subQuery) {
-                    $subQuery->whereNull('deleted_at');
-                });
+            ->whereHas('owner.user', function($query) {
+                $query->whereNull('deleted_at');
             })->sum('amount');
 
         return view('admin.billing.index', compact('billing', 'totalRevenue', 'pendingAmount', 'monthlyRevenue'));
@@ -186,14 +175,7 @@ class AdminDashboardController extends Controller
 
     public function owners()
     {
-        $owners = User::role('owner')
-            ->whereHas('owner', function($query) {
-                $query->whereNull('deleted_at');
-            })
-            ->with(['subscription.plan', 'owner'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
+        $owners = \App\Models\Owner::with('user')->paginate(20);
         return view('admin.owners.index', compact('owners'));
     }
 
@@ -210,78 +192,102 @@ class AdminDashboardController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:20',
-            'password' => 'required|string|min:6|confirmed',
+            'address' => 'required|string|max:500',
             'country' => 'required|string|max:100',
             'gender' => 'required|in:male,female,other',
-            'address' => 'required|string|max:500',
-            'plan_id' => 'required|exists:subscription_plans,id'
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Create user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $request->phone,
             'password' => bcrypt($request->password),
-            'email_verified_at' => now(),
         ]);
-
-        // Assign owner role
         $user->assignRole('owner');
 
-        // Create owner record
-        \App\Models\Owner::create([
+        $owner = \App\Models\Owner::create([
             'user_id' => $user->id,
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'address' => $request->address,
             'country' => $request->country,
             'gender' => $request->gender,
-            'address' => $request->address,
-            'status' => 'active',
-            'phone_verified' => false,
-            'is_super_admin' => false,
-            'total_properties' => 0,
-            'total_tenants' => 0
         ]);
 
-                // Create subscription
-        $subscription = \App\Models\OwnerSubscription::create([
-            'owner_id' => $user->id,
-            'plan_id' => $request->plan_id,
-            'status' => 'pending', // Start as pending
-            'start_date' => null, // Will be set after payment
-            'end_date' => null, // Will be set after payment
-            'auto_renew' => true,
-            'sms_credits' => 0
-        ]);
+        // Update user with owner_id
+        $user->update(['owner_id' => $owner->id]);
 
-        // Get the plan
-        $plan = \App\Models\SubscriptionPlan::find($request->plan_id);
+        // Automatically activate free package for new owner
+        $freePlan = \App\Models\SubscriptionPlan::where('price', 0)->first();
+        if ($freePlan) {
+            \Log::info('Activating free package for admin-created owner', [
+                'user_id' => $user->id,
+                'owner_id' => $owner->id,
+                'free_plan_id' => $freePlan->id,
+                'free_plan_name' => $freePlan->name
+            ]);
 
-        // If it's a paid plan, generate invoice
-        if ($plan->price > 0) {
-            $subscription->generateInvoice();
-        } else {
-            // Free plan - activate immediately
-            $subscription->update([
+            // Create free subscription
+            $freeSubscription = \App\Models\OwnerSubscription::create([
+                'owner_id' => $owner->id,
+                'plan_id' => $freePlan->id,
                 'status' => 'active',
+                'auto_renew' => true,
+                'sms_credits' => $freePlan->sms_notification ? 100 : 0,
                 'start_date' => now()->toDateString(),
-                'end_date' => now()->addYear()->toDateString()
+                'end_date' => now()->addYear()->toDateString(),
+                'plan_name' => $freePlan->name
+            ]);
+
+            \Log::info('Free subscription created by admin', [
+                'subscription_id' => $freeSubscription->id,
+                'owner_id' => $freeSubscription->owner_id,
+                'plan_id' => $freeSubscription->plan_id,
+                'status' => $freeSubscription->status
             ]);
         }
 
-        $message = 'Owner created successfully!';
+        return redirect()->route('admin.owners.index')->with('success', 'Owner created successfully!');
+    }
 
-        // If it's a paid plan, add invoice information
-        if ($plan->price > 0) {
-            $invoice = $subscription->getPendingInvoice();
-            $message .= " Invoice #{$invoice->invoice_number} has been generated. Payment is required to activate the subscription.";
-        } else {
-            $message .= " Free plan activated immediately.";
+    /**
+     * Remove owner from the system
+     */
+    public function destroyOwner($id)
+    {
+        try {
+            // First try to find by Owner ID
+            $owner = \App\Models\Owner::find($id);
+
+            if (!$owner) {
+                // If not found, try to find by User ID
+                $owner = \App\Models\Owner::where('user_id', $id)->first();
+            }
+
+            if (!$owner) {
+                return redirect()->route('admin.owners.index')->with('error', 'Owner not found!');
+            }
+
+            $user = \App\Models\User::find($owner->user_id);
+
+            if ($user) {
+                // Remove owner role
+                $user->removeRole('owner');
+
+                // Delete owner record
+                $owner->delete();
+
+                // Delete user record
+                $user->delete();
+
+                return redirect()->route('admin.owners.index')->with('success', 'Owner removed successfully!');
+            } else {
+                return redirect()->route('admin.owners.index')->with('error', 'User not found for this owner!');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error removing owner: ' . $e->getMessage());
+            return redirect()->route('admin.owners.index')->with('error', 'Error removing owner: ' . $e->getMessage());
         }
-
-        return redirect()->route('admin.owners.index')
-            ->with('success', $message);
     }
 }

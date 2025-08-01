@@ -65,14 +65,14 @@ class User extends Authenticatable
 
     public function subscription()
     {
-        return $this->hasOne(OwnerSubscription::class, 'owner_id');
+        return $this->hasOneThrough(OwnerSubscription::class, Owner::class, 'user_id', 'owner_id', 'id', 'id');
     }
 
     public function activeSubscription()
     {
-        return $this->hasOne(OwnerSubscription::class, 'owner_id')
-            ->where('status', 'active')
-            ->where('end_date', '>=', now());
+        return $this->hasOneThrough(OwnerSubscription::class, Owner::class, 'user_id', 'owner_id', 'id', 'id')
+            ->whereIn('owner_subscriptions.status', ['active', 'pending_upgrade'])
+            ->where('owner_subscriptions.end_date', '>=', now());
     }
 
     public function properties()

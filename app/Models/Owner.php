@@ -51,4 +51,14 @@ public function ownedProperties() {
     return $this->hasMany(Property::class)->with('units');
 }
 
+public function subscriptions()
+{
+    return $this->hasMany(OwnerSubscription::class, 'owner_id');
+}
+
+public function billing()
+{
+    return $this->hasMany(Billing::class, 'owner_id');
+}
+
 }

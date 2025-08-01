@@ -18,11 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'refresh.session' => \App\Http\Middleware\RefreshSession::class,
             'check.limits' => \App\Http\Middleware\CheckPackageLimits::class,
+            'set.locale' => \App\Http\Middleware\SetLocale::class,
         ]);
 
         // Enable CORS for API rourtes
         $middleware->web(append: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

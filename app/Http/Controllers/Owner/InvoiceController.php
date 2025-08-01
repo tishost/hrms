@@ -3,38 +3,42 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use App\Models\RentPayment;
-use App\Models\Tenant;
+use App\Models\Billing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    /**
+     * View invoice details
+     */
+    public function viewInvoice($billingId)
     {
-        $user = Auth::user();
+        $ownerId = Auth::user()->owner_id ?? Auth::id();
 
-        // Get all rent payments for properties owned by this user
-        $invoices = RentPayment::whereHas('tenant.property', function($query) use ($user) {
-            $query->where('owner_id', $user->id);
-        })
-        ->with(['tenant', 'tenant.property'])
-        ->orderBy('created_at', 'desc')
-        ->paginate(15);
+        $invoice = Billing::with(['subscription.plan', 'owner', 'paymentMethod'])
+            ->where('id', $billingId)
+            ->where('owner_id', $ownerId)
+            ->firstOrFail();
 
-        return view('owner.invoices.index', compact('invoices'));
+        return view('owner.invoice.view', compact('invoice'));
     }
 
-    public function show($id)
+    /**
+     * Download invoice as PDF
+     */
+    public function downloadInvoice($billingId)
     {
-        $user = Auth::user();
+        $ownerId = Auth::user()->owner_id ?? Auth::id();
 
-        $invoice = RentPayment::whereHas('tenant.property', function($query) use ($user) {
-            $query->where('owner_id', $user->id);
-        })
-        ->with(['tenant', 'tenant.property', 'tenant.unit'])
-        ->findOrFail($id);
+        $invoice = Billing::with(['subscription.plan', 'owner', 'paymentMethod'])
+            ->where('id', $billingId)
+            ->where('owner_id', $ownerId)
+            ->firstOrFail();
 
-        return view('owner.invoices.show', compact('invoice'));
+        // For now, just redirect to view page
+        // In future, you can implement PDF generation here
+        return redirect()->route('owner.invoice.view', $billingId)
+            ->with('info', 'PDF download feature will be implemented soon.');
     }
 }

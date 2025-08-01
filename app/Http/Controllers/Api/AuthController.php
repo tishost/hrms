@@ -89,6 +89,36 @@ class AuthController extends Controller
             // Update user with owner_id
             $user->update(['owner_id' => $owner->id]);
 
+            // Automatically activate free package for new owner
+            $freePlan = \App\Models\SubscriptionPlan::where('price', 0)->first();
+            if ($freePlan) {
+                \Log::info('Activating free package for new API owner', [
+                    'user_id' => $user->id,
+                    'owner_id' => $owner->id,
+                    'free_plan_id' => $freePlan->id,
+                    'free_plan_name' => $freePlan->name
+                ]);
+
+                // Create free subscription
+                $freeSubscription = \App\Models\OwnerSubscription::create([
+                    'owner_id' => $owner->id,
+                    'plan_id' => $freePlan->id,
+                    'status' => 'active',
+                    'auto_renew' => true,
+                    'sms_credits' => $freePlan->sms_notification ? 100 : 0,
+                    'start_date' => now()->toDateString(),
+                    'end_date' => now()->addYear()->toDateString(),
+                    'plan_name' => $freePlan->name
+                ]);
+
+                \Log::info('Free subscription created via API', [
+                    'subscription_id' => $freeSubscription->id,
+                    'owner_id' => $freeSubscription->owner_id,
+                    'plan_id' => $freeSubscription->plan_id,
+                    'status' => $freeSubscription->status
+                ]);
+            }
+
             // Generate token
             $token = $user->createToken('api-token')->plainTextToken;
 

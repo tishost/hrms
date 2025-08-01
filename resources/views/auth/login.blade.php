@@ -21,7 +21,9 @@
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 20px 0;
         }
 
         /* Animated Background */
@@ -50,11 +52,12 @@
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            overflow: visible;
             width: 100%;
             max-width: 450px;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px auto;
         }
 
         .login-header {
@@ -64,6 +67,8 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
         }
 
         .login-header::before {
@@ -365,13 +370,29 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px 0;
+                align-items: flex-start;
+            }
+            
             .login-container {
-                margin: 20px;
+                margin: 10px;
                 max-width: 100%;
+                border-radius: 15px;
+            }
+
+            .login-header {
+                padding: 30px 20px;
+                border-top-left-radius: 15px;
+                border-top-right-radius: 15px;
             }
 
             .login-header h2 {
-                font-size: 2rem;
+                font-size: 1.8rem;
+            }
+
+            .login-body {
+                padding: 30px 20px;
             }
 
             .registration-buttons {
@@ -381,6 +402,27 @@
             .btn-register {
                 padding: 12px 15px;
                 font-size: 0.95rem;
+            }
+
+            .form-control {
+                padding: 12px 15px;
+                font-size: 0.95rem;
+            }
+
+            .btn-login {
+                padding: 12px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-height: 600px) {
+            body {
+                align-items: flex-start;
+                padding: 10px 0;
+            }
+            
+            .login-container {
+                margin: 10px auto;
             }
         }
     </style>

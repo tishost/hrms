@@ -12,20 +12,26 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px 0;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         .login-card {
             background: white;
             border-radius: 15px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            overflow: visible;
             width: 100%;
             max-width: 400px;
+            margin: 20px auto;
         }
         .login-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
         }
         .login-body {
             padding: 30px;
@@ -50,6 +56,40 @@
         .btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 0;
+                align-items: flex-start;
+            }
+            
+            .login-card {
+                margin: 10px;
+                max-width: 100%;
+                border-radius: 12px;
+            }
+
+            .login-header {
+                padding: 25px 20px;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+            }
+
+            .login-body {
+                padding: 25px 20px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            body {
+                align-items: flex-start;
+                padding: 10px 0;
+            }
+            
+            .login-card {
+                margin: 10px auto;
+            }
         }
     </style>
 </head>

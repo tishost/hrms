@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'file'),
+    'driver' => env('SESSION_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,7 +32,7 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 2880),
+    'lifetime' => (int) env('SESSION_LIFETIME', 4320), // Increased to 72 hours
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 

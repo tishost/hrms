@@ -16,12 +16,8 @@
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             position: relative;
-            overflow: hidden;
             padding: 20px;
         }
 
@@ -51,11 +47,12 @@
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
             width: 100%;
             max-width: 600px;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px auto;
+            overflow: hidden;
         }
 
         .register-header {
@@ -65,6 +62,7 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            border-radius: 20px 20px 0 0;
         }
 
         .register-header::before {
@@ -259,13 +257,21 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
             .register-container {
-                margin: 20px;
+                margin: 10px;
                 max-width: 100%;
             }
 
             .register-header h2 {
                 font-size: 2rem;
+            }
+
+            .register-body {
+                padding: 30px 20px;
             }
         }
     </style>
@@ -284,6 +290,20 @@
         </div>
 
         <div class="register-body">
+            @if(session('selected_plan'))
+                @php
+                    $selectedPlan = \App\Models\SubscriptionPlan::find(session('selected_plan'));
+                @endphp
+                @if($selectedPlan)
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Selected Plan:</strong> {{ $selectedPlan->name }} - ৳{{ number_format($selectedPlan->price) }}
+                        <br>
+                        <small>You will be redirected to purchase this plan after registration.</small>
+                    </div>
+                @endif
+            @endif
+
             @if(session('success'))
                 <div class="alert alert-success">
                     <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -465,6 +485,10 @@
                         </div>
                     </div>
                 </div>
+
+                @if(session('selected_plan'))
+                    <input type="hidden" name="selected_plan" value="{{ session('selected_plan') }}">
+                @endif
 
                 <button type="submit" class="btn btn-register">
                     <i class="fas fa-user-plus"></i> Complete Registration

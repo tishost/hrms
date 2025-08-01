@@ -23,7 +23,7 @@
                                 <div class="plan-header">
                                     @if($currentSubscription && $currentSubscription->plan_id == $plan->id)
                                         <div class="plan-badge">
-                                            <span class="badge badge-primary">Current Plan</span>
+                                            <span class="badge bg-primary">Current Plan</span>
                                         </div>
                                     @endif
                                     <h3 class="plan-title">{{ $plan->name }}</h3>
@@ -75,9 +75,34 @@
                                             <i class="fas fa-check"></i> Current Plan
                                         </button>
                                     @elseif($currentSubscription && $currentSubscription->isActive())
-                                        <button class="btn btn-info btn-block" disabled>
-                                            <i class="fas fa-clock"></i> Upgrade After Expiry
-                                        </button>
+                                        @php
+                                            $currentPlan = $currentSubscription->plan;
+                                            $canUpgrade = $plan->price > $currentPlan->price;
+                                            $canDowngrade = $plan->price < $currentPlan->price;
+                                            $isHighestPlan = $currentPlan->name === 'Advance' || $currentPlan->name === 'Premium';
+                                        @endphp
+                                        
+                                        @if($isHighestPlan)
+                                            <button class="btn btn-success btn-block" disabled>
+                                                <i class="fas fa-crown"></i> Highest Plan Active
+                                            </button>
+                                        @elseif($canUpgrade)
+                                            <form action="{{ route('owner.subscription.upgrade') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                                <button type="submit" class="btn btn-success btn-block">
+                                                    <i class="fas fa-arrow-up"></i> Upgrade to {{ $plan->name }}
+                                                </button>
+                                            </form>
+                                        @elseif($canDowngrade)
+                                            <button class="btn btn-warning btn-block" disabled>
+                                                <i class="fas fa-arrow-down"></i> Downgrade Not Allowed
+                                            </button>
+                                        @else
+                                            <button class="btn btn-info btn-block" disabled>
+                                                <i class="fas fa-equals"></i> Same Price Plan
+                                            </button>
+                                        @endif
                                     @else
                                         <form action="{{ route('owner.subscription.purchase') }}" method="POST">
                                             @csrf
