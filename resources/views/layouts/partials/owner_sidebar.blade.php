@@ -92,10 +92,22 @@
             </ul>
         </li>
 
-        <li class="{{ request()->routeIs('owner.settings.*') ? 'active' : '' }}">
-            <a href="">
+        <li class="has-submenu {{ request()->routeIs('owner.settings.*') ? 'open' : '' }}">
+            <a href="javascript:void(0);" class="submenu-toggle">
                 <span class="menu-icon">⚙️</span>
                 Settings
+                <span class="submenu-arrow">▼</span>
+            </a>
+            <ul class="submenu">
+                <li class="{{ request()->routeIs('owner.settings.backup') ? 'active' : '' }}">
+                    <a href="{{ route('owner.settings.backup') }}">💾 Backup Settings</a>
+                </li>
+            </ul>
+        </li>
+        <li class="{{ request()->routeIs('owner.backups.*') ? 'active' : '' }}">
+            <a href="{{ route('owner.backups.index') }}">
+                <span class="menu-icon">💾</span>
+                My Backups
             </a>
         </li>
     </ul>

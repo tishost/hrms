@@ -30,7 +30,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('admin.owners.store') }}" method="POST">
+                    <form id="ownerForm" action="{{ route('admin.owners.store') }}" method="POST">
                         @csrf
 
                         <div class="row">
@@ -341,13 +341,38 @@ document.addEventListener('DOMContentLoaded', function() {
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Phone number formatting
+    // Phone number formatting - only allow digits and + sign
     $('#phone').on('input', function() {
-        let value = $(this).val().replace(/\D/g, '');
-        if (value.length > 0) {
+        let value = $(this).val();
+        
+        // Allow only digits and + sign
+        value = value.replace(/[^\d+]/g, '');
+        
+        // Ensure only one + at the beginning
+        if (value.indexOf('+') > 0) {
+            value = value.replace(/\+/g, '');
             value = '+' + value;
         }
+        
         $(this).val(value);
+    });
+    
+    // Form submission debugging
+    $('#ownerForm').on('submit', function(e) {
+        console.log('Form submitted!');
+        console.log('Form data:', {
+            name: $('#name').val(),
+            email: $('#email').val(),
+            phone: $('#phone').val(),
+            country: $('#country').val(),
+            address: $('#address').val(),
+            gender: $('#gender').val(),
+            password: $('#password').val(),
+            password_confirmation: $('#password_confirmation').val()
+        });
+        
+        // Don't prevent default - let it submit normally
+        console.log('Allowing form submission...');
     });
 });
 </script>

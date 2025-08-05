@@ -56,9 +56,24 @@ public function subscriptions()
     return $this->hasMany(OwnerSubscription::class, 'owner_id');
 }
 
+public function subscription()
+{
+    return $this->hasOne(OwnerSubscription::class, 'owner_id')->latest();
+}
+
 public function billing()
 {
     return $this->hasMany(Billing::class, 'owner_id');
+}
+
+public function tenants()
+{
+    return $this->hasMany(Tenant::class, 'owner_id');
+}
+
+public function notificationLogs()
+{
+    return $this->hasManyThrough(NotificationLog::class, User::class, 'owner_id', 'user_id');
 }
 
 }

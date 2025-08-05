@@ -24,7 +24,7 @@
                         @method('PUT')
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Plan Name</label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror"
@@ -34,12 +34,32 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="price" class="form-label">Price (৳)</label>
                                     <input type="number" class="form-control @error('price') is-invalid @enderror"
                                            id="price" name="price" value="{{ old('price', $plan->price) }}" min="0" step="0.01" required>
                                     @error('price')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="billing_cycle" class="form-label">Billing Cycle</label>
+                                    <select class="form-control @error('billing_cycle') is-invalid @enderror" 
+                                            id="billing_cycle" name="billing_cycle" required>
+                                        <option value="monthly" {{ old('billing_cycle', $plan->billing_cycle ?? 'monthly') == 'monthly' ? 'selected' : '' }}>
+                                            Monthly (30 days)
+                                        </option>
+                                        <option value="yearly" {{ old('billing_cycle', $plan->billing_cycle ?? 'monthly') == 'yearly' ? 'selected' : '' }}>
+                                            Yearly (365 days)
+                                        </option>
+                                        <option value="lifetime" {{ old('billing_cycle', $plan->billing_cycle ?? 'monthly') == 'lifetime' ? 'selected' : '' }}>
+                                            Lifetime (100 years)
+                                        </option>
+                                    </select>
+                                    @error('billing_cycle')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -183,9 +203,12 @@
                             @if($plan->price == 0)
                                 Free
                             @else
-                                ৳{{ number_format($plan->price) }}
+                                {{ $plan->formatted_price_with_cycle ?? '৳' . number_format($plan->price) }}
                             @endif
                         </h2>
+                        @if($plan->billing_cycle)
+                            <small class="text-muted">{{ $plan->billing_cycle_text }}</small>
+                        @endif
                     </div>
 
                     <div class="mb-3">

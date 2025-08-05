@@ -48,6 +48,7 @@ class SmsSettingsController extends Controller
             $smsSettings = [
                 'sms_enabled' => $settings['sms_enabled'] ?? '0',
                 'sms_api_token' => $settings['sms_api_token'] ?? '',
+                'sms_provider' => $settings['sms_provider'] ?? 'bulksms',
                 'sms_sender_id' => $settings['sms_sender_id'] ?? '',
                 'sms_rent_reminder_enabled' => $settings['sms_rent_reminder_enabled'] ?? '0',
                 'sms_maintenance_update_enabled' => $settings['sms_maintenance_update_enabled'] ?? '0',
@@ -62,7 +63,11 @@ class SmsSettingsController extends Controller
                 'sms_retry_delay' => $settings['sms_retry_delay'] ?? '5',
             ];
 
-            return view('admin.settings.sms', compact('smsSettings'));
+            // Get SMS logs with pagination
+            $smsLogs = \App\Models\SmsLog::orderBy('created_at', 'desc')
+                ->paginate(20);
+
+            return view('admin.settings.sms', compact('smsSettings', 'smsLogs'));
         } catch (\Exception $e) {
             return back()->with('error', 'Error loading SMS settings: ' . $e->getMessage());
         }
@@ -75,6 +80,7 @@ class SmsSettingsController extends Controller
         $request->validate([
             'sms_enabled' => 'boolean',
             'sms_api_token' => 'required_if:sms_enabled,1|string|max:255',
+            'sms_provider' => 'required_if:sms_enabled,1|in:bulksms,twilio,nexmo',
             'sms_sender_id' => 'required_if:sms_enabled,1|string|max:13',
             'sms_rent_reminder_enabled' => 'boolean',
             'sms_maintenance_update_enabled' => 'boolean',

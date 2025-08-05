@@ -7,6 +7,22 @@
 @section('title', 'Dashboard')
 
 @section('content')
+<!-- Debug Info - Remove this after fixing the issue -->
+@if(config('app.debug'))
+<div class="alert alert-info mb-4">
+    <strong>Debug Info:</strong>
+    <ul class="mb-0">
+        <li>Current Route: {{ request()->route()->getName() }}</li>
+        <li>User ID: {{ auth()->id() }}</li>
+        <li>User Name: {{ auth()->user()->name ?? 'N/A' }}</li>
+        <li>User Roles: {{ auth()->user()->roles->pluck('name')->implode(', ') }}</li>
+        <li>Is Owner: {{ auth()->user()->hasRole('owner') ? 'Yes' : 'No' }}</li>
+        <li>Owner ID: {{ auth()->user()->owner->id ?? 'N/A' }}</li>
+        <li>Layout: owner.blade.php</li>
+    </ul>
+</div>
+@endif
+
 <div class="page-header">
     <div class="page-title">
         <h1>Dashboard Overview</h1>
@@ -55,6 +71,18 @@
             </div>
             <div class="stat-icon sales">
                 <i class="fas fa-door-open"></i>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div>
+                <div class="stat-title">SMS Credits</div>
+                <div class="stat-value">{{ $smsCredits - $usedSmsCredits }}</div>
+                <small class="text-muted">of {{ $smsCredits }} total</small>
+            </div>
+            <div class="stat-icon sms">
+                <i class="fas fa-sms"></i>
             </div>
         </div>
     </div>
@@ -122,6 +150,31 @@
                         </a>
                     </div>
                 @endif
+                
+                <!-- SMS Credits Management -->
+                @if($subscription && $subscription->sms_credits > 0)
+                    <div class="alert alert-info mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6><i class="fas fa-sms"></i> SMS Credits</h6>
+                                <p class="mb-0">
+                                    <strong>{{ $smsCredits - $usedSmsCredits }}</strong> credits remaining 
+                                    out of <strong>{{ $smsCredits }}</strong> total credits
+                                </p>
+                                @if(($smsCredits - $usedSmsCredits) < 50)
+                                    <small class="text-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> Low SMS credits! Consider purchasing more.
+                                    </small>
+                                @endif
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSmsCreditsModal">
+                                    <i class="fas fa-plus"></i> Add Credits
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -180,6 +233,95 @@
         </div>
     </div>
 </div>
+<!-- Add SMS Credits Modal -->
+<div class="modal fade" id="addSmsCreditsModal" tabindex="-1" aria-labelledby="addSmsCreditsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSmsCreditsModalLabel">
+                    <i class="fas fa-sms"></i> Add SMS Credits
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('owner.sms.add-credits') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="credits_amount" class="form-label">Number of Credits</label>
+                        <select class="form-control" id="credits_amount" name="credits_amount" required>
+                            <option value="">Select amount</option>
+                            <option value="50">50 Credits - ৳500</option>
+                            <option value="100">100 Credits - ৳900</option>
+                            <option value="200">200 Credits - ৳1600</option>
+                            <option value="500">500 Credits - ৳3500</option>
+                            <option value="1000">1000 Credits - ৳6000</option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Current balance: <strong>{{ $smsCredits - $usedSmsCredits }}</strong> credits
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="payment_method" class="form-label">Payment Method</label>
+                        <select class="form-control" id="payment_method" name="payment_method" required>
+                            <option value="">Select payment method</option>
+                            <option value="bkash">bKash</option>
+                            <option value="nagad">Nagad</option>
+                            <option value="rocket">Rocket</option>
+                            <option value="card">Credit/Debit Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-credit-card"></i> Purchase Credits
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@section('styles')
+<style>
+.stat-icon.sms {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.usage-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.usage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.usage-header h6 {
+    margin: 0;
+    color: #495057;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.progress-bar {
+    border-radius: 4px;
+    font-size: 10px;
+    line-height: 8px;
+}
+</style>
 @endsection
 
 @section('scripts')

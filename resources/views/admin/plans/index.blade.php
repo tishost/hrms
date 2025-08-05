@@ -37,6 +37,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Price</th>
+                            <th>Billing Cycle</th>
                             <th>Properties</th>
                             <th>Units</th>
                             <th>Tenants</th>
@@ -60,7 +61,14 @@
                                 @if($plan->price == 0)
                                     <span class="text-success">Free</span>
                                 @else
-                                    ৳{{ number_format($plan->price) }}
+                                    {{ $plan->formatted_price_with_cycle ?? '৳' . number_format($plan->price) }}
+                                @endif
+                            </td>
+                            <td>
+                                @if($plan->billing_cycle)
+                                    <span class="badge bg-primary">{{ ucfirst($plan->billing_cycle) }}</span>
+                                @else
+                                    <span class="text-muted">Monthly</span>
                                 @endif
                             </td>
                             <td>

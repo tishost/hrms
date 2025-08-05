@@ -19,6 +19,16 @@ class OwnerDashboardController extends Controller
         $unitCount = $owner->properties()->withCount('units')->get()->sum('units_count');
         // Owner-wise tenant count using owner_id
         $tenantCount = \App\Models\Tenant::where('owner_id', $owner->id)->count();
+        
+        // Get SMS credit information
+        $smsCredits = 0;
+        $usedSmsCredits = 0;
+        $subscription = $owner->subscription;
+        if ($subscription) {
+            $smsCredits = $subscription->sms_credits ?? 0;
+            $usedSmsCredits = $subscription->used_sms_credits ?? 0;
+        }
+        
         $data = [
             'ordersCount' => 1284,
             'ordersGrowth' => 12.5,
@@ -28,6 +38,6 @@ class OwnerDashboardController extends Controller
             'customerSegments' => [35, 25, 20, 10, 5, 5]
         ];
 
-        return view('owner.dashboard', compact('buildingCount', 'unitCount', 'tenantCount', 'data'));
+        return view('owner.dashboard', compact('buildingCount', 'unitCount', 'tenantCount', 'data', 'smsCredits', 'usedSmsCredits', 'subscription'));
     }
 }

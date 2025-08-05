@@ -7,6 +7,12 @@
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
+    <!-- Dynamic Favicon -->
+    @if(\App\Helpers\SystemHelper::getCompanyFavicon())
+        <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SystemHelper::getCompanyFavicon() }}">
+        <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Helpers\SystemHelper::getCompanyFavicon() }}">
+    @endif
+    
     {!! \App\Services\SeoService::renderMetaTags('landing') !!}
 
     <!-- Tailwind CSS -->
@@ -186,21 +192,27 @@
     {!! \App\Services\SeoService::renderBreadcrumbs() !!}
 
     <!-- Hero Section -->
-    <section id="home" class="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden">
+    <section id="home" class="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden"
+             @if(\App\Models\SystemSetting::getValue('hero_image'))
+             style="background-image: url('{{ asset('storage/' . \App\Models\SystemSetting::getValue('hero_image')) }}'); background-size: cover; background-position: center;"
+             @endif>
         <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                 <div class="text-white text-center lg:text-left">
                     <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 lg:mb-6">
-                        {{ __('Bari Manager') }}
+                        {{ \App\Models\SystemSetting::getValue('hero_title', 'Bari Manager') }}
                     </h1>
-                    <p class="text-lg sm:text-xl lg:text-2xl mb-6 lg:mb-8 text-gray-100">
-                        {{ __('Streamline your property management with our comprehensive Bari Manager solution. Manage tenants, track rent, and grow your business effortlessly.') }}
+                    <p class="text-lg sm:text-xl lg:text-2xl mb-4 lg:mb-6 text-gray-100">
+                        {{ \App\Models\SystemSetting::getValue('hero_subtitle', 'Property Management System') }}
+                    </p>
+                    <p class="text-base sm:text-lg lg:text-xl mb-6 lg:mb-8 text-gray-100">
+                        {{ \App\Models\SystemSetting::getValue('hero_description', 'Streamline your property management with our comprehensive Bari Manager solution. Manage tenants, track rent, and grow your business effortlessly.') }}
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="#register" class="btn-primary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold inline-block text-center">
+                        <a href="{{ \App\Models\SystemSetting::getValue('hero_button_url', '#register') }}" class="btn-primary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold inline-block text-center">
                             <i class="fas fa-rocket mr-2"></i>
-                            {{ __('Get Started Free') }}
+                            {{ \App\Models\SystemSetting::getValue('hero_button_text', 'Get Started Free') }}
                         </a>
                         <a href="#features" class="bg-white bg-opacity-20 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold inline-block text-center hover:bg-opacity-30 transition-all">
                             <i class="fas fa-play mr-2"></i>
@@ -404,10 +416,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12 lg:mb-16">
                 <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                    {{ __('Powerful Features') }}
+                    {{ \App\Models\SystemSetting::getValue('features_title', 'Powerful Features') }}
                 </h2>
                 <p class="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-                    {{ __('Everything you need to manage your rental properties efficiently and grow your business with Bari Manager') }}
+                    {{ \App\Models\SystemSetting::getValue('features_subtitle', 'Everything you need to manage your rental properties efficiently and grow your business with Bari Manager') }}
                 </p>
             </div>
 
@@ -415,28 +427,28 @@
                 <!-- Feature 1 -->
                 <div class="feature-card bg-white p-6 lg:p-8 rounded-2xl shadow-lg border border-gray-100">
                     <div class="bg-purple-100 p-3 lg:p-4 rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center mb-4 lg:mb-6">
-                        <i class="fas fa-home text-purple-600 text-lg lg:text-2xl"></i>
+                        <i class="{{ \App\Models\SystemSetting::getValue('feature1_icon', 'fas fa-home') }} text-purple-600 text-lg lg:text-2xl"></i>
                     </div>
-                    <h3 class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">{{ __('Property Management') }}</h3>
-                    <p class="text-gray-600 text-sm lg:text-base">{{ __('Easily manage multiple properties, units, and their details in one centralized platform.') }}</p>
+                    <h3 class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">{{ \App\Models\SystemSetting::getValue('feature1_title', 'Property Management') }}</h3>
+                    <p class="text-gray-600 text-sm lg:text-base">{{ \App\Models\SystemSetting::getValue('feature1_description', 'Easily manage multiple properties, units, and their details in one centralized platform.') }}</p>
                 </div>
 
                 <!-- Feature 2 -->
                 <div class="feature-card bg-white p-6 lg:p-8 rounded-2xl shadow-lg border border-gray-100">
                     <div class="bg-blue-100 p-3 lg:p-4 rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center mb-4 lg:mb-6">
-                        <i class="fas fa-users text-blue-600 text-lg lg:text-2xl"></i>
+                        <i class="{{ \App\Models\SystemSetting::getValue('feature2_icon', 'fas fa-users') }} text-blue-600 text-lg lg:text-2xl"></i>
                     </div>
-                    <h3 class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">{{ __('Tenant Management') }}</h3>
-                    <p class="text-gray-600 text-sm lg:text-base">{{ __('Complete tenant profiles, rent history, and communication tools all in one place.') }}</p>
+                    <h3 class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">{{ \App\Models\SystemSetting::getValue('feature2_title', 'Tenant Management') }}</h3>
+                    <p class="text-gray-600 text-sm lg:text-base">{{ \App\Models\SystemSetting::getValue('feature2_description', 'Complete tenant profiles, rent history, and communication tools all in one place.') }}</p>
                 </div>
 
                 <!-- Feature 3 -->
                 <div class="feature-card bg-white p-6 lg:p-8 rounded-2xl shadow-lg border border-gray-100">
                     <div class="bg-green-100 p-3 lg:p-4 rounded-full w-12 h-12 lg:w-16 lg:h-16 flex items-center justify-center mb-4 lg:mb-6">
-                        <i class="fas fa-money-bill-wave text-green-600 text-lg lg:text-2xl"></i>
+                        <i class="{{ \App\Models\SystemSetting::getValue('feature3_icon', 'fas fa-chart-line') }} text-green-600 text-lg lg:text-2xl"></i>
                     </div>
-                    <h3 class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">{{ __('Rent Collection') }}</h3>
-                    <p class="text-gray-600 text-sm lg:text-base">{{ __('Automated rent tracking, payment reminders, and financial reporting.') }}</p>
+                    <h3 class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">{{ \App\Models\SystemSetting::getValue('feature3_title', 'Financial Tracking') }}</h3>
+                    <p class="text-gray-600 text-sm lg:text-base">{{ \App\Models\SystemSetting::getValue('feature3_description', 'Track income, expenses, and generate detailed financial reports.') }}</p>
                 </div>
 
                 <!-- Feature 4 -->

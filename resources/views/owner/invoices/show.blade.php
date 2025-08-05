@@ -73,7 +73,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Unit:</strong></td>
-                                    <td>{{ $invoice->tenant->unit->unit_number ?? 'N/A' }}</td>
+                                    <td>{{ $invoice->tenant->unit->name ?? 'N/A' }}</td>
                                 </tr>
                             </table>
                         </div>

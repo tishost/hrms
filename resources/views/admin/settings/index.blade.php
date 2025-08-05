@@ -63,13 +63,13 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.otp-settings.index') }}" class="btn btn-warning btn-block">
-                                <i class="fas fa-mobile-alt"></i> OTP Settings
+                            <a href="{{ route('admin.settings.company') }}" class="btn btn-primary btn-block">
+                                <i class="fas fa-building"></i> Company Information
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.settings.payment-gateway') }}" class="btn btn-primary btn-block">
-                                <i class="fas fa-credit-card"></i> Payment Gateway
+                            <a href="{{ route('admin.settings.system') }}" class="btn btn-info btn-block">
+                                <i class="fas fa-cogs"></i> System Settings
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
@@ -78,13 +78,28 @@
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.owners.index') }}" class="btn btn-info btn-block">
+                            <a href="{{ route('admin.otp-settings.index') }}" class="btn btn-secondary btn-block">
+                                <i class="fas fa-mobile-alt"></i> OTP Settings
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('admin.settings.payment-gateway') }}" class="btn btn-success btn-block">
+                                <i class="fas fa-credit-card"></i> Payment Gateway
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('admin.owners.index') }}" class="btn btn-dark btn-block">
                                 <i class="fas fa-users"></i> Owner Management
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-success btn-block">
+                            <a href="{{ route('admin.dashboard') }}" class="btn btn-light btn-block">
                                 <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('admin.settings.backup') }}" class="btn btn-danger btn-block">
+                                <i class="fas fa-database"></i> Backup Settings
                             </a>
                         </div>
                     </div>

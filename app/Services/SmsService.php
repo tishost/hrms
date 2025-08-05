@@ -14,11 +14,21 @@ class SmsService
 
     public function __construct($apiToken = null, $senderId = null)
     {
-        // If parameters are provided, use them; otherwise use config
-        $this->apiToken = $apiToken ?? config('services.sms.api_token', '');
-        $this->senderId = $senderId ?? config('services.sms.sender_id', '');
-        $this->apiUrl = config('services.sms.api_url', '');
-        $this->balanceUrl = config('services.sms.balance_url', '');
+        // If parameters are provided, use them; otherwise get from database
+        if ($apiToken) {
+            $this->apiToken = $apiToken;
+        } else {
+            $this->apiToken = \App\Models\SystemSetting::getValue('sms_api_token', '');
+        }
+        
+        if ($senderId) {
+            $this->senderId = $senderId;
+        } else {
+            $this->senderId = \App\Models\SystemSetting::getValue('sms_sender_id', 'BARI MANAGER');
+        }
+        
+        $this->apiUrl = \App\Models\SystemSetting::getValue('sms_api_url', 'https://api.smsinbd.com/sms-api/sendsms');
+        $this->balanceUrl = \App\Models\SystemSetting::getValue('sms_balance_url', 'https://api.smsinbd.com/sms-api/balance');
         
         // Check if API token is configured
         if (empty($this->apiToken)) {

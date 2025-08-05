@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\LoginLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
+    protected $loginLogService;
+
+    public function __construct(LoginLogService $loginLogService)
+    {
+        $this->loginLogService = $loginLogService;
+    }
+
     // Register
     public function register(Request $request)
     {
@@ -88,6 +96,23 @@ class AuthController extends Controller
 
             // Update user with owner_id
             $user->update(['owner_id' => $owner->id]);
+
+            // Send comprehensive welcome notification (multiple emails + SMS)
+            try {
+                $notificationResults = \App\Helpers\NotificationHelper::sendComprehensiveWelcome($user);
+                \Log::info('Comprehensive welcome notification sent via API', [
+                    'user_id' => $user->id,
+                    'owner_id' => $owner->id,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'emails_sent' => count(array_filter($notificationResults, function($key) {
+                        return strpos($key, 'email') !== false;
+                    }, ARRAY_FILTER_USE_KEY)),
+                    'sms_sent' => isset($notificationResults['sms']) && $notificationResults['sms']['success']
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Welcome notification failed via API: ' . $e->getMessage());
+            }
 
             // Automatically activate free package for new owner
             $freePlan = \App\Models\SubscriptionPlan::where('price', 0)->first();
@@ -168,6 +193,9 @@ class AuthController extends Controller
             }
 
             if (!$user || !Hash::check($request->password, $user->password)) {
+                // Log failed login attempt
+                $this->loginLogService->logLogin($request, null, 'failed', 'Invalid credentials');
+                
                 return response()->json([
                     'error' => 'Invalid credentials'
                 ], 401);
@@ -186,10 +214,16 @@ class AuthController extends Controller
             } elseif ($user->hasRole('tenant')) {
                 $role = 'tenant';
             } else {
+                // Log failed login attempt (unauthorized role)
+                $this->loginLogService->logLogin($request, null, 'failed', 'Unauthorized role');
+                
                 return response()->json([
                     'error' => 'Unauthorized role'
                 ], 403);
             }
+
+            // Log successful login
+            $this->loginLogService->logLogin($request, $user, 'success');
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -212,6 +246,13 @@ class AuthController extends Controller
     // Logout
     public function logout(Request $request)
     {
+        $user = $request->user();
+        
+        if ($user) {
+            // Log logout
+            $this->loginLogService->logLogout($user);
+        }
+        
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully.']);
     }

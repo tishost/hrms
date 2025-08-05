@@ -34,7 +34,7 @@
                                         <td>{{ $invoice->id }}</td>
                                         <td>{{ $invoice->tenant->full_name ?? 'N/A' }}</td>
                                         <td>{{ $invoice->tenant->property->name ?? 'N/A' }}</td>
-                                        <td>{{ $invoice->tenant->unit->unit_number ?? 'N/A' }}</td>
+                                        <td>{{ $invoice->tenant->unit->name ?? 'N/A' }}</td>
                                         <td>৳{{ number_format($invoice->amount, 2) }}</td>
                                         <td>{{ $invoice->payment_date ? $invoice->payment_date->format('M d, Y') : 'N/A' }}</td>
                                         <td>

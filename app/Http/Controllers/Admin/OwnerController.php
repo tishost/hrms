@@ -28,6 +28,13 @@ class OwnerController extends Controller
 
     public function store(Request $request)
     {
+        // Debug: Log that the method is called
+        \Log::info('OwnerController@store called', [
+            'all_data' => $request->all(),
+            'method' => $request->method(),
+            'url' => $request->url()
+        ]);
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -37,13 +44,20 @@ class OwnerController extends Controller
             'gender' => 'nullable|in:male,female,other',
         ]);
 
+        // Debug: Log validation passed
+        \Log::info('Validation passed, creating user and owner');
+
         // Create User
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make('password123'), // Default password
             'email_verified_at' => now(),
         ]);
+
+        // Debug: Log user created
+        \Log::info('User created', ['user_id' => $user->id, 'user_email' => $user->email]);
 
         // Create Owner
         $owner = Owner::create([
@@ -58,11 +72,41 @@ class OwnerController extends Controller
             'is_super_admin' => false,
         ]);
 
-        // Send welcome notification
+        // Debug: Log owner created
+        \Log::info('Owner created', ['owner_id' => $owner->id, 'owner_phone' => $owner->phone]);
+
+        // Update user with owner_id and phone number
+        $user->update([
+            'owner_id' => $owner->id,
+            'phone' => $owner->phone // Add phone number to user
+        ]);
+        
+        // Debug: Log the phone numbers
+        \Log::info('Owner creation - Phone numbers:', [
+            'request_phone' => $request->phone,
+            'owner_phone' => $owner->phone,
+            'user_phone' => $user->phone,
+            'user_id' => $user->id,
+            'owner_id' => $owner->id
+        ]);
+
+        // Send comprehensive welcome notification (multiple emails + SMS)
         try {
-            NotificationHelper::sendWelcomeNotification($user);
+            \Log::info('Starting notification process');
+            $notificationResults = NotificationHelper::sendComprehensiveWelcome($user);
+            \Log::info('Comprehensive welcome notification sent via admin', [
+                'user_id' => $user->id,
+                'owner_id' => $owner->id,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'notification_results' => $notificationResults,
+                'emails_sent' => count(array_filter($notificationResults, function($key) {
+                    return strpos($key, 'email') !== false;
+                }, ARRAY_FILTER_USE_KEY)),
+                'sms_sent' => isset($notificationResults['sms']) && $notificationResults['sms']['success']
+            ]);
         } catch (\Exception $e) {
-            \Log::error('Welcome notification failed: ' . $e->getMessage());
+            \Log::error('Welcome notification failed via admin: ' . $e->getMessage());
         }
 
         return redirect()->route('admin.owners.index')->with('success', 'Owner created successfully!');

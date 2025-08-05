@@ -36,6 +36,150 @@ Route::get('/csrf-token', function () {
     return response()->json(['token' => csrf_token()]);
 })->name('csrf.token');
 
+// Test CSRF route
+Route::post('/test-csrf', function () {
+    return response()->json(['success' => true, 'message' => 'CSRF working']);
+})->name('test.csrf');
+
+// Test template save route outside admin middleware
+Route::post('/test-template-save', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'success' => true, 
+        'message' => 'Template save test working',
+        'data' => $request->all()
+    ]);
+})->name('test.template.save');
+
+// Test template save route with same controller but outside admin middleware
+Route::post('/test-template-save-admin', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('test.template.save.admin');
+
+// Template save route (working version)
+// Test route for owner creation
+Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) {
+    try {
+        $user = \App\Models\User::create([
+            'name' => 'Test User ' . time(),
+            'email' => 'test' . time() . '@example.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+        ]);
+        
+        $owner = \App\Models\Owner::create([
+            'user_id' => $user->id,
+            'name' => 'Test Owner ' . time(),
+            'email' => 'test' . time() . '@example.com',
+            'phone' => '+8801718262530',
+            'address' => 'Test Address',
+            'country' => 'Bangladesh',
+            'gender' => 'male',
+            'status' => 'active',
+            'is_super_admin' => false,
+        ]);
+        
+        $user->update([
+            'owner_id' => $owner->id,
+            'phone' => $owner->phone
+        ]);
+        
+        $freshUser = \App\Models\User::find($user->id);
+        $freshOwner = \App\Models\Owner::find($owner->id);
+        
+        // Clean up
+        $owner->delete();
+        $user->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test completed successfully',
+            'user_phone' => $freshUser->phone,
+            'owner_phone' => $freshOwner->phone,
+            'user_id' => $user->id,
+            'owner_id' => $owner->id
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Test failed: ' . $e->getMessage()
+        ]);
+    }
+})->name('test.owner.creation');
+
+Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
+    $action = $request->get('action');
+    $templateName = $request->get('template_name');
+    
+    // Handle GET action (load template)
+    if ($action === 'get' && $templateName) {
+        try {
+            // Try different possible key formats
+            $template = \App\Models\SystemSetting::where('key', 'template_' . $templateName)
+                ->orWhere('key', $templateName)
+                ->orWhere('key', $templateName . '_template')
+                ->first();
+            
+            if ($template) {
+                $templateData = json_decode($template->value, true);
+                return response()->json([
+                    'success' => true,
+                    'template' => $templateData
+                ]);
+            } else {
+                // Debug: Log what we're looking for
+                \Log::info('Template not found for: ' . $templateName);
+                \Log::info('Available templates: ' . \App\Models\SystemSetting::where('key', 'like', '%template%')->orWhere('key', 'like', '%_email')->orWhere('key', 'like', '%_sms')->pluck('key')->toJson());
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template not found'
+                ]);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading template: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    // Handle save action
+    $content = $request->get('content');
+    $subject = $request->get('subject');
+    
+    if ($templateName && $content) {
+        try {
+            $templateData = [];
+            
+            // Check if it's an SMS template (contains '_sms' in name)
+            if (str_contains($templateName, '_sms')) {
+                $templateData = ['content' => $content];
+            } else {
+                // Email template
+                $templateData = [
+                    'subject' => $subject ?? 'HRMS Notification',
+                    'content' => $content
+                ];
+            }
+            
+            $result = \App\Models\SystemSetting::setValue('template_' . $templateName, json_encode($templateData));
+            
+            return response()->json([
+                'success' => true, 
+                'message' => 'Template saved successfully!',
+                'id' => $result->id
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Failed to save template: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    return response()->json([
+        'success' => false, 
+        'message' => 'Missing template parameters'
+    ]);
+})->name('test.save.template');
+
 // Debug route for testing features_css
 Route::get('/debug-plans', function () {
     $plans = \App\Models\SubscriptionPlan::all(['name', 'features', 'features_css']);
@@ -145,6 +289,26 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('invoice/{billingId}/view', [App\Http\Controllers\Owner\InvoiceController::class, 'viewInvoice'])->name('invoice.view');
     Route::get('invoice/{billingId}/download', [App\Http\Controllers\Owner\InvoiceController::class, 'downloadInvoice'])->name('invoice.download');
 
+    // SMS Credit routes
+    Route::get('sms/credits', [App\Http\Controllers\Owner\SmsCreditController::class, 'index'])->name('sms.credits');
+    Route::post('sms/add-credits', [App\Http\Controllers\Owner\SmsCreditController::class, 'addCredits'])->name('sms.add-credits');
+    Route::get('sms/stats', [App\Http\Controllers\Owner\SmsCreditController::class, 'getStats'])->name('sms.stats');
+
+    // Owner Backup Management
+    Route::get('backups', [App\Http\Controllers\Owner\BackupController::class, 'index'])->name('backups.index');
+    Route::post('backups', [App\Http\Controllers\Owner\BackupController::class, 'store'])->name('backups.store');
+    Route::get('backups/{backup}', [App\Http\Controllers\Owner\BackupController::class, 'show'])->name('backups.show');
+    Route::get('backups/{backup}/download', [App\Http\Controllers\Owner\BackupController::class, 'download'])->name('backups.download');
+    Route::post('backups/{backup}/restore', [App\Http\Controllers\Owner\BackupController::class, 'restore'])->name('backups.restore');
+    Route::get('backups/stats', [App\Http\Controllers\Owner\BackupController::class, 'getStats'])->name('backups.stats');
+    Route::get('backups/{backup}/details', [App\Http\Controllers\Owner\BackupController::class, 'getDetails'])->name('backups.details');
+
+    // Owner Backup Settings Routes
+    Route::get('settings/backup', [App\Http\Controllers\Owner\BackupSettingsController::class, 'index'])->name('settings.backup');
+    Route::put('settings/backup', [App\Http\Controllers\Owner\BackupSettingsController::class, 'update'])->name('settings.backup.update');
+    Route::post('settings/backup/test', [App\Http\Controllers\Owner\BackupSettingsController::class, 'testBackup'])->name('settings.backup.test');
+    Route::get('settings/backup/stats', [App\Http\Controllers\Owner\BackupSettingsController::class, 'getStats'])->name('settings.backup.stats');
+
 });
 
 
@@ -175,6 +339,11 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     // Owners
     Route::get('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'owners'])->name('owners.index');
     Route::get('owners/create', [App\Http\Controllers\Admin\AdminDashboardController::class, 'createOwner'])->name('owners.create');
+    Route::get('owners/{id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'showOwner'])->name('owners.show');
+    Route::post('owners/{id}/test-notification', [App\Http\Controllers\Admin\AdminDashboardController::class, 'testNotification'])->name('owners.test-notification');
+    Route::post('owners/{id}/test-email', [App\Http\Controllers\Admin\AdminDashboardController::class, 'testEmail'])->name('owners.test-email');
+    Route::post('owners/{id}/test-sms', [App\Http\Controllers\Admin\AdminDashboardController::class, 'testSms'])->name('owners.test-sms');
+    Route::post('owners/{id}/resend-notification/{log_id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'resendNotification'])->name('owners.resend-notification');
     Route::post('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'storeOwner'])->name('owners.store');
     Route::delete('owners/{id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'destroyOwner'])->name('owners.destroy');
 
@@ -196,8 +365,11 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'has_super_admin_role' => $user->hasRole('super_admin'),
+                'has_owner_role' => $user->hasRole('owner'),
                 'roles' => $user->roles->pluck('name'),
-                'is_super_admin' => $user->owner->is_super_admin ?? false
+                'is_super_admin' => $user->owner->is_super_admin ?? false,
+                'current_route' => request()->route()->getName(),
+                'should_see_admin' => $user->hasRole('super_admin') || ($user->owner && $user->owner->is_super_admin)
             ]);
         }
         return response()->json(['error' => 'Not authenticated']);
@@ -214,14 +386,71 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
 
     // Notification Settings
     Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('settings.notifications');
-    Route::put('settings/notifications/email', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateEmailSettings'])->name('notifications.email.update');
-    Route::put('settings/notifications/sms', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsSettings'])->name('notifications.sms.update');
-    Route::post('settings/notifications/email/test', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testEmail'])->name('notifications.email.test');
-    Route::post('settings/notifications/sms/test', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testSms'])->name('notifications.sms.test');
-    Route::post('settings/notifications/sms/reset', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'resetSmsCount'])->name('notifications.sms.reset');
-    Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get');
-    Route::post('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save');
+    Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get')->withoutMiddleware(['refresh.session', 'super.admin', 'auth', 'web']);
+    Route::match(['GET', 'POST'], 'settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save')->withoutMiddleware(['refresh.session', 'super.admin', 'auth', 'web']);
     Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
+    Route::get('settings/notifications/log/details', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getLogDetails'])->name('notifications.log.details');
+
+
+// SMS Group Settings Route
+Route::put('settings/notifications/sms-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsGroupSettings'])->name('notifications.sms-groups.update');
+
+// Company Information Settings
+Route::get('settings/company', [App\Http\Controllers\Admin\CompanySettingsController::class, 'index'])->name('settings.company');
+Route::post('settings/company/update', [App\Http\Controllers\Admin\CompanySettingsController::class, 'update'])->name('settings.company.update');
+
+// System Settings
+Route::get('settings/system', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('settings.system');
+Route::post('settings/system/update', [App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('settings.system.update');
+
+        // Landing Page Management
+        Route::get('settings/landing', [App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('settings.landing');
+        Route::post('settings/landing/update', [App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('settings.landing.update');
+
+        // Financial Reports
+        Route::get('reports/financial', [App\Http\Controllers\Admin\FinancialReportController::class, 'index'])->name('reports.financial');
+        Route::post('reports/financial/export-pdf', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportPdf'])->name('reports.financial.export-pdf');
+        Route::post('reports/financial/export-excel', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportExcel'])->name('reports.financial.export-excel');
+
+        // Analytics
+        Route::get('analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics');
+        Route::post('analytics/real-time', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeAnalytics'])->name('analytics.real-time');
+        Route::post('analytics/custom', [App\Http\Controllers\Admin\AnalyticsController::class, 'getCustomAnalytics'])->name('analytics.custom');
+
+        // Login Logs
+        Route::get('login-logs', [App\Http\Controllers\Admin\LoginLogController::class, 'index'])->name('login-logs.index');
+        Route::get('login-logs/active-sessions', [App\Http\Controllers\Admin\LoginLogController::class, 'activeSessions'])->name('login-logs.active-sessions');
+        Route::get('login-logs/user/{user}/history', [App\Http\Controllers\Admin\LoginLogController::class, 'userHistory'])->name('login-logs.user-history');
+        Route::post('login-logs/block-ip', [App\Http\Controllers\Admin\LoginLogController::class, 'blockIp'])->name('login-logs.block-ip');
+        Route::post('login-logs/unblock-ip', [App\Http\Controllers\Admin\LoginLogController::class, 'unblockIp'])->name('login-logs.unblock-ip');
+        Route::get('login-logs/export', [App\Http\Controllers\Admin\LoginLogController::class, 'export'])->name('login-logs.export');
+        Route::get('login-logs/real-time-stats', [App\Http\Controllers\Admin\LoginLogController::class, 'getRealTimeStats'])->name('login-logs.real-time-stats');
+        Route::get('login-logs/{loginLog}', [App\Http\Controllers\Admin\LoginLogController::class, 'show'])->name('login-logs.show');
+
+        // Backup Management
+        Route::get('backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backups.index');
+        Route::post('backups', [App\Http\Controllers\Admin\BackupController::class, 'store'])->name('backups.store');
+        Route::get('backups/{backup}', [App\Http\Controllers\Admin\BackupController::class, 'show'])->name('backups.show');
+        Route::get('backups/{backup}/download', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backups.download');
+        Route::post('backups/{backup}/restore', [App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backups.restore');
+        Route::delete('backups/{backup}', [App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+        Route::post('backups/clean-old', [App\Http\Controllers\Admin\BackupController::class, 'cleanOld'])->name('backups.clean-old');
+        Route::get('backups/stats', [App\Http\Controllers\Admin\BackupController::class, 'getStats'])->name('backups.stats');
+                Route::get('backups/{backup}/details', [App\Http\Controllers\Admin\BackupController::class, 'getDetails'])->name('backups.details');
+
+        // Backup Settings Routes
+        Route::get('settings/backup', [App\Http\Controllers\Admin\BackupSettingsController::class, 'index'])->name('settings.backup');
+        Route::put('settings/backup', [App\Http\Controllers\Admin\BackupSettingsController::class, 'update'])->name('settings.backup.update');
+        Route::post('settings/backup/test', [App\Http\Controllers\Admin\BackupSettingsController::class, 'testBackup'])->name('settings.backup.test');
+        Route::post('settings/backup/clean', [App\Http\Controllers\Admin\BackupSettingsController::class, 'cleanOldBackups'])->name('settings.backup.clean');
+        Route::get('settings/backup/stats', [App\Http\Controllers\Admin\BackupSettingsController::class, 'getStats'])->name('settings.backup.stats');
+        Route::post('settings/backup/schedule', [App\Http\Controllers\Admin\BackupSettingsController::class, 'scheduleBackup'])->name('settings.backup.schedule');
+
+        // Email Configuration Routes
+Route::get('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'index'])->name('settings.email-configuration');
+Route::put('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'updateEmailSettings'])->name('settings.email-configuration.update');
+Route::post('settings/email-configuration/test', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'testEmail'])->name('settings.email-configuration.test');
+Route::get('settings/email-configuration/debug', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'debugEmailSettings'])->name('settings.email-configuration.debug');
 
     // Tickets Management
     Route::get('tickets', [App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets.index');
@@ -256,6 +485,14 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('settings/sms/settings', [App\Http\Controllers\Admin\SmsSettingsController::class, 'getSmsSettings'])->name('settings.sms.settings');
     Route::post('settings/sms/bulk', [App\Http\Controllers\Admin\SmsSettingsController::class, 'sendBulkSms'])->name('settings.sms.bulk');
     Route::get('settings/sms/balance', [App\Http\Controllers\Admin\SmsSettingsController::class, 'checkBalance'])->name('settings.sms.balance');
+
+    // SMS Credit Management Routes
+    Route::get('sms/credits', [App\Http\Controllers\Admin\SmsCreditController::class, 'index'])->name('sms.credits.index');
+    Route::get('sms/credits/{owner}', [App\Http\Controllers\Admin\SmsCreditController::class, 'show'])->name('sms.credits.show');
+    Route::post('sms/credits/{owner}/add', [App\Http\Controllers\Admin\SmsCreditController::class, 'addCredits'])->name('sms.credits.add');
+    Route::post('sms/credits/{owner}/test', [App\Http\Controllers\Admin\SmsCreditController::class, 'sendTestSms'])->name('sms.credits.test');
+    Route::get('sms/credits/{owner}/stats', [App\Http\Controllers\Admin\SmsCreditController::class, 'getStats'])->name('sms.credits.stats');
+    Route::post('sms/smart-send', [App\Http\Controllers\Admin\SmsCreditController::class, 'sendSmartSms'])->name('sms.smart-send');
 });
 
 // API OTP Settings Route (Public)

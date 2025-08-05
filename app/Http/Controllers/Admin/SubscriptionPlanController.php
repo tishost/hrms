@@ -24,6 +24,7 @@ class SubscriptionPlanController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:subscription_plans',
             'price' => 'required|numeric|min:0',
+            'billing_cycle' => 'required|in:monthly,yearly,lifetime',
             'properties_limit' => 'required|integer',
             'units_limit' => 'required|integer',
             'tenants_limit' => 'required|integer',
@@ -74,6 +75,7 @@ class SubscriptionPlanController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:subscription_plans,name,' . $plan->id,
             'price' => 'required|numeric|min:0',
+            'billing_cycle' => 'required|in:monthly,yearly,lifetime',
             'properties_limit' => 'required|integer',
             'units_limit' => 'required|integer',
             'tenants_limit' => 'required|integer',

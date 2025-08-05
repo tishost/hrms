@@ -1,0 +1,303 @@
+@extends('layouts.owner')
+
+@section('title', 'My Backups')
+
+@section('content')
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-database"></i> My Backups
+        </h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createBackupModal">
+                <i class="fas fa-plus"></i> Create Backup
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Backups
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $stats['total'] }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-database fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Completed
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $stats['completed'] }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Recent (7 days)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $stats['recent'] }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ route('owner.backups.index') }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">All Status</option>
+                                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="date_from">Date From</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request('date_from') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="date_to">Date To</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request('date_to') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                                <a href="{{ route('owner.backups.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backups Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">My Backups</h6>
+        </div>
+        <div class="card-body">
+            @if($backups->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="backupsTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Filename</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($backups as $backup)
+                                <tr>
+                                    <td>{{ $backup->id }}</td>
+                                    <td>{{ $backup->filename }}</td>
+                                    <td>{{ $backup->formatted_size }}</td>
+                                    <td>
+                                        <span class="badge {{ $backup->status_badge_class }}">
+                                            {{ ucfirst($backup->status) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $backup->created_at->format('Y-m-d H:i:s') }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-info" onclick="viewBackup({{ $backup->id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            @if($backup->file_exists)
+                                                <a href="{{ route('owner.backups.download', $backup) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-warning" onclick="restoreBackup({{ $backup->id }})">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="d-flex justify-content-center">
+                    {{ $backups->links() }}
+                </div>
+            @else
+                <div class="text-center py-4">
+                    <i class="fas fa-database fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">No backups found</h5>
+                    <p class="text-gray-400">Create your first backup to protect your data.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Create Backup Modal -->
+<div class="modal fade" id="createBackupModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Backup</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('owner.backups.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Info:</strong> This will create a backup of your property and tenant data.
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notes (Optional)</label>
+                        <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Add any notes about this backup..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Backup</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Details Modal -->
+<div class="modal fade" id="backupDetailsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Backup Details</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="backupDetailsContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#backupsTable').DataTable({
+        "pageLength": 25,
+        "order": [[0, "desc"]]
+    });
+});
+
+function viewBackup(backupId) {
+    $.get(`/owner/backups/${backupId}/details`, function(data) {
+        let content = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Basic Information</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>ID:</strong></td><td>${data.id}</td></tr>
+                        <tr><td><strong>Filename:</strong></td><td>${data.filename}</td></tr>
+                        <tr><td><strong>Type:</strong></td><td>${data.type}</td></tr>
+                        <tr><td><strong>Size:</strong></td><td>${data.size}</td></tr>
+                        <tr><td><strong>Status:</strong></td><td>${data.status}</td></tr>
+                        <tr><td><strong>Created At:</strong></td><td>${data.created_at}</td></tr>
+                        <tr><td><strong>Created By:</strong></td><td>${data.created_by}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>Additional Information</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Notes:</strong></td><td>${data.notes || 'N/A'}</td></tr>
+                        <tr><td><strong>File Exists:</strong></td><td>${data.file_exists ? 'Yes' : 'No'}</td></tr>
+                        <tr><td><strong>Is Restored:</strong></td><td>${data.is_restored ? 'Yes' : 'No'}</td></tr>
+                        ${data.is_restored ? `<tr><td><strong>Restored At:</strong></td><td>${data.restored_at}</td></tr>` : ''}
+                        ${data.is_restored ? `<tr><td><strong>Restored By:</strong></td><td>${data.restored_by}</td></tr>` : ''}
+                    </table>
+                </div>
+            </div>
+        `;
+        $('#backupDetailsContent').html(content);
+        $('#backupDetailsModal').modal('show');
+    });
+}
+
+function restoreBackup(backupId) {
+    if (confirm('Are you sure you want to restore this backup? This will overwrite your current data.')) {
+        $.post(`/owner/backups/${backupId}/restore`, {
+            _token: '{{ csrf_token() }}'
+        }).done(function() {
+            location.reload();
+        }).fail(function(xhr) {
+            alert('Restore failed: ' + xhr.responseJSON?.message || 'Unknown error');
+        });
+    }
+}
+</script>
+@endpush 

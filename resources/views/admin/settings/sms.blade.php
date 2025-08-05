@@ -87,6 +87,23 @@
 
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
+                                    <label for="sms_provider" class="form-label">
+                                        <i class="fas fa-server me-1"></i>
+                                        SMS Provider
+                                    </label>
+                                    <select class="form-control" id="sms_provider" name="sms_provider">
+                                        <option value="bulksms" {{ ($smsSettings['sms_provider'] ?? 'bulksms') === 'bulksms' ? 'selected' : '' }}>Bulk SMS BD</option>
+                                        <option value="twilio" {{ ($smsSettings['sms_provider'] ?? 'bulksms') === 'twilio' ? 'selected' : '' }}>Twilio</option>
+                                        <option value="nexmo" {{ ($smsSettings['sms_provider'] ?? 'bulksms') === 'nexmo' ? 'selected' : '' }}>Nexmo</option>
+                                    </select>
+                                    <small class="text-muted">Select your SMS service provider</small>
+                                </div>
+                            </div>
+
+
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
                                     <label for="sms_test_number" class="form-label">
                                         <i class="fas fa-phone me-1"></i>
                                         Test Number
@@ -98,112 +115,7 @@
                             </div>
                         </div>
 
-                        <!-- Automated SMS Features -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-robot me-2"></i>
-                                    Automated SMS Features
-                                </h5>
-                            </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="sms_rent_reminder_enabled" class="form-label">
-                                        <i class="fas fa-calendar me-1"></i>
-                                        Rent Reminder SMS
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="sms_rent_reminder_enabled" name="sms_rent_reminder_enabled" value="1" 
-                                               {{ $smsSettings['sms_rent_reminder_enabled'] == '1' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="sms_rent_reminder_enabled">
-                                            Send rent due reminders
-                                        </label>
-                                    </div>
-                                    <small class="text-muted">Automatically send rent payment reminders</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="sms_maintenance_update_enabled" class="form-label">
-                                        <i class="fas fa-tools me-1"></i>
-                                        Maintenance Update SMS
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="sms_maintenance_update_enabled" name="sms_maintenance_update_enabled" value="1" 
-                                               {{ $smsSettings['sms_maintenance_update_enabled'] == '1' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="sms_maintenance_update_enabled">
-                                            Send maintenance status updates
-                                        </label>
-                                    </div>
-                                    <small class="text-muted">Notify tenants about maintenance progress</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="sms_welcome_message_enabled" class="form-label">
-                                        <i class="fas fa-handshake me-1"></i>
-                                        Welcome SMS
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="sms_welcome_message_enabled" name="sms_welcome_message_enabled" value="1" 
-                                               {{ $smsSettings['sms_welcome_message_enabled'] == '1' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="sms_welcome_message_enabled">
-                                            Send welcome messages to new tenants
-                                        </label>
-                                    </div>
-                                    <small class="text-muted">Welcome new tenants with SMS</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="sms_payment_confirmation_enabled" class="form-label">
-                                        <i class="fas fa-money-bill me-1"></i>
-                                        Payment Confirmation SMS
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="sms_payment_confirmation_enabled" name="sms_payment_confirmation_enabled" value="1" 
-                                               {{ $smsSettings['sms_payment_confirmation_enabled'] == '1' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="sms_payment_confirmation_enabled">
-                                            Send payment confirmations
-                                        </label>
-                                    </div>
-                                    <small class="text-muted">Confirm payments via SMS</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="sms_checkout_reminder_enabled" class="form-label">
-                                        <i class="fas fa-sign-out-alt me-1"></i>
-                                        Checkout Reminder SMS
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="sms_checkout_reminder_enabled" name="sms_checkout_reminder_enabled" value="1" 
-                                               {{ $smsSettings['sms_checkout_reminder_enabled'] == '1' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="sms_checkout_reminder_enabled">
-                                            Send checkout reminders
-                                        </label>
-                                    </div>
-                                    <small class="text-muted">Remind tenants about checkout process</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="sms_reminder_days_before" class="form-label">
-                                        <i class="fas fa-clock me-1"></i>
-                                        Reminder Days Before
-                                    </label>
-                                    <input type="number" class="form-control" id="sms_reminder_days_before" name="sms_reminder_days_before" 
-                                           value="{{ $smsSettings['sms_reminder_days_before'] }}" min="1" max="30">
-                                    <small class="text-muted">Days before due date to send reminders</small>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Working Hours & Retry Settings -->
                         <div class="row mb-4">
@@ -296,6 +208,82 @@
                                             Save Settings
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- SMS Logs Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-history"></i> SMS Logs
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Phone</th>
+                                                    <th>Message</th>
+                                                    <th>Status</th>
+                                                    <th>Provider</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($smsLogs ?? [] as $log)
+                                                <tr>
+                                                    <td>{{ $log->created_at->format('M d, Y H:i') }}</td>
+                                                    <td>{{ $log->phone }}</td>
+                                                    <td>{{ Str::limit($log->message, 50) }}</td>
+                                                    <td>
+                                                        <span class="badge badge-{{ $log->status === 'sent' ? 'success' : 'danger' }}">
+                                                            {{ ucfirst($log->status) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ ucfirst($log->provider ?? 'Unknown') }}</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-info" onclick="viewSmsLog({{ $log->id }})">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="6" class="text-center">No SMS logs found</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Pagination -->
+                                    @if(isset($smsLogs) && $smsLogs->hasPages())
+                                    <div class="d-flex justify-content-center mt-4">
+                                        {{ $smsLogs->appends(request()->query())->links('vendor.pagination.bootstrap-4') }}
+                                    </div>
+                                    
+                                    <!-- Pagination Info -->
+                                    <div class="text-center mt-3">
+                                        <div class="pagination-info">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Showing {{ $smsLogs->firstItem() ?? 0 }} to {{ $smsLogs->lastItem() ?? 0 }} 
+                                                of {{ $smsLogs->total() }} SMS logs
+                                                <span class="badge badge-info ms-2">{{ $smsLogs->perPage() }} per page</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                                 </div>
                             </div>
                         </div>

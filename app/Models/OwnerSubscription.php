@@ -98,21 +98,50 @@ class OwnerSubscription extends Model
 
     public function canSendSms()
     {
+        // If plan includes SMS notifications, always allow
         if ($this->plan->sms_notification) {
             return true;
         }
 
+        // Check if owner has SMS credits
         return $this->sms_credits > 0;
     }
 
     public function deductSmsCredit()
     {
-        if (!$this->plan->sms_notification && $this->sms_credits > 0) {
+        // If plan includes SMS, don't deduct credits
+        if ($this->plan->sms_notification) {
+            return true;
+        }
+
+        // Deduct credit if available
+        if ($this->sms_credits > 0) {
             $this->decrement('sms_credits');
             return true;
         }
 
         return false;
+    }
+
+    public function addSmsCredits($credits)
+    {
+        $this->increment('sms_credits', $credits);
+        return $this->sms_credits;
+    }
+
+    public function getSmsCreditsRemaining()
+    {
+        return $this->sms_credits;
+    }
+
+    public function getSmsUsageStats()
+    {
+        return [
+            'credits_remaining' => $this->sms_credits,
+            'plan_includes_sms' => $this->plan->sms_notification,
+            'can_send_sms' => $this->canSendSms(),
+            'plan_name' => $this->plan->name
+        ];
     }
 
     public function generateInvoice()

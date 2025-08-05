@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Setting;
+use App\Models\SystemSetting;
 use App\Models\NotificationLog;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -31,16 +31,16 @@ class NotificationService
     private function loadSettings()
     {
         // Load SMS settings
-        $this->smsProvider = Setting::getValue('sms_provider', 'bulksms');
-        $this->smsApiKey = Setting::getValue('sms_api_key', '');
-        $this->smsApiSecret = Setting::getValue('sms_api_secret', '');
-        $this->smsSenderId = Setting::getValue('sms_sender_id', 'HRMS');
-        $this->isSmsEnabled = Setting::getValue('sms_enabled', true);
-        $this->smsLimit = Setting::getValue('sms_monthly_limit', 1000);
-        $this->smsCount = Setting::getValue('sms_monthly_count', 0);
+        $this->smsProvider = SystemSetting::getValue('sms_provider', 'bulksms');
+        $this->smsApiKey = SystemSetting::getValue('sms_api_key', '');
+        $this->smsApiSecret = SystemSetting::getValue('sms_api_secret', '');
+        $this->smsSenderId = SystemSetting::getValue('sms_sender_id', 'HRMS');
+        $this->isSmsEnabled = SystemSetting::getValue('sms_enabled', true);
+        $this->smsLimit = SystemSetting::getValue('sms_monthly_limit', 1000);
+        $this->smsCount = SystemSetting::getValue('sms_monthly_count', 0);
 
         // Load Email settings
-        $this->isEmailEnabled = Setting::getValue('email_enabled', true);
+        $this->isEmailEnabled = SystemSetting::getValue('email_enabled', true);
         $this->emailSettings = [
             'host' => config('mail.mailers.smtp.host'),
             'port' => config('mail.mailers.smtp.port'),
@@ -123,7 +123,7 @@ class NotificationService
      */
     public function sendTemplateNotification($type, $to, $templateName, $variables = [])
     {
-        $template = Setting::where('key', 'template_' . $templateName)->first();
+        $template = SystemSetting::where('key', 'template_' . $templateName)->first();
 
         if (!$template) {
             return ['success' => false, 'message' => 'Template not found'];
@@ -175,6 +175,8 @@ class NotificationService
         switch ($this->smsProvider) {
             case 'bulksms':
                 return $this->sendViaBulkSms($to, $message);
+            case 'smsinbd':
+                return $this->sendViaSmsInBd($to, $message);
             case 'twilio':
                 return $this->sendViaTwilio($to, $message);
             case 'nexmo':
@@ -201,6 +203,34 @@ class NotificationService
             if ($response->successful()) {
                 $data = $response->json();
                 if ($data['status'] === 'success') {
+                    return ['success' => true, 'message' => 'SMS sent successfully'];
+                } else {
+                    return ['success' => false, 'message' => $data['message'] ?? 'SMS sending failed'];
+                }
+            } else {
+                return ['success' => false, 'message' => 'SMS API request failed'];
+            }
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'SMS sending error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Send SMS via SMS In BD
+     */
+    private function sendViaSmsInBd($to, $message)
+    {
+        try {
+            $response = Http::post('https://api.smsinbd.com/sms-api/sendsms', [
+                'api_token' => $this->smsApiKey,
+                'senderid' => $this->smsSenderId,
+                'contact_number' => $to,
+                'message' => $message,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['status']) && $data['status'] === 'success') {
                     return ['success' => true, 'message' => 'SMS sent successfully'];
                 } else {
                     return ['success' => false, 'message' => $data['message'] ?? 'SMS sending failed'];
@@ -272,7 +302,9 @@ class NotificationService
     private function replaceVariables($message, $variables)
     {
         foreach ($variables as $key => $value) {
+            // Replace both {key} and {{key}} formats
             $message = str_replace('{' . $key . '}', $value, $message);
+            $message = str_replace('{{' . $key . '}}', $value, $message);
         }
         return $message;
     }
@@ -290,6 +322,7 @@ class NotificationService
                 'content' => $content,
                 'status' => $status,
                 'sent_at' => $status === 'sent' ? now() : null,
+                'source' => 'system',
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to log notification: ' . $e->getMessage());
@@ -301,8 +334,8 @@ class NotificationService
      */
     private function incrementSmsCount()
     {
-        $currentCount = Setting::getValue('sms_monthly_count', 0);
-        Setting::setValue('sms_monthly_count', $currentCount + 1);
+        $currentCount = SystemSetting::getValue('sms_monthly_count', 0);
+        SystemSetting::setValue('sms_monthly_count', $currentCount + 1);
     }
 
     /**
@@ -310,7 +343,7 @@ class NotificationService
      */
     public function resetSmsCount()
     {
-        Setting::setValue('sms_monthly_count', 0);
+        SystemSetting::setValue('sms_monthly_count', 0);
     }
 
     /**
@@ -332,7 +365,7 @@ class NotificationService
      */
     public function setSmsEnabled($enabled)
     {
-        Setting::setValue('sms_enabled', $enabled);
+        SystemSetting::setValue('sms_enabled', $enabled);
         $this->isSmsEnabled = $enabled;
     }
 
@@ -341,7 +374,7 @@ class NotificationService
      */
     public function setEmailEnabled($enabled)
     {
-        Setting::setValue('email_enabled', $enabled);
+        SystemSetting::setValue('email_enabled', $enabled);
         $this->isEmailEnabled = $enabled;
     }
 
@@ -350,7 +383,7 @@ class NotificationService
      */
     public function setSmsLimit($limit)
     {
-        Setting::setValue('sms_monthly_limit', $limit);
+        SystemSetting::setValue('sms_monthly_limit', $limit);
         $this->smsLimit = $limit;
     }
 

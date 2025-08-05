@@ -37,6 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
+    // Admin Test Routes (No CSRF protection)
+    Route::post('/admin/test-email', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testEmail']);
+    Route::post('/admin/test-csrf', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testCsrf']);
+    Route::post('/admin/test-validation', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'testEmailValidation']);
+
     // Properties
     Route::get('/properties', [PropertyController::class, 'index']);
     Route::post('/properties', [PropertyController::class, 'store']);

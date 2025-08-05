@@ -3,7 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\PaymentMethod;
-use App\Models\Setting;
+use App\Models\SystemSetting;
 
 class SettingHelper
 {
@@ -63,7 +63,7 @@ class SettingHelper
      */
     public static function setting($key, $default = null)
     {
-        $setting = Setting::where('key', $key)->first();
+        $setting = SystemSetting::where('key', $key)->first();
         return $setting ? $setting->value : $default;
     }
 
@@ -72,7 +72,7 @@ class SettingHelper
      */
     public static function setSetting($key, $value)
     {
-        return Setting::updateOrCreate(
+        return SystemSetting::updateOrCreate(
             ['key' => $key],
             ['value' => $value]
         );

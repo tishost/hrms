@@ -10,6 +10,7 @@ use App\Models\OwnerSubscription;
 use App\Models\Billing;
 use Illuminate\Support\Str;
 use App\Helpers\CountryHelper;
+use App\Helpers\NotificationHelper;
 use App\Models\User; // if needed
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,7 @@ class OwnerRegisterController extends Controller
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
+            'phone'    => $request->phone,
             'password' => bcrypt($request->password),
         ]);
         $user->assignRole('owner');
@@ -60,13 +62,34 @@ class OwnerRegisterController extends Controller
         // Update user with owner_id
         $user->update(['owner_id' => $owner->id]);
 
+        // Refresh user to load the updated data
+        $user->refresh();
+
         // Log owner creation
         \Log::info('Owner created', [
             'user_id' => $user->id,
             'owner_id' => $owner->id,
             'owner_user_id' => $owner->user_id,
-            'user_owner_id' => $user->owner_id
+            'user_owner_id' => $user->owner_id,
+            'user_phone' => $user->phone
         ]);
+
+        // Send comprehensive welcome notification (multiple emails + SMS)
+        try {
+            $notificationResults = NotificationHelper::sendComprehensiveWelcome($user);
+            \Log::info('Comprehensive welcome notification sent', [
+                'user_id' => $user->id,
+                'owner_id' => $owner->id,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'emails_sent' => count(array_filter($notificationResults, function($key) {
+                    return strpos($key, 'email') !== false;
+                }, ARRAY_FILTER_USE_KEY)),
+                'sms_sent' => isset($notificationResults['sms']) && $notificationResults['sms']['success']
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Welcome notification failed: ' . $e->getMessage());
+        }
 
         // Automatically activate free package for new owner
         $freePlan = SubscriptionPlan::where('price', 0)->first();

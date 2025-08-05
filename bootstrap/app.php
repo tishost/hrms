@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\SeoOptimizationMiddleware::class,
+            \App\Http\Middleware\ApplySystemSettings::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

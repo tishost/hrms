@@ -18,6 +18,8 @@
         </div>
     </div>
 
+
+
     <!-- Owners Table -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -42,19 +44,19 @@
                     <tbody>
                         @forelse($owners as $owner)
                         <tr>
-                            <td>{{ $owner->name }}</td>
-                            <td>{{ $owner->email }}</td>
+                            <td>{{ $owner->user->name ?? $owner->name }}</td>
+                            <td>{{ $owner->user->email ?? $owner->email }}</td>
                             <td>{{ $owner->phone }}</td>
                             <td>
-                                @if($owner->owner)
-                                    <span class="badge bg-info">{{ $owner->owner->country }}</span>
+                                @if($owner->country)
+                                    <span class="badge bg-info">{{ $owner->country }}</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
-                                @if($owner->owner)
-                                    <span class="badge bg-secondary">{{ ucfirst($owner->owner->gender) }}</span>
+                                @if($owner->gender)
+                                    <span class="badge bg-secondary">{{ ucfirst($owner->gender) }}</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -67,6 +69,8 @@
                                     @else
                                         <small class="text-muted d-block">Free</small>
                                     @endif
+                                @elseif($owner->subscription)
+                                    <span class="badge bg-warning">Plan Not Found</span>
                                 @else
                                     <span class="badge bg-secondary">No Plan</span>
                                 @endif
@@ -77,8 +81,11 @@
                                         <span class="badge bg-success">Active</span>
                                     @elseif($owner->subscription->status === 'pending')
                                         <span class="badge bg-warning">Pending Payment</span>
-                                        @if($owner->subscription->getPendingInvoice())
-                                            <small class="text-muted d-block">Invoice: {{ $owner->subscription->getPendingInvoice()->invoice_number }}</small>
+                                        @php
+                                            $pendingInvoice = $owner->subscription->getPendingInvoice();
+                                        @endphp
+                                        @if($pendingInvoice)
+                                            <small class="text-muted d-block">Invoice: {{ $pendingInvoice->invoice_number }}</small>
                                         @endif
                                     @elseif($owner->subscription->status === 'expired')
                                         <span class="badge bg-danger">Expired</span>
@@ -87,7 +94,7 @@
                                     @elseif($owner->subscription->status === 'cancelled')
                                         <span class="badge bg-danger">Cancelled</span>
                                     @else
-                                        <span class="badge bg-secondary">{{ ucfirst($owner->subscription->status) }}</span>
+                                        <span class="badge bg-secondary">{{ ucfirst($owner->subscription->status ?? 'Unknown') }}</span>
                                     @endif
                                 @else
                                     <span class="badge bg-secondary">No Subscription</span>
@@ -106,9 +113,12 @@
                                         </small>
                                     @elseif($owner->subscription->status === 'pending')
                                         <span class="text-warning">Payment Required</span>
-                                        @if($owner->subscription->getPendingInvoice())
+                                        @php
+                                            $pendingInvoice = $owner->subscription->getPendingInvoice();
+                                        @endphp
+                                        @if($pendingInvoice)
                                             <small class="text-muted d-block">
-                                                Due: {{ $owner->subscription->getPendingInvoice()->due_date->format('M d, Y') }}
+                                                Due: {{ $pendingInvoice->due_date->format('M d, Y') }}
                                             </small>
                                         @endif
                                     @elseif($owner->subscription->status === 'expired' && $owner->subscription->end_date)
@@ -123,7 +133,7 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <a href="#" class="btn btn-sm btn-info" title="View Details">
+                                    <a href="{{ route('admin.owners.show', $owner->id) }}" class="btn btn-sm btn-info" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <a href="#" class="btn btn-sm btn-warning" title="Edit">

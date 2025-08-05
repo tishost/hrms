@@ -10,7 +10,7 @@ class TicketController extends Controller
 {
     public function index()
     {
-        $tickets = ContactTicket::orderBy('created_at', 'desc')->paginate(20);
+        $tickets = ContactTicket::orderBy('created_at', 'desc')->paginate(\App\Helpers\SystemHelper::getPaginationLimit());
         
         return view('admin.tickets.index', compact('tickets'));
     }
