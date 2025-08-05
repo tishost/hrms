@@ -12,6 +12,7 @@ use App\Http\Controllers\Owner\TenantController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Owner\TenantRentController;
 use App\Http\Controllers\Owner\RentPaymentController;
+use App\Http\Controllers\Owner\SettingController;
 
 use App\Http\Controllers\Owner\CheckoutController;
 use Illuminate\Http\Request;
@@ -239,8 +240,11 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('/properties', [OwnerPropertyController::class, 'store'])
         ->name('property.store')
         ->middleware('check.limits:properties');
+    Route::get('/property/export/pdf', [OwnerPropertyController::class, 'exportPdf'])->name('property.export.pdf');
     Route::get('units', [OwnerUnitController::class, 'index'])->name('units.index');
+    Route::get('/units/export/pdf', [OwnerUnitController::class, 'exportPdf'])->name('units.export.pdf');
     Route::get('units/{unit}/edit', [OwnerUnitController::class, 'edit'])->name('units.edit');
+    Route::get('/tenants/export/pdf', [TenantController::class, 'exportPdf'])->name('tenants.export.pdf');
     Route::delete('units/{unit}', [OwnerUnitController::class, 'destroy'])->name('units.destroy');
     Route::put('units/{unit}', [OwnerUnitController::class, 'update'])->name('units.update');
     Route::get('units/setup/{property}', [OwnerUnitController::class, 'setup'])->name('units.setup');
@@ -253,8 +257,17 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
     Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
+    Route::get('tenants/{tenant}/edit', [TenantController::class, 'edit'])->name('tenants.edit');
+    Route::put('tenants/{tenant}', [TenantController::class, 'update'])->name('tenants.update');
     Route::get('/tenants/{tenant}/assign-rent', [TenantRentController::class, 'create'])->name('rents.create');
     Route::post('/tenants/{tenant}/assign-rent', [TenantRentController::class, 'store'])->name('rents.store');
+    
+    // Settings Routes
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('/settings/test-sms', [SettingController::class, 'testSms'])->name('settings.test-sms');
+    Route::post('/settings/test-email', [SettingController::class, 'testEmail'])->name('settings.test-email');
+    Route::post('/settings/reset-templates', [SettingController::class, 'resetTemplates'])->name('settings.reset-templates');
     Route::get('/units-by-building/{id}', [TenantController::class, 'getUnitsByBuilding'])->name('units.byBuilding');
     Route::get('/unit-fees/{unit}', [OwnerUnitController::class, 'getFees'])->name('units.fees');
     Route::get('rent-payments/create',[RentPaymentController::class, 'create'])->name('rent_payments.create');
@@ -400,8 +413,18 @@ Route::get('settings/company', [App\Http\Controllers\Admin\CompanySettingsContro
 Route::post('settings/company/update', [App\Http\Controllers\Admin\CompanySettingsController::class, 'update'])->name('settings.company.update');
 
 // System Settings
-Route::get('settings/system', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('settings.system');
-Route::post('settings/system/update', [App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('settings.system.update');
+    Route::get('settings/system', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('settings.system');
+    Route::post('settings/system/update', [App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('settings.system.update');
+
+    // OTP Security Routes
+    Route::get('security/otp', [App\Http\Controllers\Admin\OtpSecurityController::class, 'index'])->name('security.otp');
+    Route::get('security/otp/logs', [App\Http\Controllers\Admin\OtpSecurityController::class, 'logs'])->name('security.otp.logs');
+    Route::post('security/otp/unblock-ip', [App\Http\Controllers\Admin\OtpSecurityController::class, 'unblockIp'])->name('security.otp.unblock-ip');
+    Route::post('security/otp/unblock-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'unblockPhone'])->name('security.otp.unblock-phone');
+    Route::post('security/otp/block-ip', [App\Http\Controllers\Admin\OtpSecurityController::class, 'blockIp'])->name('security.otp.block-ip');
+    Route::post('security/otp/block-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'blockPhone'])->name('security.otp.block-phone');
+    Route::get('security/otp/statistics', [App\Http\Controllers\Admin\OtpSecurityController::class, 'getStatistics'])->name('security.otp.statistics');
+    Route::get('security/otp/export', [App\Http\Controllers\Admin\OtpSecurityController::class, 'exportLogs'])->name('security.otp.export');
 
         // Landing Page Management
         Route::get('settings/landing', [App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('settings.landing');

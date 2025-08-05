@@ -48,7 +48,6 @@
         .sidebar {
             background: linear-gradient(135deg, #1a2942 0%, #2c3e50 100%) !important;
             min-height: 100vh;
-            
             color: #fff !important;
             padding-top: 30px;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
@@ -580,20 +579,143 @@
     </style>
 </head>
 <body>
+<!-- Mobile Menu -->
+<div class="offcanvas offcanvas-start d-block d-md-none" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+  <div class="offcanvas-header bg-dark text-white">
+    <h5 class="offcanvas-title" id="mobileMenuLabel">HRMS Admin</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body bg-dark text-white">
+    <div class="list-group list-group-flush">
+      <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white border-0">
+        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+      </a>
+      
+      <!-- Owners -->
+      <div class="list-group-item bg-transparent border-0 p-0">
+        <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#ownersSubmenu" role="button" aria-expanded="false" aria-controls="ownersSubmenu">
+          <i class="fas fa-users me-2"></i>Owners <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="ownersSubmenu">
+          <div class="list-group list-group-flush ms-3">
+            <a href="{{ route('admin.owners.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-list me-2"></i>Owner List
+            </a>
+            <a href="{{ route('admin.owners.create') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-plus me-2"></i>Add New Owner
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Subscriptions -->
+      <div class="list-group-item bg-transparent border-0 p-0">
+        <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#subscriptionSubmenu" role="button" aria-expanded="false" aria-controls="subscriptionSubmenu">
+          <i class="fas fa-credit-card me-2"></i>Subscriptions <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="subscriptionSubmenu">
+          <div class="list-group list-group-flush ms-3">
+            <a href="{{ route('admin.subscriptions') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-list me-2"></i>Subscription List
+            </a>
+            <a href="{{ route('admin.plans.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-cube me-2"></i>Package Management
+            </a>
+            <a href="{{ route('admin.billing.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-file-invoice-dollar me-2"></i>Billing & Payments
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Reports -->
+      <div class="list-group-item bg-transparent border-0 p-0">
+        <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#reportsSubmenu" role="button" aria-expanded="false" aria-controls="reportsSubmenu">
+          <i class="fas fa-chart-line me-2"></i>Reports <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="reportsSubmenu">
+          <div class="list-group list-group-flush ms-3">
+            <a href="{{ route('admin.reports.financial') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-chart-line me-2"></i>Financial Reports
+            </a>
+            <a href="{{ route('admin.analytics') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-chart-bar me-2"></i>Analytics Dashboard
+            </a>
+            <a href="{{ route('admin.login-logs.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-sign-in-alt me-2"></i>Login Logs
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <a href="{{ route('admin.backups.index') }}" class="list-group-item list-group-item-action bg-transparent text-white border-0">
+        <i class="fas fa-database me-2"></i>Backups
+      </a>
+      
+      <!-- Settings -->
+      <div class="list-group-item bg-transparent border-0 p-0">
+        <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#settingsSubmenu" role="button" aria-expanded="false" aria-controls="settingsSubmenu">
+          <i class="fas fa-cog me-2"></i>Settings <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="settingsSubmenu">
+          <div class="list-group list-group-flush ms-3">
+            <a href="{{ route('admin.settings.company') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-building me-2"></i>Company Info
+            </a>
+            <a href="{{ route('admin.settings.system') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-cogs me-2"></i>System Settings
+            </a>
+            <a href="{{ route('admin.settings.landing') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-globe me-2"></i>Landing Page
+            </a>
+            <a href="{{ route('admin.settings.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-cog me-2"></i>General Settings
+            </a>
+            <a href="{{ route('admin.otp-settings.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-mobile-alt me-2"></i>OTP Settings
+            </a>
+            <a href="{{ route('admin.settings.notifications') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-bell me-2"></i>Notification Settings
+            </a>
+            <a href="{{ route('admin.settings.email-configuration') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-envelope me-2"></i>Email Config
+            </a>
+            <a href="{{ route('admin.settings.seo') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-search me-2"></i>SEO Settings
+            </a>
+            <a href="{{ route('admin.settings.chat') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-comments me-2"></i>Chat Settings
+            </a>
+            <a href="{{ route('admin.settings.sms') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-sms me-2"></i>SMS Settings
+            </a>
+            <a href="{{ route('admin.settings.backup') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-database me-2"></i>Backup Settings
+            </a>
+            <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-comments me-2"></i>Chat Agent Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <a href="{{ route('admin.tickets.index') }}" class="list-group-item list-group-item-action bg-transparent text-white border-0">
+        <i class="fas fa-ticket-alt me-2"></i>Support
+      </a>
+    </div>
+  </div>
+</div>
+
 <div class="container-fluid">
     <div class="row flex-nowrap">
         <!-- Mobile Menu Toggle -->
-        <div class="d-md-none w-100 p-3">
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                <i class="fas fa-bars"></i> Menu
-            </button>
-        </div>
+        
         
         <!-- Sidebar Overlay for Mobile -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
         
         <!-- Sidebar -->
-        <nav class="col-12 col-lg-2 col-md-3 sidebar mb-3 mb-md-0" id="sidebar">
+        <nav class="col-12 col-lg-2 col-md-3 sidebar mb-3 mb-md-0 d-none d-md-block" id="sidebar">
             <div class="d-flex justify-content-between align-items-center mb-4 px-3">
                 <h4 class="mb-0">HRMS Admin</h4>
                 <button class="btn-close btn-close-white d-md-none" id="closeSidebar"></button>
@@ -767,6 +889,12 @@
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.security.otp.*') ? 'active' : '' }}"
+                               href="{{ route('admin.security.otp') }}">
+                                <i class="fas fa-shield-alt me-2"></i>OTP Security
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"
                                href="{{ route('admin.dashboard') }}">
                                 <i class="fas fa-comments me-2"></i>Chat Agent Dashboard
@@ -785,6 +913,12 @@
             </ul>
         </nav>
         
+        <!-- Mobile Menu Button -->
+        <div class="d-md-none w-100 p-3">
+            <button class="mobile-menu-toggle" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu">
+                <i class="fas fa-bars"></i> Menu
+            </button>
+        </div>
         <!-- Main Content -->
         <main class="col-12 col-lg-10 col-md-9 p-4 main-content">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 profile-section">

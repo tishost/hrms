@@ -17,16 +17,123 @@ class OwnerUnitController extends Controller
     /**
      * Show all units for the logged-in owner (across all properties)
      */
-    public function index()
+    public function index(Request $request)
     {
         $ownerId = auth()->user()->owner->id;
-        $units = \App\Models\Unit::whereHas('property', function($q) use ($ownerId) {
+        $query = \App\Models\Unit::whereHas('property', function($q) use ($ownerId) {
                 $q->where('owner_id', $ownerId);
             })
-            ->with(['property', 'charges', 'tenant'])
-            ->orderByDesc('id')
-            ->get();
-        return view('owner.units.index', compact('units'));
+            ->with(['property', 'charges', 'tenant']);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('property', function($propertyQuery) use ($search) {
+                      $propertyQuery->where('name', 'like', "%{$search}%")
+                                   ->orWhere('address', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('tenant', function($tenantQuery) use ($search) {
+                      $tenantQuery->where('first_name', 'like', "%{$search}%")
+                                 ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            if ($request->status === 'rented') {
+                $query->whereHas('tenant');
+            } elseif ($request->status === 'free') {
+                $query->whereDoesntHave('tenant');
+            }
+        }
+
+        // Filter by property
+        if ($request->filled('property_id')) {
+            $query->where('property_id', $request->property_id);
+        }
+
+        // Filter by rent range
+        if ($request->filled('rent_min')) {
+            $query->where('rent', '>=', $request->rent_min);
+        }
+        if ($request->filled('rent_max')) {
+            $query->where('rent', '<=', $request->rent_max);
+        }
+
+        // Sort functionality
+        $sortBy = $request->get('sort_by', 'id');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $units = $query->get();
+
+        // Get properties for filter dropdown
+        $properties = \App\Models\Property::where('owner_id', $ownerId)
+                                        ->orderBy('name')
+                                        ->get();
+
+        return view('owner.units.index', compact('units', 'properties'));
+    }
+
+    /**
+     * Export units to PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        $ownerId = auth()->user()->owner->id;
+        $query = \App\Models\Unit::whereHas('property', function($q) use ($ownerId) {
+                $q->where('owner_id', $ownerId);
+            })
+            ->with(['property', 'charges', 'tenant']);
+
+        // Apply same filters as index method
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('property', function($propertyQuery) use ($search) {
+                      $propertyQuery->where('name', 'like', "%{$search}%")
+                                   ->orWhere('address', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('tenant', function($tenantQuery) use ($search) {
+                      $tenantQuery->where('first_name', 'like', "%{$search}%")
+                                 ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'rented') {
+                $query->whereHas('tenant');
+            } elseif ($request->status === 'free') {
+                $query->whereDoesntHave('tenant');
+            }
+        }
+
+        if ($request->filled('property_id')) {
+            $query->where('property_id', $request->property_id);
+        }
+
+        if ($request->filled('rent_min')) {
+            $query->where('rent', '>=', $request->rent_min);
+        }
+        if ($request->filled('rent_max')) {
+            $query->where('rent', '<=', $request->rent_max);
+        }
+
+        $sortBy = $request->get('sort_by', 'id');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $units = $query->get();
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('owner.units.export-pdf', compact('units'));
+        
+        return $pdf->download('units_' . date('Y-m-d') . '.pdf');
     }
 
     // Step 1: Show unit config form

@@ -154,23 +154,7 @@ class SubscriptionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Log for debugging
-        \Log::info('Billing History accessed', [
-            'user_id' => Auth::id(),
-            'owner_id' => $ownerId,
-            'user_owner_id' => Auth::user()->owner_id,
-            'total_bills' => $billingHistory->count(),
-            'bills' => $billingHistory->map(function($bill) {
-                return [
-                    'id' => $bill->id,
-                    'invoice_number' => $bill->invoice_number,
-                    'amount' => $bill->amount,
-                    'status' => $bill->status,
-                    'owner_id' => $bill->owner_id,
-                    'subscription_id' => $bill->subscription_id
-                ];
-            })->toArray()
-        ]);
+
 
         return view('owner.subscription.billing', compact('billingHistory'));
     }
@@ -180,11 +164,7 @@ class SubscriptionController extends Controller
         $invoiceId = $request->get('invoice_id');
         $pendingInvoice = null;
 
-        \Log::info('Payment page accessed', [
-            'invoice_id' => $invoiceId,
-            'user_id' => Auth::id(),
-            'user_email' => Auth::user()->email ?? 'not logged in'
-        ]);
+
 
         if ($invoiceId) {
             // Get the correct owner_id from the authenticated user
@@ -196,26 +176,7 @@ class SubscriptionController extends Controller
                 ->whereIn('status', ['pending', 'unpaid', 'fail', 'cancel'])
                 ->first();
 
-            // Log for debugging
-            \Log::info('Payment page accessed with invoice_id', [
-                'invoice_id' => $invoiceId,
-                'pending_invoice_found' => $pendingInvoice ? true : false,
-                'user_id' => Auth::id(),
-                'owner_id' => $ownerId,
-                'user_owner_id' => Auth::user()->owner_id,
-                'invoice_details' => $pendingInvoice ? [
-                    'id' => $pendingInvoice->id,
-                    'amount' => $pendingInvoice->amount,
-                    'status' => $pendingInvoice->status,
-                    'owner_id' => $pendingInvoice->owner_id,
-                    'subscription_id' => $pendingInvoice->subscription_id
-                ] : null,
-                'query_conditions' => [
-                    'invoice_id' => $invoiceId,
-                    'owner_id' => $ownerId,
-                    'status' => ['pending', 'unpaid', 'fail', 'cancel']
-                ]
-            ]);
+
         } else {
             // Get the correct owner_id from the authenticated user
             $ownerId = Auth::user()->owner_id ?? Auth::id();
@@ -227,20 +188,7 @@ class SubscriptionController extends Controller
                 ->latest()
                 ->first();
 
-            // Log for debugging
-            \Log::info('Payment page accessed without invoice_id', [
-                'pending_invoice_found' => $pendingInvoice ? true : false,
-                'user_id' => Auth::id(),
-                'owner_id' => $ownerId,
-                'user_owner_id' => Auth::user()->owner_id,
-                'invoice_details' => $pendingInvoice ? [
-                    'id' => $pendingInvoice->id,
-                    'amount' => $pendingInvoice->amount,
-                    'status' => $pendingInvoice->status,
-                    'owner_id' => $pendingInvoice->owner_id,
-                    'subscription_id' => $pendingInvoice->subscription_id
-                ] : null
-            ]);
+
         }
 
         // Get payment methods
@@ -290,17 +238,6 @@ class SubscriptionController extends Controller
 
     public function initiatePaymentGateway(Request $request)
     {
-        // Log the request for debugging
-        \Log::info('initiatePaymentGateway method called', [
-            'method' => $request->method(),
-            'url' => $request->url(),
-            'invoice_id' => $request->input('invoice_id'),
-            'payment_method_id' => $request->input('payment_method_id'),
-            'all_data' => $request->all(),
-            'user_id' => Auth::id(),
-            'user_email' => Auth::user()->email ?? 'not logged in',
-            'headers' => $request->headers->all()
-        ]);
 
         $request->validate([
             'invoice_id' => 'required|exists:billing,id',
@@ -309,7 +246,6 @@ class SubscriptionController extends Controller
 
         // Handle GET requests by redirecting to payment page
         if ($request->isMethod('GET')) {
-            \Log::info('GET request detected, redirecting to payment page');
             return redirect()->route('owner.subscription.payment', ['invoice_id' => $request->invoice_id]);
         }
 
@@ -318,11 +254,7 @@ class SubscriptionController extends Controller
             $invoice = Billing::findOrFail($request->invoice_id);
             $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
 
-            \Log::info('Payment processing started', [
-                'invoice_id' => $invoice->id,
-                'payment_method' => $paymentMethod->name,
-                'amount' => $invoice->amount
-            ]);
+
 
             // Validate payment method
             if (!$paymentMethod->is_active) {
@@ -340,12 +272,7 @@ class SubscriptionController extends Controller
                 'net_amount' => $totalAmount
             ]);
 
-            \Log::info('Payment method updated', [
-                'invoice_id' => $invoice->id,
-                'payment_method_id' => $paymentMethod->id,
-                'transaction_fee' => $transactionFee,
-                'total_amount' => $totalAmount
-            ]);
+
 
             // Redirect directly to payment gateway based on payment method
             return $this->redirectToPaymentGateway($invoice, $paymentMethod);

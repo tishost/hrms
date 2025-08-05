@@ -99,6 +99,9 @@
                 <span class="submenu-arrow">▼</span>
             </a>
             <ul class="submenu">
+                <li class="{{ request()->routeIs('owner.settings.index') ? 'active' : '' }}">
+                    <a href="{{ route('owner.settings.index') }}">⚙️ General Settings</a>
+                </li>
                 <li class="{{ request()->routeIs('owner.settings.backup') ? 'active' : '' }}">
                     <a href="{{ route('owner.settings.backup') }}">💾 Backup Settings</a>
                 </li>

@@ -11,17 +11,98 @@ use App\Models\Unit;
 use App\Models\UnitCharge;
 use App\Helpers\SettingHelper;
 use App\Services\PackageLimitService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class OwnerPropertyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-       $ownerId = auth()->user()->owner->id;
-       $properties = Property::where('owner_id', $ownerId)->get();
+        $ownerId = auth()->user()->owner->id;
+        $query = Property::where('owner_id', $ownerId);
 
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('state', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%");
+            });
+        }
 
-        return view('owner.property.index', compact('properties'));
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by type
+        if ($request->filled('type')) {
+            $query->where('property_type', $request->type);
+        }
+
+        // Filter by country
+        if ($request->filled('country')) {
+            $query->where('country', $request->country);
+        }
+
+        // Sort functionality
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $properties = $query->get();
+
+        // Get unique countries for filter dropdown
+        $countries = Property::where('owner_id', $ownerId)
+                           ->distinct()
+                           ->pluck('country')
+                           ->filter()
+                           ->sort()
+                           ->values();
+
+        return view('owner.property.index', compact('properties', 'countries'));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $ownerId = auth()->user()->owner->id;
+        $query = Property::where('owner_id', $ownerId);
+
+        // Apply same filters as index method
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('state', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('type')) {
+            $query->where('property_type', $request->type);
+        }
+
+        if ($request->filled('country')) {
+            $query->where('country', $request->country);
+        }
+
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $properties = $query->get();
+
+        $pdf = Pdf::loadView('owner.property.export-pdf', compact('properties'));
+        return $pdf->download('properties_' . date('Y-m-d') . '.pdf');
     }
 
 

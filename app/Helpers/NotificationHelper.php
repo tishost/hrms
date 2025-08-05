@@ -5,6 +5,31 @@ namespace App\Helpers;
 use App\Services\NotificationService;
 use App\Helpers\SmsHelper;
 
+/**
+ * 🚀 HRMS Notification Helper
+ * 
+ * IMPORTANT DEVELOPMENT INSTRUCTIONS TO REMEMBER:
+ * 
+ * 1. ✅ সব notification এই Helper দিয়ে পাঠাবো (SMS, Email, OTP, App notifications)
+ * 2. ✅ SMS এর জন্য SmsHelper ব্যবহার করবো
+ * 3. ✅ Multiple function/controller তৈরি করবো না
+ * 4. ✅ Template-based notifications ব্যবহার করবো
+ * 5. ✅ Existing functions reuse করবো
+ * 6. ✅ Error handling করবো
+ * 
+ * PATTERNS TO FOLLOW:
+ * - SMS: NotificationHelper::sendOtpSms($phone, $otp)
+ * - Email: NotificationHelper::sendPasswordResetEmail($user, $token)
+ * - Template: NotificationHelper::sendTemplate('sms', $phone, 'template_name', $variables)
+ * 
+ * DON'T DO:
+ * - ❌ Direct SMS service calls
+ * - ❌ Hard-coded messages
+ * - ❌ Duplicate functions
+ * - ❌ New controllers for same purpose
+ * 
+ * REMEMBER: Always use this helper for all notifications!
+ */
 class NotificationHelper
 {
     private static $notificationService = null;
@@ -478,5 +503,52 @@ class NotificationHelper
     public static function testEmail($email)
     {
         return self::getService()->testEmail($email);
+    }
+
+    /**
+     * Send notification with owner's language preference
+     */
+    public static function sendNotificationWithLanguage($ownerId, $type, $recipient, $templateKey, $variables = [])
+    {
+        // Get owner's language preference
+        $language = \App\Models\OwnerSetting::getValue($ownerId, 'notification_language', 'bangla');
+        
+        // Get template with language preference
+        $template = \App\Models\OwnerSetting::getTemplateWithLanguage($ownerId, $templateKey, $variables);
+        
+        if (!$template) {
+            // Fallback to system template
+            $template = self::getSystemTemplate($templateKey . '_' . $language);
+            if (!$template) {
+                $template = self::getSystemTemplate($templateKey);
+            }
+            
+            if (!$template) {
+                return false;
+            }
+            
+            // Replace variables in system template
+            foreach ($variables as $key => $value) {
+                $template = str_replace('{' . $key . '}', $value, $template);
+            }
+        }
+        
+        // Send notification
+        return self::sendNotification($type, $recipient, $template);
+    }
+
+    /**
+     * Get system template
+     */
+    private static function getSystemTemplate($templateKey)
+    {
+        $template = \App\Models\SystemSetting::getValue('template_' . $templateKey);
+        
+        if ($template) {
+            $templateData = json_decode($template, true);
+            return $templateData['content'] ?? '';
+        }
+        
+        return '';
     }
 }

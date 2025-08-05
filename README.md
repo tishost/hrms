@@ -1,4 +1,27 @@
+# 🏠 HRMS - Property Management System
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+
+## 🚀 Development Instructions
+
+### **গুরুত্বপূর্ণ Instructions মনে রাখার জন্য:**
+
+1. **Database Rules:**
+   - ✅ Existing tables use করবো, নতুন table নয়
+   - ✅ OTP এর জন্য `otps` table use করবো
+   - ✅ নতুন migration/table এর আগে confirmation নিবো
+
+2. **Notification Rules:**
+   - ✅ সব notification NotificationHelper দিয়ে পাঠাবো
+   - ✅ SMS এর জন্য SmsHelper ব্যবহার করবো
+   - ✅ Multiple function/controller তৈরি করবো না
+
+3. **Code Pattern Rules:**
+   - ✅ Existing models/functions reuse করবো
+   - ✅ Template-based notifications ব্যবহার করবো
+   - ✅ Error handling করবো
+
+**📋 বিস্তারিত Instructions দেখতে:** [DEVELOPMENT_INSTRUCTIONS.md](./DEVELOPMENT_INSTRUCTIONS.md)
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>

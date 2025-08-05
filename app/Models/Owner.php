@@ -76,4 +76,9 @@ public function notificationLogs()
     return $this->hasManyThrough(NotificationLog::class, User::class, 'owner_id', 'user_id');
 }
 
+public function settings()
+{
+    return $this->hasOne(OwnerSetting::class);
+}
+
 }

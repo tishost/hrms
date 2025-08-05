@@ -11,6 +11,7 @@ use App\Models\ContactTicket;
 use App\Helpers\CountryHelper;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminDashboardController extends Controller
 {
@@ -179,16 +180,72 @@ class AdminDashboardController extends Controller
         ));
     }
 
-    public function subscriptions()
+    public function subscriptions(Request $request)
     {
-        $subscriptions = OwnerSubscription::with(['owner.user', 'plan'])
+        $query = OwnerSubscription::with(['owner.user', 'plan'])
             ->whereHas('owner.user', function($query) {
                 $query->whereNull('deleted_at');
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            });
 
-        return view('admin.subscriptions.index', compact('subscriptions'));
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('owner.user', function($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                             ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('plan', function($planQuery) use ($search) {
+                    $planQuery->where('name', 'like', "%{$search}%");
+                })
+                ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by subscription status
+        if ($request->filled('status')) {
+            $status = $request->get('status');
+            if ($status === 'active') {
+                $query->where('status', 'active');
+            } elseif ($status === 'pending') {
+                $query->where('status', 'pending');
+            } elseif ($status === 'expired') {
+                $query->where('status', 'expired');
+            } elseif ($status === 'suspended') {
+                $query->where('status', 'suspended');
+            } elseif ($status === 'cancelled') {
+                $query->where('status', 'cancelled');
+            }
+        }
+
+        // Filter by plan
+        if ($request->filled('plan')) {
+            $query->whereHas('plan', function($q) use ($request) {
+                $q->where('name', $request->get('plan'));
+            });
+        }
+
+        // Filter by auto renew
+        if ($request->filled('auto_renew')) {
+            $autoRenew = $request->get('auto_renew');
+            if ($autoRenew === 'yes') {
+                $query->where('auto_renew', true);
+            } elseif ($autoRenew === 'no') {
+                $query->where('auto_renew', false);
+            }
+        }
+
+        // Sort functionality
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $subscriptions = $query->paginate(20);
+        
+        // Get unique plans for filter dropdown
+        $plans = \App\Models\SubscriptionPlan::distinct()->pluck('name')->sort()->values();
+        
+        return view('admin.subscriptions.index', compact('subscriptions', 'plans'));
     }
 
     public function plans()
@@ -228,14 +285,157 @@ class AdminDashboardController extends Controller
         return view('admin.billing.index', compact('billing', 'totalRevenue', 'pendingAmount', 'monthlyRevenue'));
     }
 
-    public function owners()
+    public function owners(Request $request)
     {
-        $owners = \App\Models\Owner::with([
+        $query = \App\Models\Owner::with([
             'user',
             'subscription.plan',
             'subscription.billing'
-        ])->paginate(\App\Helpers\SystemHelper::getPaginationLimit());
-        return view('admin.owners.index', compact('owners'));
+        ]);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('owner_uid', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%")
+                               ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by subscription status
+        if ($request->filled('subscription_status')) {
+            $status = $request->get('subscription_status');
+            if ($status === 'active') {
+                $query->whereHas('subscription', function($q) {
+                    $q->where('status', 'active');
+                });
+            } elseif ($status === 'pending') {
+                $query->whereHas('subscription', function($q) {
+                    $q->where('status', 'pending');
+                });
+            } elseif ($status === 'expired') {
+                $query->whereHas('subscription', function($q) {
+                    $q->where('status', 'expired');
+                });
+            } elseif ($status === 'no_subscription') {
+                $query->whereDoesntHave('subscription');
+            }
+        }
+
+        // Filter by country
+        if ($request->filled('country')) {
+            $query->where('country', $request->get('country'));
+        }
+
+        // Filter by gender
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->get('gender'));
+        }
+
+        // Sort functionality
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Handle export requests
+        if ($request->filled('export')) {
+            $exportFormat = $request->get('export');
+            $ownersForExport = $query->get(); // Get all results without pagination
+            
+            if ($exportFormat === 'csv') {
+                return $this->exportToCsv($ownersForExport);
+            } elseif ($exportFormat === 'pdf') {
+                return $this->exportToPdf($ownersForExport);
+            }
+        }
+
+        $owners = $query->paginate(\App\Helpers\SystemHelper::getPaginationLimit());
+        
+        // Get unique countries for filter dropdown
+        $countries = \App\Models\Owner::distinct()->pluck('country')->filter()->sort()->values();
+        
+        return view('admin.owners.index', compact('owners', 'countries'));
+    }
+
+    /**
+     * Export owners data to CSV
+     */
+    private function exportToCsv($owners)
+    {
+        $filename = 'owners_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($owners) {
+            $file = fopen('php://output', 'w');
+            
+            // Add CSV headers
+            fputcsv($file, [
+                'Owner ID', 'Name', 'Email', 'Phone', 'Country', 'Gender', 
+                'Subscription Status', 'Plan', 'Expiry Date', 'Registration Date'
+            ]);
+
+            foreach ($owners as $owner) {
+                $subscriptionStatus = 'No Subscription';
+                $planName = 'N/A';
+                $expiryDate = 'N/A';
+                
+                if ($owner->subscription) {
+                    $subscriptionStatus = ucfirst($owner->subscription->status);
+                    if ($owner->subscription->plan) {
+                        $planName = $owner->subscription->plan->name;
+                    }
+                    if ($owner->subscription->end_date) {
+                        $expiryDate = $owner->subscription->end_date->format('Y-m-d');
+                    }
+                }
+
+                fputcsv($file, [
+                    $owner->owner_uid,
+                    $owner->user->name ?? $owner->name,
+                    $owner->user->email ?? $owner->email,
+                    $owner->phone,
+                    $owner->country,
+                    $owner->gender,
+                    $subscriptionStatus,
+                    $planName,
+                    $expiryDate,
+                    $owner->created_at->format('Y-m-d')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export owners data to PDF
+     */
+    private function exportToPdf($owners)
+    {
+        $filename = 'owners_' . date('Y-m-d_H-i-s') . '.pdf';
+        
+        $data = [
+            'owners' => $owners,
+            'title' => 'Owners Report',
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ];
+
+        $pdf = Pdf::loadView('admin.owners.export-pdf', $data);
+        
+        return $pdf->download($filename);
     }
 
     public function createOwner()
@@ -453,7 +653,7 @@ class AdminDashboardController extends Controller
             'address' => 'required|string|max:500',
             'country' => 'required|string|max:100',
             'gender' => 'required|in:male,female,other',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         // Debug: Log validation passed

@@ -7,21 +7,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<!-- Debug Info - Remove this after fixing the issue -->
-@if(config('app.debug'))
-<div class="alert alert-info mb-4">
-    <strong>Debug Info:</strong>
-    <ul class="mb-0">
-        <li>Current Route: {{ request()->route()->getName() }}</li>
-        <li>User ID: {{ auth()->id() }}</li>
-        <li>User Name: {{ auth()->user()->name ?? 'N/A' }}</li>
-        <li>User Roles: {{ auth()->user()->roles->pluck('name')->implode(', ') }}</li>
-        <li>Is Owner: {{ auth()->user()->hasRole('owner') ? 'Yes' : 'No' }}</li>
-        <li>Owner ID: {{ auth()->user()->owner->id ?? 'N/A' }}</li>
-        <li>Layout: owner.blade.php</li>
-    </ul>
-</div>
-@endif
+
 
 <div class="page-header">
     <div class="page-title">
@@ -107,7 +93,7 @@
                     @foreach(['properties', 'units', 'tenants', 'sms'] as $type)
                         @if(isset($stats[$type]))
                             @php $stat = $stats[$type]; @endphp
-                            <div class="col-md-3 mb-3">
+                            <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
                                 <div class="usage-card">
                                     <div class="usage-header">
                                         <h6>{{ ucfirst($type) }}</h6>
@@ -286,6 +272,293 @@
 
 @section('styles')
 <style>
+/* Force responsive styles with high specificity */
+@media (max-width: 768px) {
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        padding: 0 15px !important;
+    }
+    
+    .stat-card {
+        padding: 20px !important;
+        margin-bottom: 15px !important;
+        border-radius: 12px !important;
+        background: white !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+    }
+    
+    .stat-header {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 15px !important;
+    }
+    
+    .stat-icon {
+        align-self: center !important;
+        margin-top: 0 !important;
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.8rem !important;
+    }
+    
+    .stat-value {
+        font-size: 2.2rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .stat-title {
+        font-size: 1rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* Force Bootstrap columns to stack */
+    .row .col-lg-3,
+    .row .col-md-6,
+    .row .col-sm-12 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .usage-card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+        border-radius: 10px !important;
+    }
+    
+    .usage-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .usage-header h6 {
+        font-size: 1.1rem !important;
+        margin-bottom: 5px !important;
+    }
+    
+    .usage-header .badge {
+        align-self: flex-start !important;
+        font-size: 0.85rem !important;
+        padding: 6px 10px !important;
+    }
+    
+    .progress {
+        height: 10px !important;
+        border-radius: 5px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .progress-bar {
+        font-size: 10px !important;
+        line-height: 10px !important;
+        border-radius: 5px !important;
+    }
+    
+    .charts-row {
+        flex-direction: column !important;
+        gap: 15px !important;
+        padding: 0 15px !important;
+    }
+    
+    .chart-card {
+        width: 100% !important;
+        padding: 20px !important;
+        margin-bottom: 20px !important;
+        border-radius: 12px !important;
+    }
+    
+    .chart-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .chart-title {
+        font-size: 1.3rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .chart-actions select {
+        width: 100% !important;
+        max-width: 150px !important;
+        padding: 8px 12px !important;
+    }
+    
+    .bottom-stats {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        padding: 0 15px !important;
+    }
+    
+    .bottom-stat-card {
+        padding: 20px !important;
+        margin-bottom: 15px !important;
+        border-radius: 12px !important;
+    }
+    
+    .bottom-stat-content h4 {
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .alert {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+        border-radius: 10px !important;
+    }
+    
+    .alert .d-flex {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    
+    .alert h6 {
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .modal-dialog {
+        margin: 15px !important;
+        max-width: calc(100% - 30px) !important;
+    }
+    
+    .modal-body {
+        padding: 20px !important;
+    }
+    
+    .modal-footer {
+        padding: 20px !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    
+    .modal-footer .btn {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Card improvements */
+    .card {
+        border-radius: 12px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    }
+    
+    .card-header {
+        padding: 20px !important;
+        border-bottom: 1px solid #e9ecef !important;
+    }
+    
+    .card-body {
+        padding: 20px !important;
+    }
+    
+    .card-title {
+        font-size: 1.2rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .chart-container {
+        height: 250px !important;
+    }
+    
+    /* Page header responsive */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        padding: 15px !important;
+    }
+    
+    .page-title h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 10px !important;
+        line-height: 1.2 !important;
+    }
+    
+    .breadcrumb {
+        font-size: 0.9rem !important;
+    }
+    
+    .chart-actions select {
+        width: 100% !important;
+        max-width: 200px !important;
+        padding: 8px 12px !important;
+        border-radius: 6px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem !important;
+    }
+    
+    .stat-title {
+        font-size: 0.9rem !important;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .usage-card {
+        padding: 10px !important;
+    }
+    
+    .progress {
+        height: 6px !important;
+    }
+    
+    .progress-bar {
+        font-size: 8px !important;
+        line-height: 6px !important;
+    }
+    
+    .card {
+        margin-bottom: 15px !important;
+    }
+    
+    .card-body {
+        padding: 15px !important;
+    }
+    
+    .chart-container {
+        height: 200px !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+    }
+    
+    .charts-row {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+    
+    .chart-card {
+        width: 100% !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .bottom-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+    }
+}
+</style>
+<style>
 .stat-icon.sms {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -320,6 +593,383 @@
     border-radius: 4px;
     font-size: 10px;
     line-height: 8px;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .charts-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .chart-card {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .bottom-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .page-title h1 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        line-height: 1.2;
+    }
+    
+    .breadcrumb {
+        font-size: 0.9rem;
+    }
+    
+    .chart-actions select {
+        width: 100%;
+        max-width: 200px;
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 0 15px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+    }
+    
+    .stat-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .stat-icon {
+        align-self: center;
+        margin-top: 0;
+        width: 60px;
+        height: 60px;
+        font-size: 1.8rem;
+    }
+    
+    .stat-value {
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+    }
+    
+    .stat-title {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    
+    .usage-card {
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+    }
+    
+    .usage-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .usage-header h6 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .usage-header .badge {
+        align-self: flex-start;
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+    
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    
+    .progress-bar {
+        font-size: 10px;
+        line-height: 10px;
+        border-radius: 5px;
+    }
+    
+    .charts-row {
+        gap: 15px;
+        padding: 0 15px;
+    }
+    
+    .chart-card {
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .chart-title {
+        font-size: 1.3rem;
+        margin-bottom: 0;
+    }
+    
+    .chart-actions select {
+        width: 100%;
+        max-width: 150px;
+        padding: 8px 12px;
+    }
+    
+    .bottom-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 0 15px;
+    }
+    
+    .bottom-stat-card {
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+    }
+    
+    .bottom-stat-content h4 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+    
+    .alert {
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+    }
+    
+    .alert .d-flex {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .alert h6 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+    
+    .modal-dialog {
+        margin: 15px;
+        max-width: calc(100% - 30px);
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-footer {
+        padding: 20px;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+    }
+    
+    /* Force Bootstrap columns to stack on mobile */
+    .row .col-lg-3,
+    .row .col-md-6,
+    .row .col-sm-12 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Card improvements */
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title h1 {
+        font-size: 1.3rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-title {
+        font-size: 0.9rem;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+    }
+    
+    .usage-card {
+        padding: 10px;
+    }
+    
+    .progress {
+        height: 6px;
+    }
+    
+    .progress-bar {
+        font-size: 8px;
+        line-height: 6px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+}
+
+/* Ensure proper spacing on all devices */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Ensure stat cards are responsive */
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-title {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-icon.orders {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-icon.revenue {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.stat-icon.sales {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.charts-row {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.chart-card {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.bottom-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Ensure charts are responsive */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chart-container {
+        height: 200px;
+    }
 }
 </style>
 @endsection
