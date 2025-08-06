@@ -38,13 +38,28 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="content-welcome-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-welcome-sms" name="welcome_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['welcome_sms_content_bangla'] ?? 'স্বাগতম {tenant_name}! আপনার ইউনিট {unit_name} প্রস্তুত। {company_name}' }}</textarea>
-                                        <div class="form-text">
-                                            <span id="char-count-welcome-sms" class="text-muted">0/160</span> characters
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-welcome-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-welcome-sms" name="welcome_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['welcome_sms_content_bangla'] ?? 'স্বাগতম {tenant_name}! আপনার ইউনিট {unit_name} প্রস্তুত। {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-welcome-sms" class="text-muted">0/160</span> characters
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-welcome-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-welcome-sms-en" name="welcome_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['welcome_sms_content_english'] ?? 'Welcome {tenant_name}! Your unit {unit_name} is ready. {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-welcome-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {unit_name}, {property_name}, {company_name}
@@ -63,13 +78,28 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="content-rent-due-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-rent-due-sms" name="rent_due_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['rent_due_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, {month} মাসের ভাড়া ৳{amount} {due_date} তারিখে বাকি। {company_name}' }}</textarea>
-                                        <div class="form-text">
-                                            <span id="char-count-rent-due-sms" class="text-muted">0/160</span> characters
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-rent-due-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-rent-due-sms" name="rent_due_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['rent_due_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, {month} মাসের ভাড়া ৳{amount} {due_date} তারিখে বাকি। {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-rent-due-sms" class="text-muted">0/160</span> characters
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-rent-due-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-rent-due-sms-en" name="rent_due_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['rent_due_sms_content_english'] ?? 'Dear {tenant_name}, rent of ৳{amount} for {month} is due on {due_date}. {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-rent-due-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {amount}, {month}, {due_date}, {company_name}
@@ -88,13 +118,28 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="content-rent-paid-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-rent-paid-sms" name="rent_paid_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['rent_paid_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার {month} মাসের ভাড়া ৳{amount} সফলভাবে পরিশোধ হয়েছে। ধন্যবাদ! {company_name}' }}</textarea>
-                                        <div class="form-text">
-                                            <span id="char-count-rent-paid-sms" class="text-muted">0/160</span> characters
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-rent-paid-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-rent-paid-sms" name="rent_paid_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['rent_paid_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার {month} মাসের ভাড়া ৳{amount} সফলভাবে পরিশোধ হয়েছে। ধন্যবাদ! {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-rent-paid-sms" class="text-muted">0/160</span> characters
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-rent-paid-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-rent-paid-sms-en" name="rent_paid_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['rent_paid_sms_content_english'] ?? 'Dear {tenant_name}, your rent payment of ৳{amount} for {month} has been received. Thank you! {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-rent-paid-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {amount}, {month}, {payment_date}, {company_name}
@@ -113,13 +158,28 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="content-payment-confirmation-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-payment-confirmation-sms" name="payment_confirmation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['payment_confirmation_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার পেমেন্ট ৳{amount} সফলভাবে সম্পন্ন হয়েছে। ট্রানজেকশন: {transaction_id} {company_name}' }}</textarea>
-                                        <div class="form-text">
-                                            <span id="char-count-payment-confirmation-sms" class="text-muted">0/160</span> characters
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-payment-confirmation-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-payment-confirmation-sms" name="payment_confirmation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['payment_confirmation_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার পেমেন্ট ৳{amount} সফলভাবে সম্পন্ন হয়েছে। ট্রানজেকশন: {transaction_id} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-payment-confirmation-sms" class="text-muted">0/160</span> characters
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-payment-confirmation-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-payment-confirmation-sms-en" name="payment_confirmation_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['payment_confirmation_sms_content_english'] ?? 'Dear {tenant_name}, your payment of ৳{amount} has been completed. Transaction: {transaction_id} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-payment-confirmation-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {payment_type}, {amount}, {transaction_id}, {company_name}
@@ -138,13 +198,28 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="content-password-reset-otp-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-password-reset-otp-sms" name="password_reset_otp_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['password_reset_otp_sms_content_bangla'] ?? 'আপনার পাসওয়ার্ড রিসেট OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}' }}</textarea>
-                                        <div class="form-text">
-                                            <span id="char-count-password-reset-otp-sms" class="text-muted">0/160</span> characters
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-password-reset-otp-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-password-reset-otp-sms" name="password_reset_otp_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['password_reset_otp_sms_content_bangla'] ?? 'আপনার পাসওয়ার্ড রিসেট OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-password-reset-otp-sms" class="text-muted">0/160</span> characters
+                                            </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-password-reset-otp-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-password-reset-otp-sms-en" name="password_reset_otp_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['password_reset_otp_sms_content_english'] ?? 'Your password reset OTP: {otp}. This OTP is valid for 10 minutes. {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-password-reset-otp-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {otp}, {company_name}
@@ -270,17 +345,20 @@ function switchLanguage(lang) {
     // Update hidden input
     document.getElementById('current-language').value = lang;
     
-    // Show/hide language-specific fields
-    const banglaFields = document.querySelectorAll('[name$="_bangla"]');
-    const englishFields = document.querySelectorAll('[name$="_english"]');
+    // Show/hide language-specific content
+    const banglaContents = document.querySelectorAll('.bangla-content');
+    const englishContents = document.querySelectorAll('.english-content');
     
     if (lang === 'bangla') {
-        banglaFields.forEach(field => field.style.display = 'block');
-        englishFields.forEach(field => field.style.display = 'none');
+        banglaContents.forEach(content => content.style.display = 'block');
+        englishContents.forEach(content => content.style.display = 'none');
     } else {
-        banglaFields.forEach(field => field.style.display = 'none');
-        englishFields.forEach(field => field.style.display = 'block');
+        banglaContents.forEach(content => content.style.display = 'none');
+        englishContents.forEach(content => content.style.display = 'block');
     }
+    
+    // Dispatch event for character counter updates
+    document.dispatchEvent(new Event('languageChanged'));
 }
 
 function updateCharCount(templateName) {
@@ -315,6 +393,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize character count
         const templateName = textarea.id.replace('content-', '');
         updateCharCount(templateName);
+    });
+    
+    // Update character counters when language switches
+    document.addEventListener('languageChanged', function() {
+        setTimeout(() => {
+            const visibleTextareas = document.querySelectorAll('textarea[maxlength="160"]:not([style*="display: none"])');
+            visibleTextareas.forEach(textarea => {
+                const templateName = textarea.id.replace('content-', '');
+                updateCharCount(templateName);
+            });
+        }, 100);
     });
 });
 </script>

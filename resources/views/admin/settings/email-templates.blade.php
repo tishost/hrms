@@ -38,14 +38,16 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="subject-tenant-welcome" class="form-label">Subject</label>
-                                        <input type="text" class="form-control" id="subject-tenant-welcome" name="tenant_welcome_email_subject_bangla" 
-                                               value="{{ $allSettings['tenant_welcome_email_subject_bangla'] ?? 'স্বাগতম! আপনার ইউনিট প্রস্তুত' }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="content-tenant-welcome" class="form-label">Email Content</label>
-                                        <textarea class="form-control" id="content-tenant-welcome" name="tenant_welcome_email_content_bangla" rows="8" required>{{ $allSettings['tenant_welcome_email_content_bangla'] ?? 'স্বাগতম {tenant_name}!
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="subject-tenant-welcome" class="form-label">Subject (বাংলা)</label>
+                                            <input type="text" class="form-control" id="subject-tenant-welcome" name="tenant_welcome_email_subject_bangla" 
+                                                   value="{{ $allSettings['tenant_welcome_email_subject_bangla'] ?? 'স্বাগতম! আপনার ইউনিট প্রস্তুত' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-tenant-welcome" class="form-label">Email Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-tenant-welcome" name="tenant_welcome_email_content_bangla" rows="8" required>{{ $allSettings['tenant_welcome_email_content_bangla'] ?? 'স্বাগতম {tenant_name}!
 
 আপনার ইউনিট {unit_name} প্রস্তুত। আপনি এখন আপনার নতুন বাড়িতে প্রবেশ করতে পারেন।
 
@@ -56,7 +58,32 @@
 
 ধন্যবাদ,
 {company_name}' }}</textarea>
+                                        </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="subject-tenant-welcome-en" class="form-label">Subject (English)</label>
+                                            <input type="text" class="form-control" id="subject-tenant-welcome-en" name="tenant_welcome_email_subject_english" 
+                                                   value="{{ $allSettings['tenant_welcome_email_subject_english'] ?? 'Welcome! Your unit is ready' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-tenant-welcome-en" class="form-label">Email Content (English)</label>
+                                            <textarea class="form-control" id="content-tenant-welcome-en" name="tenant_welcome_email_content_english" rows="8" required>{{ $allSettings['tenant_welcome_email_content_english'] ?? 'Welcome {tenant_name}!
+
+Your unit {unit_name} is ready. You can now move into your new home.
+
+Details:
+- Property: {property_name}
+- Unit: {unit_name}
+- Owner Email: {owner_email}
+
+Thank you,
+{company_name}' }}</textarea>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {unit_name}, {property_name}, {owner_email}, {company_name}
@@ -75,14 +102,16 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="subject-rent-due" class="form-label">Subject</label>
-                                        <input type="text" class="form-control" id="subject-rent-due" name="rent_due_email_subject_bangla" 
-                                               value="{{ $allSettings['rent_due_email_subject_bangla'] ?? 'ভাড়া বাকি - {month} মাস' }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="content-rent-due" class="form-label">Email Content</label>
-                                        <textarea class="form-control" id="content-rent-due" name="rent_due_email_content_bangla" rows="8" required>{{ $allSettings['rent_due_email_content_bangla'] ?? 'প্রিয় {tenant_name},
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="subject-rent-due" class="form-label">Subject (বাংলা)</label>
+                                            <input type="text" class="form-control" id="subject-rent-due" name="rent_due_email_subject_bangla" 
+                                                   value="{{ $allSettings['rent_due_email_subject_bangla'] ?? 'ভাড়া বাকি - {month} মাস' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-rent-due" class="form-label">Email Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-rent-due" name="rent_due_email_content_bangla" rows="8" required>{{ $allSettings['rent_due_email_content_bangla'] ?? 'প্রিয় {tenant_name},
 
 {month} মাসের ভাড়া ৳{amount} {due_date} তারিখে বাকি। অনুগ্রহ করে সময়মতো পরিশোধ করুন।
 
@@ -94,7 +123,33 @@
 
 ধন্যবাদ,
 {company_name}' }}</textarea>
+                                        </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="subject-rent-due-en" class="form-label">Subject (English)</label>
+                                            <input type="text" class="form-control" id="subject-rent-due-en" name="rent_due_email_subject_english" 
+                                                   value="{{ $allSettings['rent_due_email_subject_english'] ?? 'Rent Due - {month}' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-rent-due-en" class="form-label">Email Content (English)</label>
+                                            <textarea class="form-control" id="content-rent-due-en" name="rent_due_email_content_english" rows="8" required>{{ $allSettings['rent_due_email_content_english'] ?? 'Dear {tenant_name},
+
+Rent of ৳{amount} for {month} is due on {due_date}. Please pay on time.
+
+Details:
+- Unit: {unit_name}
+- Property: {property_name}
+- Due Amount: ৳{amount}
+- Due Date: {due_date}
+
+Thank you,
+{company_name}' }}</textarea>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {amount}, {month}, {due_date}, {unit_name}, {property_name}, {company_name}
@@ -113,14 +168,16 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="subject-rent-paid" class="form-label">Subject</label>
-                                        <input type="text" class="form-control" id="subject-rent-paid" name="rent_paid_email_subject_bangla" 
-                                               value="{{ $allSettings['rent_paid_email_subject_bangla'] ?? 'ভাড়া পরিশোধ নিশ্চিতকরণ' }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="content-rent-paid" class="form-label">Email Content</label>
-                                        <textarea class="form-control" id="content-rent-paid" name="rent_paid_email_content_bangla" rows="8" required>{{ $allSettings['rent_paid_email_content_bangla'] ?? 'প্রিয় {tenant_name},
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="subject-rent-paid" class="form-label">Subject (বাংলা)</label>
+                                            <input type="text" class="form-control" id="subject-rent-paid" name="rent_paid_email_subject_bangla" 
+                                                   value="{{ $allSettings['rent_paid_email_subject_bangla'] ?? 'ভাড়া পরিশোধ নিশ্চিতকরণ' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-rent-paid" class="form-label">Email Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-rent-paid" name="rent_paid_email_content_bangla" rows="8" required>{{ $allSettings['rent_paid_email_content_bangla'] ?? 'প্রিয় {tenant_name},
 
 আপনার {month} মাসের ভাড়া ৳{amount} সফলভাবে পরিশোধ হয়েছে। ধন্যবাদ!
 
@@ -132,7 +189,33 @@
 
 ধন্যবাদ,
 {company_name}' }}</textarea>
+                                        </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="subject-rent-paid-en" class="form-label">Subject (English)</label>
+                                            <input type="text" class="form-control" id="subject-rent-paid-en" name="rent_paid_email_subject_english" 
+                                                   value="{{ $allSettings['rent_paid_email_subject_english'] ?? 'Rent Payment Confirmation' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-rent-paid-en" class="form-label">Email Content (English)</label>
+                                            <textarea class="form-control" id="content-rent-paid-en" name="rent_paid_email_content_english" rows="8" required>{{ $allSettings['rent_paid_email_content_english'] ?? 'Dear {tenant_name},
+
+Your rent payment of ৳{amount} for {month} has been successfully received. Thank you!
+
+Details:
+- Unit: {unit_name}
+- Property: {property_name}
+- Paid Amount: ৳{amount}
+- Payment Date: {payment_date}
+
+Thank you,
+{company_name}' }}</textarea>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {amount}, {month}, {payment_date}, {unit_name}, {property_name}, {company_name}
@@ -151,14 +234,16 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="subject-payment-confirmation" class="form-label">Subject</label>
-                                        <input type="text" class="form-control" id="subject-payment-confirmation" name="payment_confirmation_email_subject_bangla" 
-                                               value="{{ $allSettings['payment_confirmation_email_subject_bangla'] ?? 'পেমেন্ট নিশ্চিতকরণ' }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="content-payment-confirmation" class="form-label">Email Content</label>
-                                        <textarea class="form-control" id="content-payment-confirmation" name="payment_confirmation_email_content_bangla" rows="8" required>{{ $allSettings['payment_confirmation_email_content_bangla'] ?? 'প্রিয় {tenant_name},
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="subject-payment-confirmation" class="form-label">Subject (বাংলা)</label>
+                                            <input type="text" class="form-control" id="subject-payment-confirmation" name="payment_confirmation_email_subject_bangla" 
+                                                   value="{{ $allSettings['payment_confirmation_email_subject_bangla'] ?? 'পেমেন্ট নিশ্চিতকরণ' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-payment-confirmation" class="form-label">Email Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-payment-confirmation" name="payment_confirmation_email_content_bangla" rows="8" required>{{ $allSettings['payment_confirmation_email_content_bangla'] ?? 'প্রিয় {tenant_name},
 
 আপনার পেমেন্ট সফলভাবে সম্পন্ন হয়েছে।
 
@@ -170,7 +255,33 @@
 
 ধন্যবাদ,
 {company_name}' }}</textarea>
+                                        </div>
                                     </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="subject-payment-confirmation-en" class="form-label">Subject (English)</label>
+                                            <input type="text" class="form-control" id="subject-payment-confirmation-en" name="payment_confirmation_email_subject_english" 
+                                                   value="{{ $allSettings['payment_confirmation_email_subject_english'] ?? 'Payment Confirmation' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="content-payment-confirmation-en" class="form-label">Email Content (English)</label>
+                                            <textarea class="form-control" id="content-payment-confirmation-en" name="payment_confirmation_email_content_english" rows="8" required>{{ $allSettings['payment_confirmation_email_content_english'] ?? 'Dear {tenant_name},
+
+Your payment has been successfully completed.
+
+Details:
+- Payment Type: {payment_type}
+- Amount: ৳{amount}
+- Date: {payment_date}
+- Transaction ID: {transaction_id}
+
+Thank you,
+{company_name}' }}</textarea>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <small class="text-muted">
                                             <strong>Available placeholders:</strong> {tenant_name}, {payment_type}, {amount}, {payment_date}, {transaction_id}, {company_name}
@@ -288,17 +399,20 @@ function switchLanguage(lang) {
     // Update hidden input
     document.getElementById('current-language').value = lang;
     
-    // Show/hide language-specific fields
-    const banglaFields = document.querySelectorAll('[name$="_bangla"]');
-    const englishFields = document.querySelectorAll('[name$="_english"]');
+    // Show/hide language-specific content
+    const banglaContents = document.querySelectorAll('.bangla-content');
+    const englishContents = document.querySelectorAll('.english-content');
     
     if (lang === 'bangla') {
-        banglaFields.forEach(field => field.style.display = 'block');
-        englishFields.forEach(field => field.style.display = 'none');
+        banglaContents.forEach(content => content.style.display = 'block');
+        englishContents.forEach(content => content.style.display = 'none');
     } else {
-        banglaFields.forEach(field => field.style.display = 'none');
-        englishFields.forEach(field => field.style.display = 'block');
+        banglaContents.forEach(content => content.style.display = 'none');
+        englishContents.forEach(content => content.style.display = 'block');
     }
+    
+    // Dispatch event for any additional updates
+    document.dispatchEvent(new Event('languageChanged'));
 }
 
 // Initialize on page load
