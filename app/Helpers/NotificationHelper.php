@@ -232,11 +232,22 @@ class NotificationHelper
             return ['success' => false, 'message' => 'OTP SMS notifications are disabled'];
         }
 
+        // Get template content from new system
+        $contentBangla = \App\Models\SystemSetting::getValue('password_reset_otp_sms_content_bangla', 'আপনার OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}');
+        $contentEnglish = \App\Models\SystemSetting::getValue('password_reset_otp_sms_content_english', 'Your OTP: {otp}. This OTP is valid for 10 minutes. {company_name}');
+
+        // Replace variables in template
         $variables = [
             'otp' => $otp,
+            'company_name' => config('app.name', 'HRMS')
         ];
 
-        return self::sendTemplate('sms', $phone, 'otp_verification_sms', $variables);
+        // Replace variables in content
+        $contentBangla = self::replaceVariables($contentBangla, $variables);
+        $contentEnglish = self::replaceVariables($contentEnglish, $variables);
+
+        // Send SMS with Bangla content (default)
+        return self::sendSms($phone, $contentBangla, $variables);
     }
 
     /**
@@ -258,14 +269,40 @@ class NotificationHelper
      */
     public static function sendPasswordResetEmail($user, $resetToken)
     {
+        // Get template content from new system
+        $subjectBangla = \App\Models\SystemSetting::getValue('password_reset_email_subject_bangla', 'পাসওয়ার্ড রিসেট অনুরোধ');
+        $contentBangla = \App\Models\SystemSetting::getValue('password_reset_email_content_bangla', 'প্রিয় {user_name}, আপনার পাসওয়ার্ড রিসেট করার অনুরোধ পাওয়া গেছে। আপনার OTP: {otp} এই OTP 10 মিনিটের জন্য বৈধ। যদি আপনি এই অনুরোধ করেননি, তাহলে এই ইমেইল উপেক্ষা করুন। ধন্যবাদ, {company_name}');
+        
+        $subjectEnglish = \App\Models\SystemSetting::getValue('password_reset_email_subject_english', 'Password Reset Request');
+        $contentEnglish = \App\Models\SystemSetting::getValue('password_reset_email_content_english', 'Dear {user_name}, A password reset request has been received for your account. Your OTP: {otp} This OTP is valid for 10 minutes. If you did not request this, please ignore this email. Thank you, {company_name}');
+
+        // Replace variables in template
         $variables = [
-            'name' => $user->name,
+            'user_name' => $user->name,
             'email' => $user->email,
-            'reset_url' => route('password.reset', ['token' => $resetToken, 'email' => $user->email]),
-            'otp' => $resetToken // Add OTP variable for template
+            'otp' => $resetToken,
+            'company_name' => config('app.name', 'HRMS')
         ];
 
-        return self::sendTemplate('email', $user->email, 'password_reset_email', $variables);
+        // Replace variables in content
+        $subjectBangla = self::replaceVariables($subjectBangla, $variables);
+        $contentBangla = self::replaceVariables($contentBangla, $variables);
+        $subjectEnglish = self::replaceVariables($subjectEnglish, $variables);
+        $contentEnglish = self::replaceVariables($contentEnglish, $variables);
+
+        // Send email with both languages (default to Bangla)
+        return self::sendEmail($user->email, $subjectBangla, $contentBangla);
+    }
+
+    /**
+     * Replace variables in template content
+     */
+    private static function replaceVariables($content, $variables)
+    {
+        foreach ($variables as $key => $value) {
+            $content = str_replace('{' . $key . '}', $value, $content);
+        }
+        return $content;
     }
 
     /**
