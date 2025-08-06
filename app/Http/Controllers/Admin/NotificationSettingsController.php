@@ -145,13 +145,29 @@ class NotificationSettingsController extends Controller
                 // Fall back to default template
                 $template = null;
             } else {
-                return response()->json([
-                    'success' => true,
-                    'template' => [
-                        'subject' => $data['subject'] ?? '',
-                        'content' => $data['content'] ?? '',
-                    ]
-                ]);
+                // Check if template has actual content (not null or empty)
+                $hasContent = false;
+                if (str_contains($templateName, '_sms')) {
+                    $hasContent = !empty($data['content']);
+                } else {
+                    $hasContent = !empty($data['subject']) && !empty($data['content']);
+                }
+                
+                if ($hasContent) {
+                    return response()->json([
+                        'success' => true,
+                        'template' => [
+                            'subject' => $data['subject'] ?? '',
+                            'content' => $data['content'] ?? '',
+                        ]
+                    ]);
+                } else {
+                    \Log::info('Template found but content is empty, falling back to default', [
+                        'template_name' => $templateName,
+                        'template_data' => $data
+                    ]);
+                    $template = null;
+                }
             }
         }
 

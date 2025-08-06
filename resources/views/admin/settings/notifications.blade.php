@@ -691,7 +691,7 @@ function editTemplate(templateName) {
     document.getElementById('template_content').value = '';
 
     // Try to load saved content from database first
-    fetch('{{ route("admin.notifications.template.save") }}?action=get&template_name=' + encodeURIComponent(templateName), {
+    fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
         method: 'GET',
         headers: {
             'Accept': 'application/json'
@@ -789,7 +789,7 @@ function editSmsTemplate(templateName) {
     document.getElementById('sms_template_content').value = '';
 
     // Try to load saved content from database first
-    fetch('{{ route("admin.notifications.template.save") }}?action=get&template_name=' + encodeURIComponent(templateName), {
+    fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
         method: 'GET',
         headers: {
             'Accept': 'application/json'
