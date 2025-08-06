@@ -266,35 +266,100 @@ class LoginLogService
      */
     protected function getLocationFromIP($ip)
     {
-        // Use ipapi.co (free service)
-        $url = "http://ip-api.com/json/{$ip}";
+        // Debug logging
+        \Log::info('Getting location for IP: ' . $ip);
         
-        $context = stream_context_create([
-            'http' => [
-                'timeout' => 5,
-                'user_agent' => 'HRMS-App/1.0'
-            ]
-        ]);
-        
-        $response = @file_get_contents($url, false, $context);
-        
-        if ($response === false) {
-            throw new \Exception('Failed to fetch location data');
-        }
-        
-        $data = json_decode($response, true);
-        
-        if (!$data || $data['status'] !== 'success') {
-            throw new \Exception('Invalid location data received');
-        }
-        
-        return [
-            'location' => $data['city'] . ', ' . $data['country'],
-            'city' => $data['city'] ?? null,
-            'state' => $data['regionName'] ?? null,
-            'country' => $data['country'] ?? null,
-            'timezone' => $data['timezone'] ?? 'UTC'
+        // Try multiple IP geolocation services
+        $services = [
+            'ipapi' => "http://ip-api.com/json/{$ip}",
+            'ipinfo' => "https://ipinfo.io/{$ip}/json",
+            'freegeoip' => "http://freegeoip.app/json/{$ip}"
         ];
+        
+        foreach ($services as $service => $url) {
+            try {
+                \Log::info("Trying {$service} service for IP: {$ip}");
+                
+                $context = stream_context_create([
+                    'http' => [
+                        'timeout' => 5,
+                        'user_agent' => 'HRMS-App/1.0'
+                    ]
+                ]);
+                
+                $response = @file_get_contents($url, false, $context);
+                
+                if ($response === false) {
+                    continue;
+                }
+                
+                $data = json_decode($response, true);
+                
+                if (!$data) {
+                    continue;
+                }
+                
+                // Parse response based on service
+                $locationData = $this->parseLocationData($data, $service);
+                
+                if ($locationData) {
+                    \Log::info("Location data from {$service}: " . json_encode($locationData));
+                    return $locationData;
+                }
+                
+            } catch (\Exception $e) {
+                \Log::warning("Failed to get location from {$service}: " . $e->getMessage());
+                continue;
+            }
+        }
+        
+        throw new \Exception('All location services failed');
+    }
+    
+    /**
+     * Parse location data from different services
+     */
+    protected function parseLocationData($data, $service)
+    {
+        switch ($service) {
+            case 'ipapi':
+                if (isset($data['status']) && $data['status'] === 'success') {
+                    return [
+                        'location' => ($data['city'] ?? 'Unknown') . ', ' . ($data['country'] ?? 'Unknown'),
+                        'city' => $data['city'] ?? null,
+                        'state' => $data['regionName'] ?? null,
+                        'country' => $data['country'] ?? null,
+                        'timezone' => $data['timezone'] ?? 'UTC'
+                    ];
+                }
+                break;
+                
+            case 'ipinfo':
+                if (isset($data['city']) || isset($data['country'])) {
+                    return [
+                        'location' => ($data['city'] ?? 'Unknown') . ', ' . ($data['country'] ?? 'Unknown'),
+                        'city' => $data['city'] ?? null,
+                        'state' => $data['region'] ?? null,
+                        'country' => $data['country'] ?? null,
+                        'timezone' => $data['timezone'] ?? 'UTC'
+                    ];
+                }
+                break;
+                
+            case 'freegeoip':
+                if (isset($data['city']) || isset($data['country_name'])) {
+                    return [
+                        'location' => ($data['city'] ?? 'Unknown') . ', ' . ($data['country_name'] ?? 'Unknown'),
+                        'city' => $data['city'] ?? null,
+                        'state' => $data['region_name'] ?? null,
+                        'country' => $data['country_name'] ?? null,
+                        'timezone' => $data['time_zone'] ?? 'UTC'
+                    ];
+                }
+                break;
+        }
+        
+        return null;
     }
 
     /**
