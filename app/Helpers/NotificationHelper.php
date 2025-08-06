@@ -232,6 +232,9 @@ class NotificationHelper
             return ['success' => false, 'message' => 'OTP SMS notifications are disabled'];
         }
 
+        // Get language settings
+        $notificationLanguage = \App\Models\SystemSetting::getValue('notification_language', 'bangla');
+
         // Get template content from new system
         $contentBangla = \App\Models\SystemSetting::getValue('password_reset_otp_sms_content_bangla', 'আপনার OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}');
         $contentEnglish = \App\Models\SystemSetting::getValue('password_reset_otp_sms_content_english', 'Your OTP: {otp}. This OTP is valid for 10 minutes. {company_name}');
@@ -246,8 +249,18 @@ class NotificationHelper
         $contentBangla = self::replaceVariables($contentBangla, $variables);
         $contentEnglish = self::replaceVariables($contentEnglish, $variables);
 
-        // Send SMS with Bangla content (default)
-        return self::sendSms($phone, $contentBangla, $variables);
+        // Determine which language to use
+        $content = $contentBangla;
+
+        if ($notificationLanguage === 'english') {
+            $content = $contentEnglish;
+        } elseif ($notificationLanguage === 'both') {
+            // Send both languages (SMS has character limit, so send Bangla first)
+            $content = $contentBangla . ' / ' . $contentEnglish;
+        }
+
+        // Send SMS with selected language
+        return self::sendSms($phone, $content, $variables);
     }
 
     /**
@@ -269,6 +282,10 @@ class NotificationHelper
      */
     public static function sendPasswordResetEmail($user, $resetToken)
     {
+        // Get language settings
+        $notificationLanguage = \App\Models\SystemSetting::getValue('notification_language', 'bangla');
+        $userLanguagePreference = \App\Models\SystemSetting::getValue('user_language_preference', 'enabled');
+
         // Get template content from new system
         $subjectBangla = \App\Models\SystemSetting::getValue('password_reset_email_subject_bangla', 'পাসওয়ার্ড রিসেট অনুরোধ');
         $contentBangla = \App\Models\SystemSetting::getValue('password_reset_email_content_bangla', 'প্রিয় {user_name}, আপনার পাসওয়ার্ড রিসেট করার অনুরোধ পাওয়া গেছে। আপনার OTP: {otp} এই OTP 10 মিনিটের জন্য বৈধ। যদি আপনি এই অনুরোধ করেননি, তাহলে এই ইমেইল উপেক্ষা করুন। ধন্যবাদ, {company_name}');
@@ -290,8 +307,21 @@ class NotificationHelper
         $subjectEnglish = self::replaceVariables($subjectEnglish, $variables);
         $contentEnglish = self::replaceVariables($contentEnglish, $variables);
 
-        // Send email with both languages (default to Bangla)
-        return self::sendEmail($user->email, $subjectBangla, $contentBangla);
+        // Determine which language to use
+        $subject = $subjectBangla;
+        $content = $contentBangla;
+
+        if ($notificationLanguage === 'english') {
+            $subject = $subjectEnglish;
+            $content = $contentEnglish;
+        } elseif ($notificationLanguage === 'both') {
+            // Send both languages
+            $subject = $subjectBangla . ' / ' . $subjectEnglish;
+            $content = $contentBangla . "\n\n---\n\n" . $contentEnglish;
+        }
+
+        // Send email with selected language
+        return self::sendEmail($user->email, $subject, $content);
     }
 
     /**

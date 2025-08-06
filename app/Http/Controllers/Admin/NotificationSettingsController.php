@@ -65,10 +65,6 @@ class NotificationSettingsController extends Controller
         
         $notificationService = new NotificationService();
 
-
-
-
-
         // Get SMS Group Settings
         $smsGroupSettings = [];
         $smsGroupKeys = [
@@ -84,11 +80,23 @@ class NotificationSettingsController extends Controller
             $smsGroupSettings[$key] = $value === null ? true : ($value === '1');
         }
 
+        // Get Language Settings
+        $languageSettings = [];
+        $languageKeys = [
+            'notification_language',
+            'user_language_preference'
+        ];
+
+        foreach ($languageKeys as $key) {
+            $value = SystemSetting::where('key', $key)->value('value');
+            $languageSettings[$key] = $value ?: ($key === 'notification_language' ? 'bangla' : 'enabled');
+        }
+
         // Get notification logs with pagination
         $notificationLogs = NotificationLog::orderBy('created_at', 'desc')
             ->paginate(\App\Helpers\SystemHelper::getPaginationLimit()); // Show dynamic logs per page
 
-        return view('admin.settings.notifications', compact('smsGroupSettings', 'notificationLogs'));
+        return view('admin.settings.notifications', compact('smsGroupSettings', 'languageSettings', 'notificationLogs'));
     }
 
 
@@ -197,6 +205,42 @@ class NotificationSettingsController extends Controller
         } catch (\Exception $e) {
             Log::error('SMS group settings update failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to update SMS group settings: ' . $e->getMessage());
+        }
+    }
+
+    public function updateLanguageSettings(Request $request)
+    {
+        $this->checkSuperAdmin();
+        
+        try {
+            // Validate the request
+            $request->validate([
+                'notification_language' => 'required|in:bangla,english,both',
+                'user_language_preference' => 'required|in:enabled,disabled'
+            ]);
+
+            // Update notification language setting
+            SystemSetting::updateOrCreate(
+                ['key' => 'notification_language'],
+                ['value' => $request->notification_language]
+            );
+
+            // Update user language preference setting
+            SystemSetting::updateOrCreate(
+                ['key' => 'user_language_preference'],
+                ['value' => $request->user_language_preference]
+            );
+
+            // Log the language settings update
+            \Log::info('Language settings updated', [
+                'notification_language' => $request->notification_language,
+                'user_language_preference' => $request->user_language_preference
+            ]);
+
+            return redirect()->back()->with('success', 'Language settings updated successfully!');
+        } catch (\Exception $e) {
+            Log::error('Language settings update failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update language settings: ' . $e->getMessage());
         }
     }
 
