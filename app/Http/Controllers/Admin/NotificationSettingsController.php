@@ -15,22 +15,40 @@ class NotificationSettingsController extends Controller
     private function checkSuperAdmin()
     {
         try {
+            // Check if user is authenticated
             if (!auth()->check()) {
+                \Log::warning('Authentication failed - no user logged in');
                 abort(401, 'Authentication required. Please log in again.');
             }
 
             $user = auth()->user();
+            
+            // Log user details for debugging
+            \Log::info('User authentication check', [
+                'user_id' => $user->id ?? 'null',
+                'user_email' => $user->email ?? 'null',
+                'has_roles' => $user->roles ? $user->roles->pluck('name') : 'no roles',
+                'has_owner' => $user->owner ? 'yes' : 'no',
+                'owner_is_super_admin' => $user->owner && $user->owner->is_super_admin ? 'yes' : 'no'
+            ]);
 
             // Check if user has super_admin role
             if ($user && $user->hasRole('super_admin')) {
+                \Log::info('User has super_admin role');
                 return;
             }
 
             // Check if user is super admin through owner relationship
             if ($user && $user->owner && $user->owner->is_super_admin) {
+                \Log::info('User is super admin through owner relationship');
                 return;
             }
 
+            \Log::warning('Access denied - user does not have super admin privileges', [
+                'user_id' => $user->id,
+                'user_email' => $user->email
+            ]);
+            
             abort(403, 'Access denied. Super admin privileges required.');
         } catch (\Exception $e) {
             \Log::error('checkSuperAdmin error: ' . $e->getMessage(), [

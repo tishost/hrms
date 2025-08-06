@@ -699,6 +699,17 @@ function editTemplate(templateName) {
     })
     .then(response => {
         console.log('Template load response status:', response.status);
+        if (response.status === 401) {
+            // Authentication error - redirect to login
+            alert('Session expired. Please log in again.');
+            window.location.href = '/login';
+            return;
+        }
+        if (response.status === 403) {
+            // Permission error
+            alert('Access denied. You do not have permission to perform this action.');
+            return;
+        }
         if (!response.ok) {
             throw new Error('HTTP ' + response.status);
         }
@@ -771,6 +782,17 @@ function editSmsTemplate(templateName) {
     })
     .then(response => {
         console.log('SMS template load response status:', response.status);
+        if (response.status === 401) {
+            // Authentication error - redirect to login
+            alert('Session expired. Please log in again.');
+            window.location.href = '/login';
+            return;
+        }
+        if (response.status === 403) {
+            // Permission error
+            alert('Access denied. You do not have permission to perform this action.');
+            return;
+        }
         if (!response.ok) {
             throw new Error('HTTP ' + response.status);
         }
@@ -858,12 +880,25 @@ function saveSmsTemplateAjax() {
     })
     .then(response => {
         console.log('Response status:', response.status);
+        if (response.status === 401) {
+            // Authentication error - redirect to login
+            alert('Session expired. Please log in again.');
+            window.location.href = '/login';
+            return;
+        }
+        if (response.status === 403) {
+            // Permission error
+            alert('Access denied. You do not have permission to perform this action.');
+            return;
+        }
         if (!response.ok) {
             throw new Error('HTTP ' + response.status);
         }
         return response.json();
     })
     .then(data => {
+        if (!data) return; // Skip if redirected due to auth error
+        
         console.log('Template save response:', data);
         if (data.success) {
             alert('Template saved successfully!');
@@ -928,12 +963,25 @@ function saveEmailTemplateAjax() {
     })
     .then(response => {
         console.log('Response status:', response.status);
+        if (response.status === 401) {
+            // Authentication error - redirect to login
+            alert('Session expired. Please log in again.');
+            window.location.href = '/login';
+            return;
+        }
+        if (response.status === 403) {
+            // Permission error
+            alert('Access denied. You do not have permission to perform this action.');
+            return;
+        }
         if (!response.ok) {
             throw new Error('HTTP ' + response.status);
         }
         return response.json();
     })
     .then(data => {
+        if (!data) return; // Skip if redirected due to auth error
+        
         console.log('Template save response:', data);
         if (data.success) {
             alert('Template saved successfully!');
