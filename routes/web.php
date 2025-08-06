@@ -548,6 +548,11 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('sms/credits/{owner}/test', [App\Http\Controllers\Admin\SmsCreditController::class, 'sendTestSms'])->name('sms.credits.test');
     Route::get('sms/credits/{owner}/stats', [App\Http\Controllers\Admin\SmsCreditController::class, 'getStats'])->name('sms.credits.stats');
     Route::post('sms/smart-send', [App\Http\Controllers\Admin\SmsCreditController::class, 'sendSmartSms'])->name('sms.smart-send');
+
+    // Notification Settings Routes
+    Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('admin.settings.notifications');
+    Route::get('settings/email-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'emailTemplates'])->name('admin.settings.email.templates');
+    Route::get('settings/sms-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'smsTemplates'])->name('admin.settings.sms.templates');
 });
 
 // API OTP Settings Route (Public)

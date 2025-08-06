@@ -71,6 +71,14 @@
                     <h3 class="card-title">
                         <i class="fas fa-bell"></i> Notification Settings
                     </h3>
+                    <div class="mt-3">
+                        <a href="{{ route('admin.settings.email.templates') }}" class="btn btn-primary btn-sm me-2">
+                            <i class="fas fa-envelope"></i> Email Templates
+                        </a>
+                        <a href="{{ route('admin.settings.sms.templates') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-sms"></i> SMS Templates
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))

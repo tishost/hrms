@@ -859,6 +859,18 @@
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.settings.email.templates.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.email.templates') }}">
+                                <i class="fas fa-envelope me-2"></i>Email Templates
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.settings.sms.templates.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.sms.templates') }}">
+                                <i class="fas fa-sms me-2"></i>SMS Templates
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item {{ request()->routeIs('admin.settings.email-configuration.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.email-configuration') }}">
                                 <i class="fas fa-envelope me-2"></i>Email Configuration

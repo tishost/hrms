@@ -91,6 +91,18 @@ class NotificationSettingsController extends Controller
         return view('admin.settings.notifications', compact('smsGroupSettings', 'notificationLogs'));
     }
 
+    public function emailTemplates()
+    {
+        $this->checkSuperAdmin();
+        return view('admin.settings.email-templates');
+    }
+
+    public function smsTemplates()
+    {
+        $this->checkSuperAdmin();
+        return view('admin.settings.sms-templates');
+    }
+
 
 
 
