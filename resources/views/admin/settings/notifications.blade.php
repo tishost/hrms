@@ -690,7 +690,7 @@ function editTemplate(templateName) {
     document.getElementById('template_subject').value = '';
     document.getElementById('template_content').value = '';
 
-    // Try to load saved content from database first
+    // Load template from database
     fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
         method: 'GET',
         headers: {
@@ -699,50 +699,16 @@ function editTemplate(templateName) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Template load response:', data);
-        if (data.success && data.template) {
-            // Always use the content from database, even if empty
-            document.getElementById('template_subject').value = data.template.subject || '';
-            document.getElementById('template_content').value = data.template.content || '';
+        if (data.success && data.template && data.template.content) {
+            // Use saved content from database
+            document.getElementById('template_content').value = data.template.content;
         } else {
-            // Set default template content based on template name
-            let defaultSubject = '';
-            let defaultContent = '';
-            
-            switch(templateName) {
-                case 'welcome_email':
-                    defaultSubject = 'Welcome to HRMS!';
-                    defaultContent = 'Dear {name},\n\nWelcome to HRMS! Your account has been created successfully.\n\nYou can now access all our services and manage your properties efficiently.\n\nBest regards,\nHRMS Team';
-                    break;
-                case 'payment_confirmation_email':
-                    defaultSubject = 'Payment Confirmation - HRMS';
-                    defaultContent = 'Dear {name},\n\nYour payment of ৳{amount} has been received successfully.\n\nInvoice Number: {invoice_number}\nPayment Method: {payment_method}\nDate: {payment_date}\n\nThank you for your business!\n\nBest regards,\nHRMS Team';
-                    break;
-                case 'invoice_notification_email':
-                    defaultSubject = 'New Invoice Generated - HRMS';
-                    defaultContent = 'Dear {name},\n\nA new invoice has been generated for your account.\n\nInvoice Number: {invoice_number}\nAmount: ৳{amount}\nDue Date: {due_date}\n\nPlease log in to your account to view and pay the invoice.\n\nBest regards,\nHRMS Team';
-                    break;
-                case 'subscription_reminder_email':
-                    defaultSubject = 'Subscription Reminder - HRMS';
-                    defaultContent = 'Dear {name},\n\nYour subscription will expire on {expiry_date}.\n\nPlease renew your subscription to continue enjoying our services without interruption.\n\nBest regards,\nHRMS Team';
-                    break;
-                case 'subscription_activation_email':
-                    defaultSubject = 'Subscription Activated - HRMS';
-                    defaultContent = 'Dear {name},\n\nYour subscription has been activated successfully!\n\nPlan: {plan_name}\nPrice: ৳{plan_price}\nExpiry Date: {expiry_date}\nSMS Credits: {sms_credits}\n\nBest regards,\nHRMS Team';
-                    break;
-                default:
-                    defaultSubject = 'HRMS Notification';
-                    defaultContent = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
-            }
-            
-            document.getElementById('template_subject').value = defaultSubject;
-            document.getElementById('template_content').value = defaultContent;
+            // Set default content
+            document.getElementById('template_content').value = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
         }
     })
     .catch(error => {
         console.error('Error loading template:', error);
-        // Fallback to default content
-        document.getElementById('template_subject').value = 'HRMS Notification';
         document.getElementById('template_content').value = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
     });
 
@@ -789,7 +755,7 @@ function editSmsTemplate(templateName) {
     document.getElementById('sms_template_name').value = templateName;
     document.getElementById('sms_template_content').value = '';
 
-    // Try to load saved content from database first
+    // Load template from database
     fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
         method: 'GET',
         headers: {
@@ -798,50 +764,18 @@ function editSmsTemplate(templateName) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Template load response:', data);
-        if (data.success && data.template) {
-            // Always use the content from database, even if empty
-            document.getElementById('sms_template_content').value = data.template.content || '';
+        if (data.success && data.template && data.template.content) {
+            // Use saved content from database
+            document.getElementById('sms_template_content').value = data.template.content;
         } else {
-            // Set default template content based on template name
-            let defaultContent = '';
-            switch(templateName) {
-                case 'tenant_welcome_sms':
-                    defaultContent = 'Welcome {tenant_name}! Your tenancy at {property_name} has been registered. Welcome to HRMS!';
-                    break;
-                case 'owner_welcome_sms':
-                    defaultContent = 'Welcome {name}! Your HRMS account has been created successfully. You can now access all services.';
-                    break;
-                case 'owner_payment_confirmation_sms':
-                    defaultContent = 'Dear {name}, your payment of ৳{amount} has been received. Invoice: {invoice_number}. Thank you! - HRMS';
-                    break;
-                case 'tenant_payment_confirmation_sms':
-                    defaultContent = 'Dear {tenant_name}, your rent payment of ৳{amount} has been received. Property: {property_name}. Thank you! - HRMS';
-                    break;
-                case 'owner_invoice_notification_sms':
-                    defaultContent = 'Dear {name}, new invoice generated. Amount: ৳{amount}, Due: {due_date}. Invoice: {invoice_number} - HRMS';
-                    break;
-                case 'tenant_invoice_notification_sms':
-                    defaultContent = 'Dear {tenant_name}, new rent invoice generated. Amount: ৳{amount}, Due: {due_date}. Property: {property_name} - HRMS';
-                    break;
-                case 'owner_subscription_reminder_sms':
-                    defaultContent = 'Dear {name}, your subscription expires on {expiry_date}. Please renew to continue services. - HRMS';
-                    break;
-                case 'tenant_subscription_reminder_sms':
-                    defaultContent = 'Dear {tenant_name}, your rent is due on {due_date}. Amount: ৳{amount}. Property: {property_name} - HRMS';
-                    break;
-                default:
-                    defaultContent = 'Welcome to HRMS! Your notification has been sent.';
-            }
-            document.getElementById('sms_template_content').value = defaultContent;
+            // Set default content
+            document.getElementById('sms_template_content').value = 'Welcome to HRMS! Your notification has been sent.';
         }
         updateSmsCharCount();
     })
     .catch(error => {
         console.error('Error loading template:', error);
-        // Fallback to default content
-        let defaultContent = 'Welcome to HRMS! Your notification has been sent.';
-        document.getElementById('sms_template_content').value = defaultContent;
+        document.getElementById('sms_template_content').value = 'Welcome to HRMS! Your notification has been sent.';
         updateSmsCharCount();
     });
 

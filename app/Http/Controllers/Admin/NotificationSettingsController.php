@@ -114,136 +114,31 @@ class NotificationSettingsController extends Controller
     }
 
 
-
-
-
-
-
-
-
-
-
     public function getTemplate(Request $request)
     {
         $this->checkSuperAdmin();
         
         $templateName = $request->get('template');
-
-        // Get template from database or return default
+        
+        // Get template directly from database
         $template = SystemSetting::where('key', 'template_' . $templateName)->first();
-
-        // Log template loading for debugging
-        \Log::info('Template loading attempt', [
-            'template_name' => $templateName,
-            'database_key' => 'template_' . $templateName,
-            'template_found' => $template ? 'yes' : 'no',
-            'template_value' => $template ? $template->value : 'not found'
-        ]);
-
+        
         if ($template) {
-            $data = json_decode($template->value, true);
-            
-            // Log the raw template value for debugging
-            \Log::info('Template data from database', [
-                'template_name' => $templateName,
-                'raw_value' => $template->value,
-                'json_error' => json_last_error_msg(),
-                'decoded_data' => $data
-            ]);
-            
-            // Return the template data even if JSON is invalid
-            // This allows us to see what's actually in the database
+            // Return the raw template value - let frontend handle JSON parsing
             return response()->json([
                 'success' => true,
                 'template' => [
-                    'subject' => is_array($data) ? ($data['subject'] ?? '') : '',
-                    'content' => is_array($data) ? ($data['content'] ?? '') : $template->value,
+                    'content' => $template->value
                 ]
             ]);
         }
-
-        // Return default template
-        $defaultTemplates = [
-            'payment_confirmation_email' => [
-                'subject' => 'Payment Confirmation - HRMS',
-                'content' => 'Dear {name},\n\nYour payment of ৳{amount} has been received successfully.\n\nInvoice: {invoice_number}\nPayment Method: {payment_method}\n\nThank you for using HRMS!\n\nBest regards,\nHRMS Team'
-            ],
-            'invoice_notification_email' => [
-                'subject' => 'New Invoice Generated - HRMS',
-                'content' => 'Dear {name},\n\nA new invoice has been generated for your account.\n\nInvoice: {invoice_number}\nAmount: ৳{amount}\nDue Date: {due_date}\n\nPlease make the payment before the due date.\n\nBest regards,\nHRMS Team'
-            ],
-            'subscription_reminder_email' => [
-                'subject' => 'Subscription Reminder - HRMS',
-                'content' => 'Dear {name},\n\nYour subscription will expire on {expiry_date}.\n\nPlease renew your subscription to continue using HRMS services.\n\nBest regards,\nHRMS Team'
-            ],
-            'welcome_email' => [
-                'subject' => 'Welcome to HRMS!',
-                'content' => 'Dear {name},\n\nWelcome to HRMS! Your account has been created successfully.\n\nYou can now access all our services.\n\nBest regards,\nHRMS Team'
-            ],
-            'password_reset_email' => [
-                'subject' => 'Password Reset Request - HRMS',
-                'content' => 'Dear {name},\n\nYou have requested to reset your password.\n\nYour OTP: {otp}\nValid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nHRMS Team'
-            ],
-            'otp_verification_sms' => [
-                'content' => 'Your HRMS password reset OTP is: {otp}. Valid for 10 minutes. If you didn\'t request this, please ignore. - HRMS'
-            ],
-            'password_reset_otp_sms' => [
-                'content' => 'Your HRMS password reset OTP is: {otp}. Valid for 10 minutes. Please enter this code to reset your password. If you didn\'t request this, please ignore. - HRMS'
-            ],
-            'maintenance_notification_email' => [
-                'subject' => 'Maintenance Update - HRMS',
-                'content' => 'Dear {name},\n\nMaintenance has been completed for your property.\n\nDetails: {maintenance_details}\n\nThank you for your patience.\n\nBest regards,\nHRMS Team'
-            ],
-            'rent_reminder_email' => [
-                'subject' => 'Rent Reminder - HRMS',
-                'content' => 'Dear {name},\n\nThis is a reminder that your rent is due on {due_date}.\n\nAmount: ৳{amount}\n\nPlease make the payment on time.\n\nBest regards,\nHRMS Team'
-            ],
-            'checkout_reminder_email' => [
-                'subject' => 'Checkout Reminder - HRMS',
-                'content' => 'Dear {name},\n\nYour checkout date is approaching on {checkout_date}.\n\nPlease ensure all dues are cleared before checkout.\n\nBest regards,\nHRMS Team'
-            ],
-            // SMS Templates for Owners
-            'owner_payment_confirmation_sms' => [
-                'content' => 'Dear {name}, your payment of ৳{amount} has been received. Invoice: {invoice_number}. Thank you! - HRMS'
-            ],
-            'owner_invoice_notification_sms' => [
-                'content' => 'Dear {name}, new invoice generated. Amount: ৳{amount}, Due: {due_date}. Invoice: {invoice_number} - HRMS'
-            ],
-            'owner_subscription_reminder_sms' => [
-                'content' => 'Dear {name}, your subscription expires on {expiry_date}. Please renew to continue services. - HRMS'
-            ],
-            'owner_subscription_activation_sms' => [
-                'content' => 'Dear {name}, your subscription has been activated successfully. Welcome to HRMS!'
-            ],
-            'owner_welcome_sms' => [
-                'content' => 'Welcome {name}! Your HRMS account has been created successfully. You can now access all services.'
-            ],
-            // SMS Templates for Tenants
-            'tenant_payment_confirmation_sms' => [
-                'content' => 'Dear {tenant_name}, your rent payment of ৳{amount} has been received. Property: {property_name}. Thank you! - HRMS'
-            ],
-            'tenant_invoice_notification_sms' => [
-                'content' => 'Dear {tenant_name}, new rent invoice generated. Amount: ৳{amount}, Due: {due_date}. Property: {property_name} - HRMS'
-            ],
-            'tenant_subscription_reminder_sms' => [
-                'content' => 'Dear {tenant_name}, your rent is due on {due_date}. Amount: ৳{amount}. Property: {property_name} - HRMS'
-            ],
-            'tenant_subscription_activation_sms' => [
-                'content' => 'Dear {tenant_name}, your tenancy has been activated. Property: {property_name}. Welcome to HRMS!'
-            ],
-            'tenant_welcome_sms' => [
-                'content' => 'Welcome {tenant_name}! Your tenancy at {property_name} has been registered. Welcome to HRMS!'
-            ]
-        ];
-
-        $template = $defaultTemplates[$templateName] ?? [
-            'subject' => 'HRMS Notification',
-            'content' => 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team'
-        ];
-
+        
+        // Return empty template if not found
         return response()->json([
             'success' => true,
-            'template' => $template
+            'template' => [
+                'content' => ''
+            ]
         ]);
     }
 
@@ -251,77 +146,33 @@ class NotificationSettingsController extends Controller
     {
         $this->checkSuperAdmin();
         
-        // Handle both GET and POST requests
-        if ($request->isMethod('GET')) {
-            $templateName = $request->get('template_name');
-            $content = $request->get('content');
-            $subject = $request->get('subject');
-        } else {
-            $request->validate([
-                'template_name' => 'required|string',
-                'content' => 'required|string',
+        $templateName = $request->input('template_name');
+        $content = $request->input('content');
+        
+        if (empty($templateName) || empty($content)) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Template name and content are required'
             ]);
-            $templateName = $request->input('template_name');
-            $content = $request->input('content');
-            $subject = $request->input('subject');
         }
-
-        // Validate required fields
-        if (empty($templateName)) {
-            return response()->json(['success' => false, 'message' => 'Template name is required'], 400);
-        }
-
-        if (empty($content)) {
-            return response()->json(['success' => false, 'message' => 'Template content is required'], 400);
-        }
-
+        
         try {
-            $templateData = [];
+            // Save template directly as string (no JSON encoding)
+            SystemSetting::updateOrCreate(
+                ['key' => 'template_' . $templateName],
+                ['value' => $content]
+            );
             
-            // Check if it's an SMS template (contains '_sms' in name)
-            if (str_contains($templateName, '_sms')) {
-                $templateData = [
-                    'content' => $content,
-                ];
-            } else {
-                // Email template requires subject
-                if ($request->isMethod('POST')) {
-                    $request->validate([
-                        'subject' => 'required|string|max:255',
-                    ]);
-                }
-                
-                $templateData = [
-                    'subject' => $subject,
-                    'content' => $content,
-                ];
-            }
-
-            $result = SystemSetting::setValue('template_' . $templateName, json_encode($templateData));
-
-            // Log the template save operation for debugging
-            \Log::info('Template saved successfully', [
-                'template_name' => $templateName,
-                'template_data' => $templateData,
-                'database_key' => 'template_' . $templateName,
-                'result' => $result
+            return response()->json([
+                'success' => true,
+                'message' => 'Template saved successfully!'
             ]);
-
-            // Check if it's an AJAX request
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Template saved successfully!']);
-            }
-
-            // For form submissions, redirect back with success message
-            return redirect()->back()->with('success', 'Template saved successfully!');
+            
         } catch (\Exception $e) {
-            Log::error('Template save failed: ' . $e->getMessage());
-            
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Failed to save template: ' . $e->getMessage()]);
-            }
-            
-            return redirect()->back()->with('error', 'Failed to save template: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save template: ' . $e->getMessage()
+            ]);
         }
     }
 
