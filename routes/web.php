@@ -66,6 +66,11 @@ Route::post('/test-csrf-simple', function (\Illuminate\Http\Request $request) {
     ]);
 })->name('test.csrf.simple');
 
+// CSRF token refresh route
+Route::get('/refresh-csrf', function() {
+    return response()->json(['token' => csrf_token()]);
+})->name('refresh.csrf');
+
 // Template save route (working version)
 // Test route for owner creation
 Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) {

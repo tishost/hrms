@@ -230,8 +230,15 @@ class NotificationSettingsController extends Controller
             $templateName = $request->get('template_name');
             $content = $request->get('content');
         } else {
-            $templateName = $request->input('template_name');
-            $content = $request->input('content');
+            // Handle JSON input
+            if ($request->isJson()) {
+                $data = $request->json()->all();
+                $templateName = $data['template_name'] ?? null;
+                $content = $data['content'] ?? null;
+            } else {
+                $templateName = $request->input('template_name');
+                $content = $request->input('content');
+            }
         }
         
         if (empty($templateName) || empty($content)) {

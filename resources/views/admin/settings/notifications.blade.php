@@ -1073,15 +1073,13 @@ function toggleInlineEdit(templateName, type) {
 }
 
 function loadInlineTemplate(templateName, type) {
-    // Load template from database
-    fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
+    // Load template from database using simplified CSRF handling
+    fetchWithCsrf('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
+        method: 'GET'
     })
     .then(response => {
         console.log('Load template response status:', response.status);
+        if (handleSessionExpired(response)) return;
         
         if (response.status === 401) {
             console.log('Authentication required for template load');
@@ -1155,99 +1153,29 @@ function saveInlineTemplate(templateName, type) {
         }
     }
     
-    // Refresh session and CSRF token before saving
-    if (typeof refreshSession === 'function') {
-        refreshSession();
-    }
+    // Prepare data
+    const data = {
+        template_name: templateName,
+        content: content,
+        _token: document.querySelector('meta[name="csrf-token"]').content
+    };
     
-    if (typeof refreshCsrfToken === 'function') {
-        refreshCsrfToken();
-    }
-    
-    // Get CSRF token with multiple fallbacks
-    let csrfToken = '';
-    
-    // Try meta tag first
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-    if (csrfMeta) {
-        csrfToken = csrfMeta.getAttribute('content');
-        console.log('CSRF Token from meta:', csrfToken ? 'Found' : 'Not found');
-    }
-    
-    // If not found, try to get from form
-    if (!csrfToken) {
-        const tokenInput = document.querySelector('input[name="_token"]');
-        if (tokenInput) {
-            csrfToken = tokenInput.value;
-            console.log('CSRF Token from form:', csrfToken ? 'Found' : 'Not found');
-        }
-    }
-    
-    // If still not found, try to fetch fresh token
-    if (!csrfToken) {
-        console.log('Attempting to fetch fresh CSRF token...');
-        fetch('/csrf-token')
-            .then(response => response.json())
-            .then(data => {
-                csrfToken = data.token;
-                console.log('Fresh CSRF Token:', csrfToken ? 'Found' : 'Not found');
-                if (csrfToken) {
-                    // Update meta tag
-                    if (csrfMeta) {
-                        csrfMeta.setAttribute('content', csrfToken);
-                    }
-                    // Proceed with save
-                    proceedWithSave(templateName, type, content, subject, csrfToken);
-                } else {
-                    alert('Unable to get CSRF token. Please refresh the page.');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching CSRF token:', error);
-                alert('Unable to get CSRF token. Please refresh the page.');
-            });
-        return;
-    }
-    
-    // Proceed with save if token is available
-    proceedWithSave(templateName, type, content, subject, csrfToken);
-}
-
-function proceedWithSave(templateName, type, content, subject, csrfToken) {
-    console.log('Proceeding with save, CSRF Token:', csrfToken ? 'Available' : 'Missing');
-    
-    // Prepare form data
-    const formData = new FormData();
-    formData.append('template_name', templateName);
-    formData.append('content', content);
     if (type === 'email') {
-        formData.append('subject', subject);
+        data.subject = subject;
     }
-    formData.append('_token', csrfToken);
     
-    // Save template
-    fetch('{{ route("admin.notifications.template.save") }}', {
+    // Save template using simplified CSRF handling
+    fetchWithCsrf('{{ route("admin.notifications.template.save") }}', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify(data)
     })
     .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
+        console.log('Save response status:', response.status);
+        if (handleSessionExpired(response)) return;
         
-        if (response.status === 419) {
-            // CSRF token mismatch - refresh and retry
-            console.log('CSRF token mismatch, refreshing...');
-            if (typeof refreshCsrfToken === 'function') {
-                refreshCsrfToken();
-            }
-            alert('Session expired. Please try again.');
-            return;
-        }
         if (response.status === 401) {
             console.log('Authentication required');
             alert('Session expired. Please log in again.');
@@ -1282,6 +1210,8 @@ function proceedWithSave(templateName, type, content, subject, csrfToken) {
     });
 }
 
+
+
 function cancelInlineEdit(templateName) {
     document.getElementById('edit-' + templateName).style.display = 'none';
 }
@@ -1303,44 +1233,73 @@ function updateCharCount(templateName) {
     }
 }
 
+// Simplified CSRF handling function
+function fetchWithCsrf(url, options = {}) {
+    // Get token from meta tag
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+    
+    // Set default headers if none exist
+    options.headers = options.headers || {};
+    options.headers['X-CSRF-TOKEN'] = token;
+    options.headers['Accept'] = 'application/json';
+    options.headers['X-Requested-With'] = 'XMLHttpRequest';
+    
+    return fetch(url, options);
+}
+
+// Handle session expiration gracefully
+function handleSessionExpired(response) {
+    if (response.status === 419) {
+        console.log('Session expired, attempting to refresh CSRF token...');
+        
+        // Try to refresh the CSRF token
+        fetch('/refresh-csrf')
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').content = data.token;
+                    console.log('✅ CSRF token refreshed successfully');
+                    // Inform user to try again
+                    alert('Session refreshed. Please try your action again.');
+                } else {
+                    // Redirect to login
+                    console.log('❌ Failed to refresh CSRF token, redirecting to login');
+                    window.location.href = '/login';
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing CSRF token:', error);
+                window.location.href = '/login';
+            });
+        return true;
+    }
+    return false;
+}
+
 // Test CSRF function
 function testCsrfToken() {
     console.log('Testing CSRF token...');
     
-    // Get CSRF token
-    let csrfToken = '';
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-    if (csrfMeta) {
-        csrfToken = csrfMeta.getAttribute('content');
-        console.log('CSRF Token from meta:', csrfToken ? 'Found' : 'Not found');
-    }
+    const data = {
+        test: 'data',
+        _token: document.querySelector('meta[name="csrf-token"]').content
+    };
     
-    if (!csrfToken) {
-        console.error('No CSRF token found');
-        return;
-    }
-    
-    // Test CSRF token
-    const formData = new FormData();
-    formData.append('_token', csrfToken);
-    formData.append('test', 'data');
-    
-    fetch('/test-csrf-simple', {
+    fetchWithCsrf('/test-csrf-simple', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify(data)
     })
     .then(response => {
         console.log('CSRF test response status:', response.status);
+        if (handleSessionExpired(response)) return;
         return response.json();
     })
     .then(data => {
-        console.log('CSRF test response:', data);
-        if (data.success) {
+        if (data && data.success) {
             console.log('✅ CSRF token working correctly');
         } else {
             console.log('❌ CSRF token test failed');
@@ -1355,12 +1314,8 @@ function testCsrfToken() {
 function refreshSession() {
     console.log('Refreshing session...');
     
-    // Make a simple request to keep session alive
-    fetch('/admin/settings/notifications', {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
+    fetchWithCsrf('/admin/settings/notifications', {
+        method: 'GET'
     })
     .then(response => {
         console.log('Session refresh response:', response.status);
