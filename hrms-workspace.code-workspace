@@ -1,0 +1,34 @@
+{
+    "folders": [
+        {
+            "name": "HRMS Backend (Local)",
+            "path": "D:/BariManager/hrms_backend"
+        },
+        {
+            "name": "Flutter App (Local)",
+            "path": "D:/BariManager/hrms_app"
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/vendor": true,
+            "**/.git": true,
+            "**/storage/logs": true,
+            "**/storage/framework/cache": true
+        },
+        "files.watcherExclude": {
+            "**/vendor/**": true,
+            "**/storage/**": true
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-vscode.vscode-php-debug",
+            "ms-vscode.vscode-php-intellisense",
+            "dart-code.dart-code",
+            "dart-code.flutter",
+            "ms-vscode.vscode-json"
+        ]
+    }
+} 

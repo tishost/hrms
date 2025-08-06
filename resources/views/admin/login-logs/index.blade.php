@@ -3,6 +3,31 @@
 @section('title', 'Login Logs')
 
 @section('content')
+<style>
+    .table th {
+        background-color: #343a40 !important;
+        color: white !important;
+        border-color: #454d55 !important;
+    }
+    .table td {
+        color: #333 !important;
+        border-color: #dee2e6 !important;
+    }
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.75em;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,.05);
+    }
+    .pagination {
+        margin-bottom: 0;
+    }
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -208,19 +233,19 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" id="loginLogsTable">
-                    <thead>
+                <table class="table table-bordered table-striped" id="loginLogsTable" style="color: #333;">
+                    <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>IP Address</th>
-                            <th>Device</th>
-                            <th>Platform</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th>Login At</th>
-                            <th>Actions</th>
+                            <th style="color: white;">ID</th>
+                            <th style="color: white;">User</th>
+                            <th style="color: white;">Email</th>
+                            <th style="color: white;">IP Address</th>
+                            <th style="color: white;">Device</th>
+                            <th style="color: white;">Platform</th>
+                            <th style="color: white;">Location</th>
+                            <th style="color: white;">Status</th>
+                            <th style="color: white;">Login At</th>
+                            <th style="color: white;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -244,7 +269,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge {{ $log->device_type_badge_class }}">
+                                <span class="badge {{ $log->device_type_badge_class }}" style="color: white;">
                                     {{ ucfirst($log->device_type) }}
                                 </span>
                                 @if($log->device_model)
@@ -252,14 +277,14 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-info">{{ ucfirst($log->platform) }}</span>
+                                <span class="badge bg-info" style="color: white;">{{ ucfirst($log->platform) }}</span>
                                 @if($log->browser)
                                     <br><small class="text-muted">{{ $log->browser }}</small>
                                 @endif
                             </td>
                             <td>{{ $log->location_string }}</td>
                             <td>
-                                <span class="badge {{ $log->status_badge_class }}">
+                                <span class="badge {{ $log->status_badge_class }}" style="color: white;">
                                     {{ ucfirst($log->status) }}
                                 </span>
                                 @if($log->failure_reason)
@@ -295,8 +320,8 @@
             </div>
             
             <!-- Pagination -->
-            <div class="d-flex justify-content-center">
-                {{ $logs->appends(request()->query())->links() }}
+            <div class="d-flex justify-content-center mt-3">
+                {{ $logs->appends(request()->query())->links('pagination::bootstrap-4') }}
             </div>
         </div>
     </div>
