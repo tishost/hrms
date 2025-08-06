@@ -135,26 +135,23 @@ class NotificationSettingsController extends Controller
         if ($template) {
             $data = json_decode($template->value, true);
             
-            // Check if template data is valid
-            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
-                \Log::warning('Invalid template data found', [
-                    'template_name' => $templateName,
-                    'template_value' => $template->value,
-                    'json_error' => json_last_error_msg()
-                ]);
-                // Fall back to default template
-                $template = null;
-            } else {
-                // Return the template data regardless of content validation
-                // Let frontend handle empty content display
-                return response()->json([
-                    'success' => true,
-                    'template' => [
-                        'subject' => $data['subject'] ?? '',
-                        'content' => $data['content'] ?? '',
-                    ]
-                ]);
-            }
+            // Log the raw template value for debugging
+            \Log::info('Template data from database', [
+                'template_name' => $templateName,
+                'raw_value' => $template->value,
+                'json_error' => json_last_error_msg(),
+                'decoded_data' => $data
+            ]);
+            
+            // Return the template data even if JSON is invalid
+            // This allows us to see what's actually in the database
+            return response()->json([
+                'success' => true,
+                'template' => [
+                    'subject' => is_array($data) ? ($data['subject'] ?? '') : '',
+                    'content' => is_array($data) ? ($data['content'] ?? '') : $template->value,
+                ]
+            ]);
         }
 
         // Return default template

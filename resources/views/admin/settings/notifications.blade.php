@@ -701,6 +701,7 @@ function editTemplate(templateName) {
     .then(data => {
         console.log('Template load response:', data);
         if (data.success && data.template) {
+            // Always use the content from database, even if empty
             document.getElementById('template_subject').value = data.template.subject || '';
             document.getElementById('template_content').value = data.template.content || '';
         } else {
@@ -797,8 +798,10 @@ function editSmsTemplate(templateName) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success && data.template && data.template.content) {
-            document.getElementById('sms_template_content').value = data.template.content;
+        console.log('Template load response:', data);
+        if (data.success && data.template) {
+            // Always use the content from database, even if empty
+            document.getElementById('sms_template_content').value = data.template.content || '';
         } else {
             // Set default template content based on template name
             let defaultContent = '';
