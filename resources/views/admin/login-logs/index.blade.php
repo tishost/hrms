@@ -269,7 +269,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge {{ $log->device_type_badge_class }}" style="color: white;">
+                                <span class="badge {{ $log->device_type_badge_class }}" style="color: #333; background-color: #e9ecef;">
                                     {{ ucfirst($log->device_type) }}
                                 </span>
                                 @if($log->device_model)
@@ -277,14 +277,14 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-info" style="color: white;">{{ ucfirst($log->platform) }}</span>
+                                <span class="badge bg-info" style="color: #333; background-color: #d1ecf1;">{{ ucfirst($log->platform) }}</span>
                                 @if($log->browser)
                                     <br><small class="text-muted">{{ $log->browser }}</small>
                                 @endif
                             </td>
                             <td>{{ $log->location_string }}</td>
                             <td>
-                                <span class="badge {{ $log->status_badge_class }}" style="color: white;">
+                                <span class="badge {{ $log->status_badge_class }}" style="color: #333; background-color: {{ $log->status === 'success' ? '#d4edda' : ($log->status === 'failed' ? '#f8d7da' : '#fff3cd') }};">
                                     {{ ucfirst($log->status) }}
                                 </span>
                                 @if($log->failure_reason)
