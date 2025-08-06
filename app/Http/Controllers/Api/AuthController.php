@@ -194,7 +194,11 @@ class AuthController extends Controller
 
             if (!$user || !Hash::check($request->password, $user->password)) {
                 // Log failed login attempt
-                $this->loginLogService->logLogin($request, null, 'failed', 'Invalid credentials');
+                try {
+                    $this->loginLogService->logLogin($request, null, 'failed', 'Invalid credentials');
+                } catch (\Exception $e) {
+                    \Log::error('Failed to log login attempt: ' . $e->getMessage());
+                }
                 
                 return response()->json([
                     'error' => 'Invalid credentials'
@@ -215,7 +219,11 @@ class AuthController extends Controller
                 $role = 'tenant';
             } else {
                 // Log failed login attempt (unauthorized role)
-                $this->loginLogService->logLogin($request, null, 'failed', 'Unauthorized role');
+                try {
+                    $this->loginLogService->logLogin($request, null, 'failed', 'Unauthorized role');
+                } catch (\Exception $e) {
+                    \Log::error('Failed to log login attempt: ' . $e->getMessage());
+                }
                 
                 return response()->json([
                     'error' => 'Unauthorized role'
@@ -223,7 +231,11 @@ class AuthController extends Controller
             }
 
             // Log successful login
-            $this->loginLogService->logLogin($request, $user, 'success');
+            try {
+                $this->loginLogService->logLogin($request, $user, 'success');
+            } catch (\Exception $e) {
+                \Log::error('Failed to log successful login: ' . $e->getMessage());
+            }
 
             $token = $user->createToken('auth_token')->plainTextToken;
 

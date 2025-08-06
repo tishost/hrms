@@ -14,36 +14,47 @@ class LoginLogService
      */
     public function logLogin(Request $request, ?User $user = null, $status = 'success', $failureReason = null)
     {
-        $deviceInfo = $this->getDeviceInfo($request);
-        $locationInfo = $this->getLocationInfo($request);
-        
-        $loginData = [
-            'user_id' => $user ? $user->id : null,
-            'email' => $request->input('email'),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'device_type' => $deviceInfo['device_type'],
-            'platform' => $deviceInfo['platform'],
-            'browser' => $deviceInfo['browser'],
-            'browser_version' => $deviceInfo['browser_version'],
-            'os' => $deviceInfo['os'],
-            'os_version' => $deviceInfo['os_version'],
-            'device_model' => $deviceInfo['device_model'],
-            'location' => $locationInfo['location'],
-            'city' => $locationInfo['city'],
-            'state' => $locationInfo['state'],
-            'country' => $locationInfo['country'],
-            'timezone' => $locationInfo['timezone'],
-            'status' => $status,
-            'failure_reason' => $failureReason,
-            'login_method' => $this->getLoginMethod($request),
-            'app_version' => $request->header('App-Version'),
-            'api_version' => $request->header('API-Version'),
-            'additional_data' => $this->getAdditionalData($request),
-            'login_at' => Carbon::now(),
-        ];
+        try {
+            $deviceInfo = $this->getDeviceInfo($request);
+            $locationInfo = $this->getLocationInfo($request);
+            
+            $loginData = [
+                'user_id' => $user ? $user->id : null,
+                'email' => $request->input('email'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'device_type' => $deviceInfo['device_type'],
+                'platform' => $deviceInfo['platform'],
+                'browser' => $deviceInfo['browser'],
+                'browser_version' => $deviceInfo['browser_version'],
+                'os' => $deviceInfo['os'],
+                'os_version' => $deviceInfo['os_version'],
+                'device_model' => $deviceInfo['device_model'],
+                'location' => $locationInfo['location'],
+                'city' => $locationInfo['city'],
+                'state' => $locationInfo['state'],
+                'country' => $locationInfo['country'],
+                'timezone' => $locationInfo['timezone'],
+                'status' => $status,
+                'failure_reason' => $failureReason,
+                'login_method' => $this->getLoginMethod($request),
+                'app_version' => $request->header('App-Version'),
+                'api_version' => $request->header('API-Version'),
+                'additional_data' => $this->getAdditionalData($request),
+                'login_at' => Carbon::now(),
+            ];
 
-        return LoginLog::create($loginData);
+            $log = LoginLog::create($loginData);
+            \Log::info('Login log created successfully', ['log_id' => $log->id, 'user_id' => $user?->id, 'status' => $status]);
+            return $log;
+        } catch (\Exception $e) {
+            \Log::error('Failed to create login log: ' . $e->getMessage(), [
+                'user_id' => $user?->id,
+                'status' => $status,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
