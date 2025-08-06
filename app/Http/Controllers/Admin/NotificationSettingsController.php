@@ -14,23 +14,31 @@ class NotificationSettingsController extends Controller
 {
     private function checkSuperAdmin()
     {
-        if (!auth()->check()) {
-            abort(401, 'Authentication required. Please log in again.');
+        try {
+            if (!auth()->check()) {
+                abort(401, 'Authentication required. Please log in again.');
+            }
+
+            $user = auth()->user();
+
+            // Check if user has super_admin role
+            if ($user && $user->hasRole('super_admin')) {
+                return;
+            }
+
+            // Check if user is super admin through owner relationship
+            if ($user && $user->owner && $user->owner->is_super_admin) {
+                return;
+            }
+
+            abort(403, 'Access denied. Super admin privileges required.');
+        } catch (\Exception $e) {
+            \Log::error('checkSuperAdmin error: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            abort(500, 'Internal server error. Please try again.');
         }
-
-        $user = auth()->user();
-
-        // Check if user has super_admin role
-        if ($user->hasRole('super_admin')) {
-            return;
-        }
-
-        // Check if user is super admin through owner relationship
-        if ($user->owner && $user->owner->is_super_admin) {
-            return;
-        }
-
-        abort(403, 'Access denied. Super admin privileges required.');
     }
 
     public function index()

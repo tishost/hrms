@@ -16,22 +16,30 @@ class SuperAdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
-            return redirect('/login');
-        }
+        try {
+            if (!Auth::check()) {
+                return redirect('/login');
+            }
 
-        $user = Auth::user();
+            $user = Auth::user();
 
-        // Check if user has super_admin role
-        if (!$user->hasRole('super_admin')) {
+            // Check if user has super_admin role
+            if ($user && $user->hasRole('super_admin')) {
+                return $next($request);
+            }
+
             // Check if user is super admin through owner relationship
-            if ($user->owner && $user->owner->is_super_admin) {
+            if ($user && $user->owner && $user->owner->is_super_admin) {
                 return $next($request);
             }
 
             return redirect('/dashboard')->with('error', 'Access denied. Super admin privileges required.');
+        } catch (\Exception $e) {
+            \Log::error('SuperAdminMiddleware error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect('/login')->with('error', 'Authentication error. Please log in again.');
         }
-
-        return $next($request);
     }
 }
