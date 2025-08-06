@@ -525,7 +525,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="templateForm" method="GET" action="{{ route('test.save.template') }}">
+                <form id="templateForm" method="GET" action="{{ route('admin.notifications.template.save') }}">
                     <div class="form-group">
                         <label for="template_name">Template Name</label>
                         <input type="text" class="form-control" id="template_name" name="template_name" readonly>
@@ -560,7 +560,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="smsTemplateForm" method="GET" action="{{ route('test.save.template') }}">
+                <form id="smsTemplateForm" method="GET" action="{{ route('admin.notifications.template.save') }}">
                     <div class="form-group">
                         <label for="sms_template_name">Template Name</label>
                         <input type="text" class="form-control" id="sms_template_name" name="template_name" readonly>
@@ -712,7 +712,7 @@ function editTemplate(templateName) {
     document.getElementById('template_content').value = '';
 
     // Try to load saved content from database first
-    fetch('{{ route("test.save.template") }}?action=get&template_name=' + encodeURIComponent(templateName), {
+    fetch('{{ route("admin.notifications.template.save") }}?action=get&template_name=' + encodeURIComponent(templateName), {
         method: 'GET',
         headers: {
             'Accept': 'application/json'
@@ -810,7 +810,7 @@ function editSmsTemplate(templateName) {
     document.getElementById('sms_template_content').value = '';
 
     // Try to load saved content from database first
-    fetch('{{ route("test.save.template") }}?action=get&template_name=' + encodeURIComponent(templateName), {
+    fetch('{{ route("admin.notifications.template.save") }}?action=get&template_name=' + encodeURIComponent(templateName), {
         method: 'GET',
         headers: {
             'Accept': 'application/json'
@@ -898,7 +898,7 @@ function saveSmsTemplateAjax() {
     }
     
     // Build URL with parameters
-    const url = '{{ route("test.save.template") }}?template_name=' + encodeURIComponent(templateName) + '&content=' + encodeURIComponent(content);
+    const url = '{{ route("admin.notifications.template.save") }}?template_name=' + encodeURIComponent(templateName) + '&content=' + encodeURIComponent(content);
     
     fetch(url, {
         method: 'GET',
@@ -936,7 +936,7 @@ function saveEmailTemplateAjax() {
     }
     
     // Build URL with parameters
-    const url = '{{ route("test.save.template") }}?template_name=' + encodeURIComponent(templateName) + '&subject=' + encodeURIComponent(subject) + '&content=' + encodeURIComponent(content);
+    const url = '{{ route("admin.notifications.template.save") }}?template_name=' + encodeURIComponent(templateName) + '&subject=' + encodeURIComponent(subject) + '&content=' + encodeURIComponent(content);
     
     fetch(url, {
         method: 'GET',
@@ -1004,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Load template from server
-        fetch(`{{ route('notifications.template.get') }}?template=${selectedTemplate}`)
+        fetch(`{{ route('admin.notifications.template.get') }}?template=${selectedTemplate}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
