@@ -454,11 +454,19 @@ class AuthController extends Controller
     // Verify OTP
     public function verifyOtp(Request $request)
     {
-        $request->validate([
-            'email' => 'required_without:mobile|email',
-            'mobile' => 'required_without:email|string',
-            'otp' => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required_without:mobile|email',
+                'mobile' => 'required_without:email|string',
+                'otp' => 'required|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         try {
             $email = $request->email;
