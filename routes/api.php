@@ -26,6 +26,7 @@ Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 
 // Password reset routes
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // OTP Routes

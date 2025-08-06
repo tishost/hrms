@@ -466,6 +466,66 @@ class AuthController extends Controller
         }
     }
 
+    // Verify OTP
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required_without:mobile|email',
+            'mobile' => 'required_without:email|string',
+            'otp' => 'required|string',
+        ]);
+
+        try {
+            $email = $request->email;
+            $mobile = $request->mobile;
+            $otp = $request->otp;
+
+            $user = null;
+
+            // Find user
+            if ($email) {
+                $user = User::where('email', $email)->first();
+            } elseif ($mobile) {
+                $user = User::where('phone', $mobile)->first();
+            }
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+
+            // Verify OTP for mobile
+            if ($mobile && !\App\Models\Otp::verifyOtp($mobile, $otp, 'password_reset')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired OTP'
+                ], 400);
+            }
+
+            // For email, we'll verify the token later in resetPassword
+            if ($email) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP verification will be done during password reset'
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP verified successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Verify OTP error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify OTP'
+            ], 500);
+        }
+    }
+
     // Reset Password
     public function resetPassword(Request $request)
     {
