@@ -145,29 +145,15 @@ class NotificationSettingsController extends Controller
                 // Fall back to default template
                 $template = null;
             } else {
-                // Check if template has actual content (not null or empty)
-                $hasContent = false;
-                if (str_contains($templateName, '_sms')) {
-                    $hasContent = !empty($data['content']);
-                } else {
-                    $hasContent = !empty($data['subject']) && !empty($data['content']);
-                }
-                
-                if ($hasContent) {
-                    return response()->json([
-                        'success' => true,
-                        'template' => [
-                            'subject' => $data['subject'] ?? '',
-                            'content' => $data['content'] ?? '',
-                        ]
-                    ]);
-                } else {
-                    \Log::info('Template found but content is empty, falling back to default', [
-                        'template_name' => $templateName,
-                        'template_data' => $data
-                    ]);
-                    $template = null;
-                }
+                // Return the template data regardless of content validation
+                // Let frontend handle empty content display
+                return response()->json([
+                    'success' => true,
+                    'template' => [
+                        'subject' => $data['subject'] ?? '',
+                        'content' => $data['content'] ?? '',
+                    ]
+                ]);
             }
         }
 
@@ -290,7 +276,7 @@ class NotificationSettingsController extends Controller
             // Check if it's an SMS template (contains '_sms' in name)
             if (str_contains($templateName, '_sms')) {
                 $templateData = [
-                    'content' => $content ?: 'Your OTP is: {otp}. Valid for 10 minutes. - HRMS',
+                    'content' => $content,
                 ];
             } else {
                 // Email template requires subject
@@ -301,8 +287,8 @@ class NotificationSettingsController extends Controller
                 }
                 
                 $templateData = [
-                    'subject' => $subject ?: 'Password Reset Request - HRMS',
-                    'content' => $content ?: 'Dear {name},\n\nYou have requested to reset your password.\n\nYour OTP: {otp}\nValid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nHRMS Team',
+                    'subject' => $subject,
+                    'content' => $content,
                 ];
             }
 

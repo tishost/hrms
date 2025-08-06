@@ -894,6 +894,10 @@ function saveSmsTemplateAjax() {
             if (modal) {
                 modal.hide();
             }
+            // Reload the page to show updated templates
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             alert('Failed to save template: ' + data.message);
         }
@@ -932,6 +936,10 @@ function saveEmailTemplateAjax() {
             if (modal) {
                 modal.hide();
             }
+            // Reload the page to show updated templates
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             alert('Failed to save template: ' + data.message);
         }
