@@ -697,8 +697,15 @@ function editTemplate(templateName) {
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Template load response status:', response.status);
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Template load response:', data);
         if (data.success && data.template && data.template.content) {
             // Use saved content from database
             document.getElementById('template_content').value = data.template.content;
@@ -762,8 +769,15 @@ function editSmsTemplate(templateName) {
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('SMS template load response status:', response.status);
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('SMS template load response:', data);
         if (data.success && data.template && data.template.content) {
             // Use saved content from database
             document.getElementById('sms_template_content').value = data.template.content;
@@ -774,7 +788,7 @@ function editSmsTemplate(templateName) {
         updateSmsCharCount();
     })
     .catch(error => {
-        console.error('Error loading template:', error);
+        console.error('Error loading SMS template:', error);
         document.getElementById('sms_template_content').value = 'Welcome to HRMS! Your notification has been sent.';
         updateSmsCharCount();
     });
@@ -813,17 +827,28 @@ function saveSmsTemplateAjax() {
         return;
     }
     
-    // Build URL with parameters
-    const url = '{{ route("admin.notifications.template.save") }}?template_name=' + encodeURIComponent(templateName) + '&content=' + encodeURIComponent(content);
+    // Use POST method with form data
+    const formData = new FormData();
+    formData.append('template_name', templateName);
+    formData.append('content', content);
     
-    fetch(url, {
-        method: 'GET',
+    fetch('{{ route("admin.notifications.template.save") }}', {
+        method: 'POST',
         headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
-        }
+        },
+        body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Template save response:', data);
         if (data.success) {
             alert('Template saved successfully!');
             // Close the modal
@@ -836,12 +861,12 @@ function saveSmsTemplateAjax() {
                 window.location.reload();
             }, 1000);
         } else {
-            alert('Failed to save template: ' + data.message);
+            alert('Failed to save template: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error saving template:', error);
-        alert('Error saving template. Please try again.');
+        alert('Error saving template: ' + error.message);
     });
 }
 
@@ -855,17 +880,29 @@ function saveEmailTemplateAjax() {
         return;
     }
     
-    // Build URL with parameters
-    const url = '{{ route("admin.notifications.template.save") }}?template_name=' + encodeURIComponent(templateName) + '&subject=' + encodeURIComponent(subject) + '&content=' + encodeURIComponent(content);
+    // Use POST method with form data
+    const formData = new FormData();
+    formData.append('template_name', templateName);
+    formData.append('subject', subject);
+    formData.append('content', content);
     
-    fetch(url, {
-        method: 'GET',
+    fetch('{{ route("admin.notifications.template.save") }}', {
+        method: 'POST',
         headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
-        }
+        },
+        body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Template save response:', data);
         if (data.success) {
             alert('Template saved successfully!');
             // Close the modal
@@ -878,12 +915,12 @@ function saveEmailTemplateAjax() {
                 window.location.reload();
             }, 1000);
         } else {
-            alert('Failed to save template: ' + data.message);
+            alert('Failed to save template: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error saving template:', error);
-        alert('Error saving template. Please try again.');
+        alert('Error saving template: ' + error.message);
     });
 }
 

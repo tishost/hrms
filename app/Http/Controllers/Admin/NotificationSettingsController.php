@@ -146,8 +146,14 @@ class NotificationSettingsController extends Controller
     {
         $this->checkSuperAdmin();
         
-        $templateName = $request->input('template_name');
-        $content = $request->input('content');
+        // Handle both GET and POST requests
+        if ($request->isMethod('GET')) {
+            $templateName = $request->get('template_name');
+            $content = $request->get('content');
+        } else {
+            $templateName = $request->input('template_name');
+            $content = $request->input('content');
+        }
         
         if (empty($templateName) || empty($content)) {
             return response()->json([
