@@ -229,6 +229,366 @@
                             </div>
                         </div>
 
+                        <!-- Owner Payment Confirmation SMS -->
+                        <div class="template-section mb-4" id="owner-payment-confirmation-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-money-bill-wave"></i> Owner Payment Confirmation SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-owner-payment-confirmation-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-owner-payment-confirmation-sms" name="owner_payment_confirmation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['owner_payment_confirmation_sms_content_bangla'] ?? 'প্রিয় {owner_name}, আপনার পেমেন্ট ৳{amount} সফলভাবে সম্পন্ন হয়েছে। ট্রানজেকশন: {transaction_id} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-payment-confirmation-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-owner-payment-confirmation-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-owner-payment-confirmation-sms-en" name="owner_payment_confirmation_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['owner_payment_confirmation_sms_content_english'] ?? 'Dear {owner_name}, your payment of ৳{amount} has been completed. Transaction: {transaction_id} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-payment-confirmation-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {owner_name}, {payment_type}, {amount}, {transaction_id}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Owner Invoice Notification SMS -->
+                        <div class="template-section mb-4" id="owner-invoice-notification-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-file-invoice"></i> Owner Invoice Notification SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-owner-invoice-notification-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-owner-invoice-notification-sms" name="owner_invoice_notification_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['owner_invoice_notification_sms_content_bangla'] ?? 'প্রিয় {owner_name}, {month} মাসের জন্য নতুন ইনভয়েস ৳{amount}। প্রপার্টি: {property_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-invoice-notification-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-owner-invoice-notification-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-owner-invoice-notification-sms-en" name="owner_invoice_notification_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['owner_invoice_notification_sms_content_english'] ?? 'Dear {owner_name}, new invoice of ৳{amount} for {month}. Property: {property_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-invoice-notification-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {owner_name}, {month}, {amount}, {property_name}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Owner Subscription Reminder SMS -->
+                        <div class="template-section mb-4" id="owner-subscription-reminder-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-bell"></i> Owner Subscription Reminder SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-owner-subscription-reminder-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-owner-subscription-reminder-sms" name="owner_subscription_reminder_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['owner_subscription_reminder_sms_content_bangla'] ?? 'প্রিয় {owner_name}, আপনার সাবস্ক্রিপশন {expiry_date} তারিখে শেষ হবে। প্ল্যান: {subscription_plan} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-subscription-reminder-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-owner-subscription-reminder-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-owner-subscription-reminder-sms-en" name="owner_subscription_reminder_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['owner_subscription_reminder_sms_content_english'] ?? 'Dear {owner_name}, your subscription expires on {expiry_date}. Plan: {subscription_plan} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-subscription-reminder-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {owner_name}, {subscription_plan}, {expiry_date}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Owner Subscription Activation SMS -->
+                        <div class="template-section mb-4" id="owner-subscription-activation-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-check-circle"></i> Owner Subscription Activation SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-owner-subscription-activation-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-owner-subscription-activation-sms" name="owner_subscription_activation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['owner_subscription_activation_sms_content_bangla'] ?? 'প্রিয় {owner_name}, আপনার সাবস্ক্রিপশন সক্রিয় হয়েছে! প্ল্যান: {subscription_plan} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-subscription-activation-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-owner-subscription-activation-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-owner-subscription-activation-sms-en" name="owner_subscription_activation_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['owner_subscription_activation_sms_content_english'] ?? 'Dear {owner_name}, your subscription is activated! Plan: {subscription_plan} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-subscription-activation-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {owner_name}, {subscription_plan}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Owner Welcome SMS -->
+                        <div class="template-section mb-4" id="owner-welcome-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-home"></i> Owner Welcome SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-owner-welcome-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-owner-welcome-sms" name="owner_welcome_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['owner_welcome_sms_content_bangla'] ?? 'স্বাগতম {owner_name}! আপনার অ্যাকাউন্ট প্রস্তুত। প্রপার্টি: {property_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-welcome-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-owner-welcome-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-owner-welcome-sms-en" name="owner_welcome_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['owner_welcome_sms_content_english'] ?? 'Welcome {owner_name}! Your account is ready. Property: {property_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-owner-welcome-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {owner_name}, {property_name}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tenant Payment Confirmation SMS -->
+                        <div class="template-section mb-4" id="tenant-payment-confirmation-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-money-bill-wave"></i> Tenant Payment Confirmation SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-payment-confirmation-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-tenant-payment-confirmation-sms" name="tenant_payment_confirmation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['tenant_payment_confirmation_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার পেমেন্ট ৳{amount} সফলভাবে সম্পন্ন হয়েছে। ইউনিট: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-payment-confirmation-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-payment-confirmation-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-tenant-payment-confirmation-sms-en" name="tenant_payment_confirmation_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['tenant_payment_confirmation_sms_content_english'] ?? 'Dear {tenant_name}, your payment of ৳{amount} has been completed. Unit: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-payment-confirmation-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {tenant_name}, {payment_type}, {amount}, {unit_name}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tenant Invoice Notification SMS -->
+                        <div class="template-section mb-4" id="tenant-invoice-notification-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-file-invoice"></i> Tenant Invoice Notification SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-invoice-notification-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-tenant-invoice-notification-sms" name="tenant_invoice_notification_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['tenant_invoice_notification_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, {month} মাসের জন্য নতুন ইনভয়েস ৳{amount}। ইউনিট: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-invoice-notification-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-invoice-notification-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-tenant-invoice-notification-sms-en" name="tenant_invoice_notification_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['tenant_invoice_notification_sms_content_english'] ?? 'Dear {tenant_name}, new invoice of ৳{amount} for {month}. Unit: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-invoice-notification-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {tenant_name}, {month}, {amount}, {unit_name}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tenant Subscription Reminder SMS -->
+                        <div class="template-section mb-4" id="tenant-subscription-reminder-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-bell"></i> Tenant Subscription Reminder SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-subscription-reminder-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-tenant-subscription-reminder-sms" name="tenant_subscription_reminder_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['tenant_subscription_reminder_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার সাবস্ক্রিপশন {expiry_date} তারিখে শেষ হবে। ইউনিট: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-subscription-reminder-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-subscription-reminder-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-tenant-subscription-reminder-sms-en" name="tenant_subscription_reminder_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['tenant_subscription_reminder_sms_content_english'] ?? 'Dear {tenant_name}, your subscription expires on {expiry_date}. Unit: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-subscription-reminder-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {tenant_name}, {subscription_plan}, {expiry_date}, {unit_name}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tenant Subscription Activation SMS -->
+                        <div class="template-section mb-4" id="tenant-subscription-activation-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-check-circle"></i> Tenant Subscription Activation SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Bangla Content -->
+                                    <div class="bangla-content">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-subscription-activation-sms" class="form-label">SMS Content (বাংলা)</label>
+                                            <textarea class="form-control" id="content-tenant-subscription-activation-sms" name="tenant_subscription_activation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['tenant_subscription_activation_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার সাবস্ক্রিপশন সক্রিয় হয়েছে! ইউনিট: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-subscription-activation-sms" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- English Content -->
+                                    <div class="english-content" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="content-tenant-subscription-activation-sms-en" class="form-label">SMS Content (English)</label>
+                                            <textarea class="form-control" id="content-tenant-subscription-activation-sms-en" name="tenant_subscription_activation_sms_content_english" rows="4" maxlength="160" required>{{ $allSettings['tenant_subscription_activation_sms_content_english'] ?? 'Dear {tenant_name}, your subscription is activated! Unit: {unit_name} {company_name}' }}</textarea>
+                                            <div class="form-text">
+                                                <span id="char-count-tenant-subscription-activation-sms-en" class="text-muted">0/160</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Available placeholders:</strong> {tenant_name}, {subscription_plan}, {unit_name}, {company_name}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Save Button -->
                         <div class="text-center mt-4">
                             <button type="submit" class="btn btn-primary">
