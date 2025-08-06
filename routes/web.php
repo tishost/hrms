@@ -399,8 +399,8 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
 
     // Notification Settings
     Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('settings.notifications');
-    Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get')->withoutMiddleware(['refresh.session', 'super.admin', 'auth', 'web']);
-    Route::match(['GET', 'POST'], 'settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save')->withoutMiddleware(['refresh.session', 'super.admin', 'auth', 'web']);
+    Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get');
+    Route::match(['GET', 'POST'], 'settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save');
     Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
     Route::get('settings/notifications/log/details', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getLogDetails'])->name('notifications.log.details');
 

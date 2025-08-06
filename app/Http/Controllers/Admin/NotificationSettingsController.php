@@ -117,8 +117,7 @@ class NotificationSettingsController extends Controller
 
     public function getTemplate(Request $request)
     {
-        // Temporarily disable super admin check for testing
-        // $this->checkSuperAdmin();
+        $this->checkSuperAdmin();
         
         $templateName = $request->get('template');
 
@@ -220,8 +219,7 @@ class NotificationSettingsController extends Controller
 
     public function saveTemplate(Request $request)
     {
-        // Temporarily disable super admin check for testing
-        // $this->checkSuperAdmin();
+        $this->checkSuperAdmin();
         
         // Handle both GET and POST requests
         if ($request->isMethod('GET')) {
