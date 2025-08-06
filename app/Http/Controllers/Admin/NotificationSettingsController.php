@@ -134,13 +134,25 @@ class NotificationSettingsController extends Controller
 
         if ($template) {
             $data = json_decode($template->value, true);
-            return response()->json([
-                'success' => true,
-                'template' => [
-                    'subject' => $data['subject'] ?? '',
-                    'content' => $data['content'] ?? '',
-                ]
-            ]);
+            
+            // Check if template data is valid
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+                \Log::warning('Invalid template data found', [
+                    'template_name' => $templateName,
+                    'template_value' => $template->value,
+                    'json_error' => json_last_error_msg()
+                ]);
+                // Fall back to default template
+                $template = null;
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'template' => [
+                        'subject' => $data['subject'] ?? '',
+                        'content' => $data['content'] ?? '',
+                    ]
+                ]);
+            }
         }
 
         // Return default template
@@ -236,6 +248,7 @@ class NotificationSettingsController extends Controller
         if ($request->isMethod('GET')) {
             $templateName = $request->get('template_name');
             $content = $request->get('content');
+            $subject = $request->get('subject');
         } else {
             $request->validate([
                 'template_name' => 'required|string',
@@ -243,6 +256,16 @@ class NotificationSettingsController extends Controller
             ]);
             $templateName = $request->input('template_name');
             $content = $request->input('content');
+            $subject = $request->input('subject');
+        }
+
+        // Validate required fields
+        if (empty($templateName)) {
+            return response()->json(['success' => false, 'message' => 'Template name is required'], 400);
+        }
+
+        if (empty($content)) {
+            return response()->json(['success' => false, 'message' => 'Template content is required'], 400);
         }
 
         try {
@@ -251,7 +274,7 @@ class NotificationSettingsController extends Controller
             // Check if it's an SMS template (contains '_sms' in name)
             if (str_contains($templateName, '_sms')) {
                 $templateData = [
-                    'content' => $content,
+                    'content' => $content ?: 'Your OTP is: {otp}. Valid for 10 minutes. - HRMS',
                 ];
             } else {
                 // Email template requires subject
@@ -261,11 +284,9 @@ class NotificationSettingsController extends Controller
                     ]);
                 }
                 
-                $subject = $request->isMethod('GET') ? $request->get('subject') : $request->input('subject');
-                
                 $templateData = [
-                    'subject' => $subject,
-                    'content' => $content,
+                    'subject' => $subject ?: 'Password Reset Request - HRMS',
+                    'content' => $content ?: 'Dear {name},\n\nYou have requested to reset your password.\n\nYour OTP: {otp}\nValid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nHRMS Team',
                 ];
             }
 
