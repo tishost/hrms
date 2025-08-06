@@ -1164,7 +1164,13 @@ function saveInlineTemplate(templateName, type) {
         data.subject = subject;
     }
     
-    // Save template using simplified CSRF handling
+    // Save template with retry mechanism
+    saveTemplateWithRetry(templateName, type, data, 0);
+}
+
+function saveTemplateWithRetry(templateName, type, data, retryCount) {
+    console.log(`Attempting to save template (attempt ${retryCount + 1})...`);
+    
     fetchWithCsrf('{{ route("admin.notifications.template.save") }}', {
         method: 'POST',
         headers: {
@@ -1174,7 +1180,37 @@ function saveInlineTemplate(templateName, type) {
     })
     .then(response => {
         console.log('Save response status:', response.status);
-        if (handleSessionExpired(response)) return;
+        console.log('Response headers:', response.headers);
+        
+        if (response.status === 419 && retryCount < 2) {
+            // CSRF token mismatch, refresh and retry
+            console.log('CSRF token mismatch, refreshing and retrying...');
+            return fetch('/refresh-csrf')
+                .then(res => {
+                    console.log('Refresh CSRF response status:', res.status);
+                    return res.json();
+                })
+                .then(tokenData => {
+                    console.log('Refresh CSRF response:', tokenData);
+                    if (tokenData.token) {
+                        // Update meta tag and token
+                        const metaTag = document.querySelector('meta[name="csrf-token"]');
+                        if (metaTag) {
+                            metaTag.content = tokenData.token;
+                        }
+                        data._token = tokenData.token;
+                        console.log('✅ CSRF token refreshed, retrying...');
+                        // Retry the save
+                        return saveTemplateWithRetry(templateName, type, data, retryCount + 1);
+                    } else {
+                        throw new Error('Failed to refresh CSRF token');
+                    }
+                })
+                .catch(refreshError => {
+                    console.error('Error refreshing CSRF token:', refreshError);
+                    throw new Error('Failed to refresh CSRF token: ' + refreshError.message);
+                });
+        }
         
         if (response.status === 401) {
             console.log('Authentication required');
@@ -1206,7 +1242,11 @@ function saveInlineTemplate(templateName, type) {
     })
     .catch(error => {
         console.error('Error saving template:', error);
-        alert('Error saving template: ' + error.message);
+        if (retryCount >= 2) {
+            alert('Failed to save template after multiple attempts. Please refresh the page and try again.');
+        } else {
+            alert('Error saving template: ' + error.message);
+        }
     });
 }
 
@@ -1235,14 +1275,32 @@ function updateCharCount(templateName) {
 
 // Simplified CSRF handling function
 function fetchWithCsrf(url, options = {}) {
-    // Get token from meta tag
-    const token = document.querySelector('meta[name="csrf-token"]').content;
+    // Get token from meta tag with fallback
+    let token = '';
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag && metaTag.content) {
+        token = metaTag.content;
+    } else {
+        console.error('CSRF token not found in meta tag');
+        // Try to get from form
+        const tokenInput = document.querySelector('input[name="_token"]');
+        if (tokenInput) {
+            token = tokenInput.value;
+        }
+    }
+    
+    if (!token) {
+        console.error('No CSRF token available');
+        return Promise.reject(new Error('CSRF token not available'));
+    }
     
     // Set default headers if none exist
     options.headers = options.headers || {};
     options.headers['X-CSRF-TOKEN'] = token;
     options.headers['Accept'] = 'application/json';
     options.headers['X-Requested-With'] = 'XMLHttpRequest';
+    
+    console.log('Making request with CSRF token:', token.substring(0, 20) + '...');
     
     return fetch(url, options);
 }
@@ -1260,8 +1318,8 @@ function handleSessionExpired(response) {
                     // Update meta tag
                     document.querySelector('meta[name="csrf-token"]').content = data.token;
                     console.log('✅ CSRF token refreshed successfully');
-                    // Inform user to try again
-                    alert('Session refreshed. Please try your action again.');
+                    // Don't show alert, just log the refresh
+                    console.log('CSRF token refreshed, user can retry');
                 } else {
                     // Redirect to login
                     console.log('❌ Failed to refresh CSRF token, redirecting to login');
@@ -1286,7 +1344,7 @@ function testCsrfToken() {
         _token: document.querySelector('meta[name="csrf-token"]').content
     };
     
-    fetchWithCsrf('/test-csrf-simple', {
+    fetchWithCsrf('/test-csrf-token', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -1301,8 +1359,14 @@ function testCsrfToken() {
     .then(data => {
         if (data && data.success) {
             console.log('✅ CSRF token working correctly');
+            console.log('CSRF Token:', data.csrf_token);
+            console.log('Session Token:', data.session_token);
+            console.log('Tokens Match:', data.tokens_match);
+            console.log('Session ID:', data.session_id);
+            console.log('User Authenticated:', data.user_authenticated);
         } else {
             console.log('❌ CSRF token test failed');
+            console.log('Response:', data);
         }
     })
     .catch(error => {
@@ -1356,7 +1420,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Test CSRF token on page load
-    setTimeout(testCsrfToken, 1000);
+    setTimeout(() => {
+        if (typeof testCsrfToken === 'function') {
+            console.log('🔍 Testing CSRF token on page load...');
+            testCsrfToken();
+        }
+    }, 1000);
     
     // Refresh session every 5 minutes to keep it alive
     setInterval(function() {
@@ -1364,6 +1433,14 @@ document.addEventListener('DOMContentLoaded', function() {
             refreshSession();
         }
     }, 5 * 60 * 1000); // 5 minutes
+    
+    // Test CSRF token every 2 minutes
+    setInterval(function() {
+        if (typeof testCsrfToken === 'function') {
+            console.log('🔍 Periodic CSRF token test...');
+            testCsrfToken();
+        }
+    }, 2 * 60 * 1000); // 2 minutes
 });
 
 

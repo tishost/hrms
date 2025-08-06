@@ -71,6 +71,21 @@ Route::get('/refresh-csrf', function() {
     return response()->json(['token' => csrf_token()]);
 })->name('refresh.csrf');
 
+// CSRF token test route
+Route::post('/test-csrf-token', function (\Illuminate\Http\Request $request) {
+    $csrfToken = $request->header('X-CSRF-TOKEN');
+    $sessionToken = session()->token();
+    
+    return response()->json([
+        'success' => $csrfToken === $sessionToken,
+        'csrf_token' => $csrfToken ? substr($csrfToken, 0, 20) . '...' : 'null',
+        'session_token' => $sessionToken ? substr($sessionToken, 0, 20) . '...' : 'null',
+        'tokens_match' => $csrfToken === $sessionToken,
+        'session_id' => session()->getId(),
+        'user_authenticated' => auth()->check()
+    ]);
+})->name('test.csrf.token');
+
 // Template save route (working version)
 // Test route for owner creation
 Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) {

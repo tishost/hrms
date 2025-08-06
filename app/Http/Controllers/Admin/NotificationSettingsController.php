@@ -200,7 +200,9 @@ class NotificationSettingsController extends Controller
             'session_id' => session()->getId(),
             'session_status' => session()->isStarted() ? 'Started' : 'Not Started',
             'user_authenticated' => auth()->check(),
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
+            'session_token' => session()->token(),
+            'csrf_token_valid' => $request->header('X-CSRF-TOKEN') === session()->token()
         ]);
         
         // Check authentication first
@@ -211,6 +213,30 @@ class NotificationSettingsController extends Controller
                 'message' => 'Authentication required. Please log in again.',
                 'code' => 'AUTH_REQUIRED'
             ], 401);
+        }
+
+        // Check CSRF token
+        $csrfToken = $request->header('X-CSRF-TOKEN');
+        $sessionToken = session()->token();
+        
+        \Log::info('CSRF Token Check', [
+            'csrf_token' => $csrfToken ? substr($csrfToken, 0, 20) . '...' : 'null',
+            'session_token' => $sessionToken ? substr($sessionToken, 0, 20) . '...' : 'null',
+            'tokens_match' => $csrfToken === $sessionToken,
+            'csrf_token_length' => $csrfToken ? strlen($csrfToken) : 0,
+            'session_token_length' => $sessionToken ? strlen($sessionToken) : 0
+        ]);
+        
+        if (!$csrfToken || $csrfToken !== $sessionToken) {
+            \Log::warning('CSRF token mismatch', [
+                'csrf_token' => $csrfToken ? substr($csrfToken, 0, 20) . '...' : 'null',
+                'session_token' => $sessionToken ? substr($sessionToken, 0, 20) . '...' : 'null'
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'CSRF token mismatch. Please refresh the page and try again.',
+                'code' => 'CSRF_MISMATCH'
+            ], 419);
         }
         
         // Check super admin privileges
