@@ -158,6 +158,9 @@ class NotificationSettingsController extends Controller
                 'subject' => 'Password Reset Request - HRMS',
                 'content' => 'Dear {name},\n\nYou have requested to reset your password.\n\nReset Link: {reset_link}\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nHRMS Team'
             ],
+            'otp_verification_sms' => [
+                'content' => 'Your HRMS password reset OTP is: {otp}. Valid for 10 minutes. If you didn\'t request this, please ignore. - HRMS'
+            ],
             'maintenance_notification_email' => [
                 'subject' => 'Maintenance Update - HRMS',
                 'content' => 'Dear {name},\n\nMaintenance has been completed for your property.\n\nDetails: {maintenance_details}\n\nThank you for your patience.\n\nBest regards,\nHRMS Team'

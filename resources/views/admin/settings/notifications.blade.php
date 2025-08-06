@@ -87,6 +87,45 @@
 
 
 
+                    <!-- Template Management Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-edit"></i> Template Management
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="template_select">Select Template</label>
+                                                <select class="form-control" id="template_select">
+                                                    <option value="">Choose a template...</option>
+                                                    <option value="password_reset_email">Password Reset Email</option>
+                                                    <option value="otp_verification_sms">OTP Verification SMS</option>
+                                                    <option value="welcome_email">Welcome Email</option>
+                                                    <option value="payment_confirmation_email">Payment Confirmation Email</option>
+                                                    <option value="invoice_notification_email">Invoice Notification Email</option>
+                                                    <option value="subscription_reminder_email">Subscription Reminder Email</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>&nbsp;</label>
+                                                <button type="button" class="btn btn-primary btn-block" onclick="loadTemplate()">
+                                                    <i class="fas fa-edit"></i> Edit Template
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- SMS Notification Groups Section -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -954,7 +993,49 @@ document.addEventListener('DOMContentLoaded', function() {
         smsContent.addEventListener('input', updateSmsCharCount);
     }
     
-
+    // Template management functions
+    window.loadTemplate = function() {
+        const templateSelect = document.getElementById('template_select');
+        const selectedTemplate = templateSelect.value;
+        
+        if (!selectedTemplate) {
+            alert('Please select a template first');
+            return;
+        }
+        
+        // Load template from server
+        fetch(`{{ route('notifications.template.get') }}?template=${selectedTemplate}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const template = data.template;
+                    
+                    // Set template name
+                    document.getElementById('template_name').value = selectedTemplate;
+                    
+                    // Set subject (for email templates)
+                    if (template.subject) {
+                        document.getElementById('template_subject').value = template.subject;
+                        document.getElementById('template_subject').parentElement.style.display = 'block';
+                    } else {
+                        document.getElementById('template_subject').parentElement.style.display = 'none';
+                    }
+                    
+                    // Set content
+                    document.getElementById('template_content').value = template.content;
+                    
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+                    modal.show();
+                } else {
+                    alert('Failed to load template');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading template:', error);
+                alert('Error loading template. Please try again.');
+            });
+    };
 });
 
 
