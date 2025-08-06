@@ -227,27 +227,21 @@ class NotificationSettingsController extends Controller
             ], 401);
         }
 
-        // Check CSRF token
-        $csrfToken = $request->header('X-CSRF-TOKEN');
-        $sessionToken = session()->token();
-        
-        \Log::info('CSRF Token Check', [
-            'csrf_token' => $csrfToken ? substr($csrfToken, 0, 20) . '...' : 'null',
-            'session_token' => $sessionToken ? substr($sessionToken, 0, 20) . '...' : 'null',
-            'tokens_match' => $csrfToken === $sessionToken,
-            'csrf_token_length' => $csrfToken ? strlen($csrfToken) : 0,
-            'session_token_length' => $sessionToken ? strlen($sessionToken) : 0
-        ]);
-        
-        if (!$csrfToken || $csrfToken !== $sessionToken) {
-            \Log::warning('CSRF token mismatch', [
-                'csrf_token' => $csrfToken ? substr($csrfToken, 0, 20) . '...' : 'null',
-                'session_token' => $sessionToken ? substr($sessionToken, 0, 20) . '...' : 'null'
+        // Use Laravel's built-in CSRF validation
+        try {
+            $request->validate([
+                '_token' => 'required|string'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('CSRF validation failed', [
+                'errors' => $e->errors(),
+                'csrf_token' => $request->header('X-CSRF-TOKEN') ? substr($request->header('X-CSRF-TOKEN'), 0, 20) . '...' : 'null',
+                'form_token' => $request->input('_token') ? substr($request->input('_token'), 0, 20) . '...' : 'null'
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'CSRF token mismatch. Please refresh the page and try again.',
-                'code' => 'CSRF_MISMATCH'
+                'message' => 'CSRF token validation failed. Please refresh the page and try again.',
+                'code' => 'CSRF_VALIDATION_FAILED'
             ], 419);
         }
         

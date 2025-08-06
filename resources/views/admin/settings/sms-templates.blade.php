@@ -351,17 +351,75 @@ function saveSmsTemplate(templateName, lang, event) {
     const formData = new FormData(form);
     formData.append('template_name', `${templateName}_${lang}`);
     
+    // Get CSRF token with multiple fallbacks
+    let csrfToken = '';
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag && metaTag.content) {
+        csrfToken = metaTag.content;
+    } else {
+        const tokenInput = form.querySelector('input[name="_token"]');
+        if (tokenInput) {
+            csrfToken = tokenInput.value;
+        }
+    }
+    
+    if (!csrfToken) {
+        console.error('No CSRF token available');
+        alert('CSRF token not available. Please refresh the page and try again.');
+        return;
+    }
+    
+    // Add CSRF token to form data
+    formData.append('_token', csrfToken);
+    
     fetch('/admin/settings/notifications/template', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Save response status:', response.status);
+        
+        if (response.status === 419) {
+            // CSRF token mismatch - refresh token and retry
+            console.log('CSRF token mismatch, refreshing token...');
+            return fetch('/refresh-csrf')
+                .then(res => res.json())
+                .then(tokenData => {
+                    if (tokenData.token) {
+                        // Update meta tag
+                        const metaTag = document.querySelector('meta[name="csrf-token"]');
+                        if (metaTag) {
+                            metaTag.content = tokenData.token;
+                        }
+                        
+                        // Retry with new token
+                        formData.set('_token', tokenData.token);
+                        return fetch('/admin/settings/notifications/template', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': tokenData.token,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+                    } else {
+                        throw new Error('Failed to refresh CSRF token');
+                    }
+                });
+        }
+        
+        return response.json();
+    })
     .then(data => {
+        if (!data) return;
+        
+        console.log('Save response:', data);
         if (data.success) {
             // Show success message
             const alertDiv = document.createElement('div');
@@ -403,9 +461,44 @@ function updateCharCount(templateName) {
     }
 }
 
+// CSRF token refresh function
+function refreshCsrfToken() {
+    return fetch('/refresh-csrf')
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                // Update meta tag
+                const metaTag = document.querySelector('meta[name="csrf-token"]');
+                if (metaTag) {
+                    metaTag.content = data.token;
+                }
+                
+                // Update all _token inputs
+                const tokenInputs = document.querySelectorAll('input[name="_token"]');
+                tokenInputs.forEach(input => {
+                    input.value = data.token;
+                });
+                
+                console.log('✅ CSRF token refreshed successfully');
+                return data.token;
+            } else {
+                throw new Error('Failed to refresh CSRF token');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error refreshing CSRF token:', error);
+            throw error;
+        });
+}
+
 // Load templates on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadTemplatesForLanguage(currentLanguage);
+    
+    // Refresh CSRF token on page load
+    refreshCsrfToken().catch(error => {
+        console.error('Failed to refresh CSRF token on page load:', error);
+    });
     
     // Add character counters for all SMS textareas
     const smsTextareas = document.querySelectorAll('textarea[maxlength="160"]');
