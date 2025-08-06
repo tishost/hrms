@@ -401,7 +401,7 @@
                         </div>
                     </div>
 
-                    <!-- Notification Templates Section -->
+                    <!-- Notification Templates Section (Removed - Now using separate Email and SMS Template pages) -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <div class="card">
@@ -451,7 +451,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-credit-card"></i> Payment Confirmation
+                                                            <i class="fas fa-credit-card"></i> Payment Confirmation
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('payment_confirmation_email', 'email')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -480,7 +480,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-file-invoice"></i> Invoice Notification
+                                                            <i class="fas fa-file-invoice"></i> Invoice Notification
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('invoice_notification_email', 'email')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -509,7 +509,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-calendar-alt"></i> Subscription Reminder
+                                                            <i class="fas fa-calendar-alt"></i> Subscription Reminder
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('subscription_reminder_email', 'email')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -538,7 +538,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-check-circle"></i> Subscription Activation
+                                                            <i class="fas fa-check-circle"></i> Subscription Activation
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('subscription_activation_email', 'email')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -567,12 +567,12 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-handshake"></i> Welcome Email
-                                                                </div>
+                                                            <i class="fas fa-handshake"></i> Welcome Email
+                                                    </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('welcome_email', 'email')">
                                                                     <i class="fas fa-edit"></i> Edit
                                                                 </button>
-                                                            </div>
+                                                </div>
                                                             <div id="edit-welcome_email" class="mt-3" style="display: none;">
                                                                 <div class="form-group">
                                                                     <label>Subject:</label>
@@ -633,7 +633,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-credit-card"></i> Owner Payment Confirmation
+                                                            <i class="fas fa-credit-card"></i> Owner Payment Confirmation
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_payment_confirmation_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -659,7 +659,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-file-invoice"></i> Owner Invoice Notification
+                                                            <i class="fas fa-file-invoice"></i> Owner Invoice Notification
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_invoice_notification_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -685,7 +685,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-calendar-alt"></i> Owner Subscription Reminder
+                                                            <i class="fas fa-calendar-alt"></i> Owner Subscription Reminder
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_subscription_reminder_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -711,7 +711,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-check-circle"></i> Owner Subscription Activation
+                                                            <i class="fas fa-check-circle"></i> Owner Subscription Activation
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_subscription_activation_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -737,7 +737,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-handshake"></i> Owner Welcome SMS
+                                                            <i class="fas fa-handshake"></i> Owner Welcome SMS
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_welcome_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -763,7 +763,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-credit-card"></i> Tenant Payment Confirmation
+                                                            <i class="fas fa-credit-card"></i> Tenant Payment Confirmation
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_payment_confirmation_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -789,7 +789,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-file-invoice"></i> Tenant Invoice Notification
+                                                            <i class="fas fa-file-invoice"></i> Tenant Invoice Notification
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_invoice_notification_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -815,7 +815,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-calendar-alt"></i> Tenant Subscription Reminder
+                                                            <i class="fas fa-calendar-alt"></i> Tenant Subscription Reminder
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_subscription_reminder_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -841,7 +841,7 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-check-circle"></i> Tenant Subscription Activation
+                                                            <i class="fas fa-check-circle"></i> Tenant Subscription Activation
                                                                 </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_subscription_activation_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
@@ -867,12 +867,12 @@
                                                         <div class="list-group-item">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <i class="fas fa-handshake"></i> Tenant Welcome SMS
-                                                                </div>
+                                                            <i class="fas fa-handshake"></i> Tenant Welcome SMS
+                                                    </div>
                                                                 <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_welcome_sms', 'sms')">
                                                                     <i class="fas fa-edit"></i> Edit
                                                                 </button>
-                                                            </div>
+                                                </div>
                                                             <div id="edit-tenant_welcome_sms" class="mt-3" style="display: none;">
                                                                 <div class="form-group">
                                                                     <label>Content:</label>
@@ -1193,7 +1193,7 @@ function loadInlineTemplate(templateName, type) {
             if (type === 'email') {
                 document.getElementById('subject-' + templateName).value = data.template.subject || '';
                 document.getElementById('content-' + templateName).value = data.template.content;
-            } else {
+        } else {
                 document.getElementById('content-' + templateName).value = data.template.content;
                 updateCharCount(templateName);
             }
@@ -1231,12 +1231,12 @@ function saveInlineTemplate(templateName, type) {
             return;
         }
     } else {
-        if (!content.trim()) {
-            alert('Please enter SMS content');
+    if (!content.trim()) {
+        alert('Please enter SMS content');
             return;
-        }
-        if (content.length > 160) {
-            alert('SMS content cannot exceed 160 characters');
+    }
+    if (content.length > 160) {
+        alert('SMS content cannot exceed 160 characters');
             return;
         }
     }
@@ -1290,7 +1290,7 @@ function saveTemplateWithRetry(templateName, type, data, retryCount) {
                         console.log('✅ CSRF token refreshed, retrying...');
                         // Retry the save
                         return saveTemplateWithRetry(templateName, type, data, retryCount + 1);
-                    } else {
+        } else {
                         throw new Error('Failed to refresh CSRF token');
                     }
                 })
@@ -1304,8 +1304,8 @@ function saveTemplateWithRetry(templateName, type, data, retryCount) {
             console.log('Authentication required');
             alert('Session expired. Please log in again.');
             window.location.href = '/login';
-            return;
-        }
+        return;
+    }
         if (response.status === 403) {
             console.log('Access denied');
             alert('Access denied. You do not have permission to perform this action.');
@@ -1350,13 +1350,13 @@ function updateCharCount(templateName) {
     if (textarea && charCount) {
         const count = textarea.value.length;
         charCount.textContent = count + '/160';
-        
-        if (count > 160) {
-            charCount.className = 'text-danger';
-        } else if (count > 140) {
-            charCount.className = 'text-warning';
-        } else {
-            charCount.className = 'text-muted';
+    
+    if (count > 160) {
+        charCount.className = 'text-danger';
+    } else if (count > 140) {
+        charCount.className = 'text-warning';
+    } else {
+        charCount.className = 'text-muted';
         }
     }
 }
