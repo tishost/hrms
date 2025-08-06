@@ -245,14 +245,55 @@ class LoginLogService
             ];
         }
 
-        // In production, you would use a geolocation service
-        // For now, return default values
+        // Try to get location from IP using free API
+        try {
+            $locationData = $this->getLocationFromIP($ip);
+            return $locationData;
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get location from IP: ' . $e->getMessage());
+            return [
+                'location' => 'Unknown',
+                'city' => null,
+                'state' => null,
+                'country' => null,
+                'timezone' => 'UTC'
+            ];
+        }
+    }
+
+    /**
+     * Get location from IP using free API
+     */
+    protected function getLocationFromIP($ip)
+    {
+        // Use ipapi.co (free service)
+        $url = "http://ip-api.com/json/{$ip}";
+        
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 5,
+                'user_agent' => 'HRMS-App/1.0'
+            ]
+        ]);
+        
+        $response = @file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            throw new \Exception('Failed to fetch location data');
+        }
+        
+        $data = json_decode($response, true);
+        
+        if (!$data || $data['status'] !== 'success') {
+            throw new \Exception('Invalid location data received');
+        }
+        
         return [
-            'location' => 'Unknown',
-            'city' => null,
-            'state' => null,
-            'country' => null,
-            'timezone' => 'UTC'
+            'location' => $data['city'] . ', ' . $data['country'],
+            'city' => $data['city'] ?? null,
+            'state' => $data['regionName'] ?? null,
+            'country' => $data['country'] ?? null,
+            'timezone' => $data['timezone'] ?? 'UTC'
         ];
     }
 

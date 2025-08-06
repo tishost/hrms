@@ -282,7 +282,21 @@
                                     <br><small class="text-muted">{{ $log->browser }}</small>
                                 @endif
                             </td>
-                            <td>{{ $log->location_string }}</td>
+                            <td>
+                                @if($log->location && $log->location !== 'Unknown')
+                                    <div>
+                                        <strong>{{ $log->city ?? 'Unknown City' }}</strong>
+                                        @if($log->state)
+                                            <br><small class="text-muted">{{ $log->state }}</small>
+                                        @endif
+                                        @if($log->country)
+                                            <br><small class="text-muted">{{ $log->country }}</small>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-muted">Unknown Location</span>
+                                @endif
+                            </td>
                             <td>
                                 <span class="badge {{ $log->status_badge_class }}" style="color: #333; background-color: {{ $log->status === 'success' ? '#d4edda' : ($log->status === 'failed' ? '#f8d7da' : '#fff3cd') }};">
                                     {{ ucfirst($log->status) }}
