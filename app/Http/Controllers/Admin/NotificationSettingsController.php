@@ -46,7 +46,7 @@ class NotificationSettingsController extends Controller
         // Get SMS Group Settings
         $smsGroupSettings = [];
         $smsGroupKeys = [
-            'system_welcome_sms', 'system_otp_sms', 'system_password_reset_sms', 'system_security_alert_sms',
+            'system_welcome_sms', 'system_otp_sms', 'system_password_reset_sms', 'system_password_reset_otp_sms', 'system_security_alert_sms',
             'owner_welcome_sms', 'owner_package_purchase_sms', 'owner_payment_confirmation_sms', 
             'owner_invoice_reminder_sms', 'owner_subscription_expiry_sms', 'owner_subscription_renewal_sms',
             'tenant_welcome_sms', 'tenant_rent_reminder_sms', 'tenant_payment_confirmation_sms',
@@ -76,7 +76,7 @@ class NotificationSettingsController extends Controller
         try {
             // Define all SMS group settings
             $smsGroupKeys = [
-                'system_welcome_sms', 'system_otp_sms', 'system_password_reset_sms', 'system_security_alert_sms',
+                'system_welcome_sms', 'system_otp_sms', 'system_password_reset_sms', 'system_password_reset_otp_sms', 'system_security_alert_sms',
                 'owner_welcome_sms', 'owner_package_purchase_sms', 'owner_payment_confirmation_sms', 
                 'owner_invoice_reminder_sms', 'owner_subscription_expiry_sms', 'owner_subscription_renewal_sms',
                 'tenant_welcome_sms', 'tenant_rent_reminder_sms', 'tenant_payment_confirmation_sms',
@@ -159,6 +159,9 @@ class NotificationSettingsController extends Controller
             ],
             'otp_verification_sms' => [
                 'content' => 'Your HRMS password reset OTP is: {otp}. Valid for 10 minutes. If you didn\'t request this, please ignore. - HRMS'
+            ],
+            'password_reset_otp_sms' => [
+                'content' => 'Your HRMS password reset OTP is: {otp}. Valid for 10 minutes. Please enter this code to reset your password. If you didn\'t request this, please ignore. - HRMS'
             ],
             'maintenance_notification_email' => [
                 'subject' => 'Maintenance Update - HRMS',

@@ -105,6 +105,7 @@
                                                     <option value="">Choose a template...</option>
                                                     <option value="password_reset_email">Password Reset Email</option>
                                                     <option value="otp_verification_sms">OTP Verification SMS</option>
+                                                    <option value="password_reset_otp_sms">Password Reset OTP SMS</option>
                                                     <option value="welcome_email">Welcome Email</option>
                                                     <option value="payment_confirmation_email">Payment Confirmation Email</option>
                                                     <option value="invoice_notification_email">Invoice Notification Email</option>
@@ -175,6 +176,16 @@
                                                         <i class="fas fa-lock me-1"></i> Password Reset SMS
                                                     </label>
                                                     <small class="text-muted d-block">Send password reset codes</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="system_password_reset_otp_sms" name="system_password_reset_otp_sms" value="1" 
+                                                           {{ ($smsGroupSettings['system_password_reset_otp_sms'] ?? true) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="system_password_reset_otp_sms">
+                                                        <i class="fas fa-key me-1"></i> Password Reset OTP SMS
+                                                    </label>
+                                                    <small class="text-muted d-block">Send OTP for password reset</small>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
