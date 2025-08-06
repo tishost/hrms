@@ -364,4 +364,174 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    // Forgot Password
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required_without:mobile|email',
+            'mobile' => 'required_without:email|string',
+        ]);
+
+        try {
+            $email = $request->email;
+            $mobile = $request->mobile;
+            $user = null;
+
+            // Find user by email or mobile
+            if ($email) {
+                $user = User::where('email', $email)->first();
+            } elseif ($mobile) {
+                $user = User::where('phone', $mobile)->first();
+            }
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found with provided email/mobile'
+                ], 404);
+            }
+
+            // Check if user has email or mobile
+            $hasEmail = !empty($user->email);
+            $hasMobile = !empty($user->phone);
+
+            // Determine reset method
+            if ($hasEmail && $hasMobile) {
+                // Both available, use the one provided in request
+                $resetMethod = $email ? 'email' : 'mobile';
+            } elseif ($hasEmail) {
+                $resetMethod = 'email';
+            } elseif ($hasMobile) {
+                $resetMethod = 'mobile';
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email or mobile found for password reset'
+                ], 400);
+            }
+
+            // Generate reset token
+            $token = \Str::random(60);
+            $user->update([
+                'password_reset_token' => $token,
+                'password_reset_expires_at' => now()->addHours(1)
+            ]);
+
+            if ($resetMethod === 'email') {
+                // Send email reset link
+                $resetUrl = url("/reset-password?token={$token}&email=" . urlencode($user->email));
+                
+                // Use NotificationHelper to send email
+                \App\Helpers\NotificationHelper::sendEmail(
+                    $user->email,
+                    'Password Reset Request',
+                    'emails.password-reset',
+                    [
+                        'user' => $user,
+                        'resetUrl' => $resetUrl,
+                        'token' => $token
+                    ]
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Password reset link sent to your email',
+                    'method' => 'email'
+                ]);
+
+            } else {
+                // Send OTP for mobile
+                $otp = \App\Models\Otp::generateOtp($user->phone, 'password_reset');
+                
+                // Use NotificationHelper to send SMS
+                \App\Helpers\NotificationHelper::sendSms(
+                    $user->phone,
+                    "Your password reset OTP is: {$otp}. Valid for 10 minutes."
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP sent to your mobile number',
+                    'method' => 'mobile'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Forgot password error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process password reset request'
+            ], 500);
+        }
+    }
+
+    // Reset Password
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+            'email' => 'required_without:mobile|email',
+            'mobile' => 'required_without:email|string',
+            'otp' => 'required_with:mobile|string',
+        ]);
+
+        try {
+            $email = $request->email;
+            $mobile = $request->mobile;
+            $token = $request->token;
+            $password = $request->password;
+            $otp = $request->otp;
+
+            $user = null;
+
+            // Find user
+            if ($email) {
+                $user = User::where('email', $email)
+                    ->where('password_reset_token', $token)
+                    ->where('password_reset_expires_at', '>', now())
+                    ->first();
+            } elseif ($mobile) {
+                $user = User::where('phone', $mobile)->first();
+                
+                // Verify OTP for mobile reset
+                if ($user && !\App\Models\Otp::verifyOtp($mobile, $otp, 'password_reset')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid or expired OTP'
+                    ], 400);
+                }
+            }
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired reset token'
+                ], 400);
+            }
+
+            // Update password
+            $user->update([
+                'password' => Hash::make($password),
+                'password_reset_token' => null,
+                'password_reset_expires_at' => null
+            ]);
+
+            // Log the password reset
+            $this->loginLogService->logLogin($request, $user, 'success', 'Password reset successful');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Reset password error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reset password'
+            ], 500);
+        }
+    }
 }
