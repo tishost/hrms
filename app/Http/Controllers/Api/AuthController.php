@@ -504,7 +504,7 @@ class AuthController extends Controller
 
             $user = null;
 
-            // Find user
+            // Find user by email or mobile
             if ($email) {
                 $user = User::where('email', $email)->first();
             } elseif ($mobile) {
@@ -519,6 +519,7 @@ class AuthController extends Controller
             }
 
             // Check if OTP matches the stored token and is not expired
+            // For password reset, OTP is always stored with email in password_reset_tokens table
             $resetToken = \DB::table('password_reset_tokens')
                 ->where('email', $user->email)
                 ->where('token', $otp)
@@ -564,7 +565,7 @@ class AuthController extends Controller
 
             $user = null;
 
-            // Find user
+            // Find user by email or mobile
             if ($email) {
                 $user = User::where('email', $email)->first();
             } elseif ($mobile) {
@@ -579,6 +580,7 @@ class AuthController extends Controller
             }
 
             // Verify OTP matches and is not expired
+            // For password reset, OTP is always stored with email in password_reset_tokens table
             $resetToken = \DB::table('password_reset_tokens')
                 ->where('email', $user->email)
                 ->where('token', $otp)

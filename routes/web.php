@@ -441,6 +441,9 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     // SMS Group Settings Route
     Route::put('settings/notifications/sms-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsGroupSettings'])->name('notifications.sms-groups.update');
 
+    // Language Settings Route
+    Route::put('settings/notifications/language', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateLanguageSettings'])->name('settings.notifications.language.update');
+
     // Company Information Settings
     Route::get('settings/company', [App\Http\Controllers\Admin\CompanySettingsController::class, 'index'])->name('settings.company');
     Route::post('settings/company/update', [App\Http\Controllers\Admin\CompanySettingsController::class, 'update'])->name('settings.company.update');

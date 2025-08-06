@@ -93,9 +93,89 @@
                         </div>
                     @endif
 
-
-
-
+                    <!-- Language Settings Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-language"></i> Notification Language Settings
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <form action="{{ route('admin.settings.notifications.language.update') }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="notification_language" class="form-label">
+                                                        <i class="fas fa-globe me-1"></i> Default Notification Language
+                                                    </label>
+                                                    <select class="form-control" id="notification_language" name="notification_language" required>
+                                                        <option value="bangla" {{ ($languageSettings['notification_language'] ?? 'bangla') === 'bangla' ? 'selected' : '' }}>
+                                                            বাংলা (Bangla)
+                                                        </option>
+                                                        <option value="english" {{ ($languageSettings['notification_language'] ?? 'bangla') === 'english' ? 'selected' : '' }}>
+                                                            English
+                                                        </option>
+                                                        <option value="both" {{ ($languageSettings['notification_language'] ?? 'bangla') === 'both' ? 'selected' : '' }}>
+                                                            Both Languages (বাংলা + English)
+                                                        </option>
+                                                    </select>
+                                                    <small class="text-muted">
+                                                        Choose the default language for all notifications (SMS and Email)
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="user_language_preference" class="form-label">
+                                                        <i class="fas fa-user-cog me-1"></i> User Language Preference
+                                                    </label>
+                                                    <select class="form-control" id="user_language_preference" name="user_language_preference">
+                                                        <option value="enabled" {{ ($languageSettings['user_language_preference'] ?? 'enabled') === 'enabled' ? 'selected' : '' }}>
+                                                            Enabled (Users can choose their preferred language)
+                                                        </option>
+                                                        <option value="disabled" {{ ($languageSettings['user_language_preference'] ?? 'enabled') === 'disabled' ? 'selected' : '' }}>
+                                                            Disabled (Use system default only)
+                                                        </option>
+                                                    </select>
+                                                    <small class="text-muted">
+                                                        Allow users to set their preferred notification language
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    <strong>Language Settings Info:</strong>
+                                                    <ul class="mb-0 mt-2">
+                                                        <li><strong>Bangla:</strong> All notifications will be sent in বাংলা</li>
+                                                        <li><strong>English:</strong> All notifications will be sent in English</li>
+                                                        <li><strong>Both:</strong> Notifications will be sent in both languages</li>
+                                                        <li><strong>User Preference:</strong> If enabled, users can choose their preferred language in their profile</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save me-1"></i> Save Language Settings
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- SMS Notification Groups Section -->
                     <div class="row mb-4">
