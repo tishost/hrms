@@ -261,7 +261,8 @@ class NotificationHelper
         $variables = [
             'name' => $user->name,
             'email' => $user->email,
-            'reset_url' => route('password.reset', ['token' => $resetToken, 'email' => $user->email])
+            'reset_url' => route('password.reset', ['token' => $resetToken, 'email' => $user->email]),
+            'otp' => $resetToken // Add OTP variable for template
         ];
 
         return self::sendTemplate('email', $user->email, 'password_reset_email', $variables);

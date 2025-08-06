@@ -124,6 +124,14 @@ class NotificationSettingsController extends Controller
         // Get template from database or return default
         $template = SystemSetting::where('key', 'template_' . $templateName)->first();
 
+        // Log template loading for debugging
+        \Log::info('Template loading attempt', [
+            'template_name' => $templateName,
+            'database_key' => 'template_' . $templateName,
+            'template_found' => $template ? 'yes' : 'no',
+            'template_value' => $template ? $template->value : 'not found'
+        ]);
+
         if ($template) {
             $data = json_decode($template->value, true);
             return response()->json([
@@ -155,7 +163,7 @@ class NotificationSettingsController extends Controller
             ],
             'password_reset_email' => [
                 'subject' => 'Password Reset Request - HRMS',
-                'content' => 'Dear {name},\n\nYou have requested to reset your password.\n\nReset Link: {reset_link}\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nHRMS Team'
+                'content' => 'Dear {name},\n\nYou have requested to reset your password.\n\nYour OTP: {otp}\nValid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nHRMS Team'
             ],
             'otp_verification_sms' => [
                 'content' => 'Your HRMS password reset OTP is: {otp}. Valid for 10 minutes. If you didn\'t request this, please ignore. - HRMS'
@@ -262,6 +270,14 @@ class NotificationSettingsController extends Controller
             }
 
             $result = SystemSetting::setValue('template_' . $templateName, json_encode($templateData));
+
+            // Log the template save operation for debugging
+            \Log::info('Template saved successfully', [
+                'template_name' => $templateName,
+                'template_data' => $templateData,
+                'database_key' => 'template_' . $templateName,
+                'result' => $result
+            ]);
 
             // Check if it's an AJAX request
             if ($request->expectsJson()) {
