@@ -91,16 +91,73 @@ class NotificationSettingsController extends Controller
         return view('admin.settings.notifications', compact('smsGroupSettings', 'notificationLogs'));
     }
 
+
+
+    /**
+     * Save templates using simple form submission
+     */
+    public function saveTemplates(Request $request)
+    {
+        $this->checkSuperAdmin();
+        
+        try {
+            // Get all form data
+            $data = $request->all();
+            
+            // Remove CSRF token and method
+            unset($data['_token']);
+            unset($data['_method']);
+            unset($data['current_language']);
+            
+            // Save each template setting
+            foreach ($data as $key => $value) {
+                if (!empty($value)) {
+                    SystemSetting::updateOrCreate(
+                        ['key' => $key],
+                        ['value' => $value]
+                    );
+                }
+            }
+            
+            return redirect()->back()->with('success', 'Templates saved successfully!');
+            
+        } catch (\Exception $e) {
+            \Log::error('Template save failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to save templates: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get all settings for template pages
+     */
+    private function getAllSettings()
+    {
+        $settings = SystemSetting::all()->pluck('value', 'key')->toArray();
+        return $settings;
+    }
+
+    /**
+     * Show email templates page with settings
+     */
     public function emailTemplates()
     {
         $this->checkSuperAdmin();
-        return view('admin.settings.email-templates');
+        $allSettings = $this->getAllSettings();
+        return view('admin.settings.email-templates', compact('allSettings'));
     }
 
+    /**
+     * Show SMS templates page with settings
+     */
     public function smsTemplates()
     {
         $this->checkSuperAdmin();
-        return view('admin.settings.sms-templates');
+        $allSettings = $this->getAllSettings();
+        return view('admin.settings.sms-templates', compact('allSettings'));
     }
 
 

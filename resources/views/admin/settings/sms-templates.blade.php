@@ -25,20 +25,22 @@
                         </div>
                     </div>
 
-                                         <!-- Welcome SMS -->
-                     <div class="template-section mb-4" id="welcome-sms">
-                         <div class="card">
-                             <div class="card-header">
-                                 <h5 class="mb-0">
-                                     <i class="fas fa-user-plus"></i> Welcome SMS (<span id="lang-indicator-bangla">বাংলা</span>)
-                                 </h5>
-                             </div>
-                             <div class="card-body">
-                                 <form id="welcome-sms-form" onsubmit="saveSmsTemplate('welcome_sms', currentLanguage, event)">
-                                    @csrf
+                    <form method="POST" action="{{ route('admin.settings.notifications.template.save') }}">
+                        @csrf
+                        <input type="hidden" name="current_language" id="current-language" value="bangla">
+                        
+                        <!-- Welcome SMS -->
+                        <div class="template-section mb-4" id="welcome-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-user-plus"></i> Welcome SMS (<span id="lang-indicator-bangla">বাংলা</span>)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
                                     <div class="mb-3">
                                         <label for="content-welcome-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-welcome-sms" name="content" rows="4" maxlength="160" required>স্বাগতম {tenant_name}! আপনার ইউনিট {unit_name} প্রস্তুত। {company_name}</textarea>
+                                        <textarea class="form-control" id="content-welcome-sms" name="welcome_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['welcome_sms_content_bangla'] ?? 'স্বাগতম {tenant_name}! আপনার ইউনিট {unit_name} প্রস্তুত। {company_name}' }}</textarea>
                                         <div class="form-text">
                                             <span id="char-count-welcome-sms" class="text-muted">0/160</span> characters
                                         </div>
@@ -48,28 +50,22 @@
                                             <strong>Available placeholders:</strong> {tenant_name}, {unit_name}, {property_name}, {company_name}
                                         </small>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Template
-                                    </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Rent Due SMS -->
-                    <div class="template-section mb-4" id="rent-due-sms">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-calendar-times"></i> Rent Due SMS (বাংলা)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="rent-due-sms-form" onsubmit="saveSmsTemplate('rent_due_sms', 'bangla', event)">
-                                    @csrf
+                        <!-- Rent Due SMS -->
+                        <div class="template-section mb-4" id="rent-due-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-calendar-times"></i> Rent Due SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
                                     <div class="mb-3">
                                         <label for="content-rent-due-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-rent-due-sms" name="content" rows="4" maxlength="160" required>প্রিয় {tenant_name}, {month} মাসের ভাড়া ৳{amount} {due_date} তারিখে বাকি। {company_name}</textarea>
+                                        <textarea class="form-control" id="content-rent-due-sms" name="rent_due_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['rent_due_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, {month} মাসের ভাড়া ৳{amount} {due_date} তারিখে বাকি। {company_name}' }}</textarea>
                                         <div class="form-text">
                                             <span id="char-count-rent-due-sms" class="text-muted">0/160</span> characters
                                         </div>
@@ -79,28 +75,22 @@
                                             <strong>Available placeholders:</strong> {tenant_name}, {amount}, {month}, {due_date}, {company_name}
                                         </small>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Template
-                                    </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Rent Paid SMS -->
-                    <div class="template-section mb-4" id="rent-paid-sms">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-check-circle"></i> Rent Paid SMS (বাংলা)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="rent-paid-sms-form" onsubmit="saveSmsTemplate('rent_paid_sms', 'bangla', event)">
-                                    @csrf
+                        <!-- Rent Paid SMS -->
+                        <div class="template-section mb-4" id="rent-paid-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-check-circle"></i> Rent Paid SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
                                     <div class="mb-3">
                                         <label for="content-rent-paid-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-rent-paid-sms" name="content" rows="4" maxlength="160" required>প্রিয় {tenant_name}, আপনার {month} মাসের ভাড়া ৳{amount} সফলভাবে পরিশোধ হয়েছে। ধন্যবাদ! {company_name}</textarea>
+                                        <textarea class="form-control" id="content-rent-paid-sms" name="rent_paid_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['rent_paid_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার {month} মাসের ভাড়া ৳{amount} সফলভাবে পরিশোধ হয়েছে। ধন্যবাদ! {company_name}' }}</textarea>
                                         <div class="form-text">
                                             <span id="char-count-rent-paid-sms" class="text-muted">0/160</span> characters
                                         </div>
@@ -110,28 +100,22 @@
                                             <strong>Available placeholders:</strong> {tenant_name}, {amount}, {month}, {payment_date}, {company_name}
                                         </small>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Template
-                                    </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Payment Confirmation SMS -->
-                    <div class="template-section mb-4" id="payment-confirmation-sms">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-credit-card"></i> Payment Confirmation SMS (বাংলা)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="payment-confirmation-sms-form" onsubmit="saveSmsTemplate('payment_confirmation_sms', 'bangla', event)">
-                                    @csrf
+                        <!-- Payment Confirmation SMS -->
+                        <div class="template-section mb-4" id="payment-confirmation-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-credit-card"></i> Payment Confirmation SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
                                     <div class="mb-3">
                                         <label for="content-payment-confirmation-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-payment-confirmation-sms" name="content" rows="4" maxlength="160" required>প্রিয় {tenant_name}, আপনার পেমেন্ট ৳{amount} সফলভাবে সম্পন্ন হয়েছে। ট্রানজেকশন: {transaction_id} {company_name}</textarea>
+                                        <textarea class="form-control" id="content-payment-confirmation-sms" name="payment_confirmation_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['payment_confirmation_sms_content_bangla'] ?? 'প্রিয় {tenant_name}, আপনার পেমেন্ট ৳{amount} সফলভাবে সম্পন্ন হয়েছে। ট্রানজেকশন: {transaction_id} {company_name}' }}</textarea>
                                         <div class="form-text">
                                             <span id="char-count-payment-confirmation-sms" class="text-muted">0/160</span> characters
                                         </div>
@@ -141,28 +125,22 @@
                                             <strong>Available placeholders:</strong> {tenant_name}, {payment_type}, {amount}, {transaction_id}, {company_name}
                                         </small>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Template
-                                    </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Password Reset OTP SMS -->
-                    <div class="template-section mb-4" id="password-reset-otp-sms">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-key"></i> Password Reset OTP SMS (বাংলা)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="password-reset-otp-sms-form" onsubmit="saveSmsTemplate('password_reset_otp_sms', 'bangla', event)">
-                                    @csrf
+                        <!-- Password Reset OTP SMS -->
+                        <div class="template-section mb-4" id="password-reset-otp-sms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-key"></i> Password Reset OTP SMS (বাংলা)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
                                     <div class="mb-3">
                                         <label for="content-password-reset-otp-sms" class="form-label">SMS Content</label>
-                                        <textarea class="form-control" id="content-password-reset-otp-sms" name="content" rows="4" maxlength="160" required>আপনার পাসওয়ার্ড রিসেট OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}</textarea>
+                                        <textarea class="form-control" id="content-password-reset-otp-sms" name="password_reset_otp_sms_content_bangla" rows="4" maxlength="160" required>{{ $allSettings['password_reset_otp_sms_content_bangla'] ?? 'আপনার পাসওয়ার্ড রিসেট OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}' }}</textarea>
                                         <div class="form-text">
                                             <span id="char-count-password-reset-otp-sms" class="text-muted">0/160</span> characters
                                         </div>
@@ -172,13 +150,17 @@
                                             <strong>Available placeholders:</strong> {otp}, {company_name}
                                         </small>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Template
-                                    </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
+
+                        <!-- Save Button -->
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save SMS Templates
+                            </button>
+                        </div>
+                    </form>
 
                 </div>
             </div>
@@ -285,178 +267,20 @@ function switchLanguage(lang) {
         title.innerHTML = icon.outerHTML + ' ' + baseText + ` (${lang === 'bangla' ? 'বাংলা' : 'English'})`;
     });
     
-    // Load templates for selected language
-    loadTemplatesForLanguage(lang);
-}
-
-function loadTemplatesForLanguage(lang) {
-    // Load saved templates for the selected language
-    const templates = [
-        'welcome_sms',
-        'rent_due_sms', 
-        'rent_paid_sms',
-        'payment_confirmation_sms',
-        'password_reset_otp_sms'
-    ];
+    // Update hidden input
+    document.getElementById('current-language').value = lang;
     
-    templates.forEach(template => {
-        loadSmsTemplate(template, lang);
-    });
-}
-
-function loadSmsTemplate(templateName, lang) {
-    fetch(`/admin/settings/notifications/template?template=${templateName}_${lang}`, {
-        method: 'GET',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.template) {
-            const formId = templateName.replace(/_/g, '-') + '-form';
-            const form = document.getElementById(formId);
-            if (form) {
-                const contentTextarea = form.querySelector('textarea[name="content"]');
-                if (contentTextarea) {
-                    contentTextarea.value = data.template.content || '';
-                    updateCharCount(templateName.replace(/_/g, '-'));
-                }
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error loading template:', error);
-    });
-}
-
-function saveSmsTemplate(templateName, lang, event) {
-    event.preventDefault();
+    // Show/hide language-specific fields
+    const banglaFields = document.querySelectorAll('[name$="_bangla"]');
+    const englishFields = document.querySelectorAll('[name$="_english"]');
     
-    const form = event.target;
-    const content = form.querySelector('textarea[name="content"]').value;
-    
-    if (!content.trim()) {
-        alert('Please enter SMS content');
-        return;
-    }
-    
-    if (content.length > 160) {
-        alert('SMS content cannot exceed 160 characters');
-        return;
-    }
-    
-    const formData = new FormData(form);
-    formData.append('template_name', `${templateName}_${lang}`);
-    
-    // Get CSRF token with multiple fallbacks
-    let csrfToken = '';
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    if (metaTag && metaTag.content) {
-        csrfToken = metaTag.content;
+    if (lang === 'bangla') {
+        banglaFields.forEach(field => field.style.display = 'block');
+        englishFields.forEach(field => field.style.display = 'none');
     } else {
-        const tokenInput = form.querySelector('input[name="_token"]');
-        if (tokenInput) {
-            csrfToken = tokenInput.value;
-        }
+        banglaFields.forEach(field => field.style.display = 'none');
+        englishFields.forEach(field => field.style.display = 'block');
     }
-    
-    if (!csrfToken) {
-        console.error('No CSRF token available');
-        alert('CSRF token not available. Please refresh the page and try again.');
-        return;
-    }
-    
-    // Add CSRF token to form data
-    formData.append('_token', csrfToken);
-    
-    fetch('/admin/settings/notifications/template', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => {
-        console.log('Save response status:', response.status);
-        
-        if (response.status === 419) {
-            // CSRF token mismatch - refresh token and retry
-            console.log('CSRF token mismatch, refreshing token...');
-            return fetch('/refresh-csrf')
-                .then(res => res.json())
-                .then(tokenData => {
-                    if (tokenData.token) {
-                        // Update meta tag
-                        const metaTag = document.querySelector('meta[name="csrf-token"]');
-                        if (metaTag) {
-                            metaTag.content = tokenData.token;
-                        }
-                        
-                        // Retry with new token
-                        formData.set('_token', tokenData.token);
-                        return fetch('/admin/settings/notifications/template', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': tokenData.token,
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: formData
-                        });
-                    } else {
-                        throw new Error('Failed to refresh CSRF token');
-                    }
-                });
-        }
-        
-        if (response.status === 422) {
-            // Validation error
-            return response.json().then(data => {
-                throw new Error(data.message || 'Validation failed');
-            });
-        }
-        
-        if (response.status === 500) {
-            // Server error
-            return response.json().then(data => {
-                throw new Error(data.message || 'Server error occurred');
-            });
-        }
-        
-        return response.json();
-    })
-    .then(data => {
-        if (!data) return;
-        
-        console.log('Save response:', data);
-        if (data.success) {
-            // Show success message
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success alert-dismissible fade show';
-            alertDiv.innerHTML = `
-                <i class="fas fa-check-circle"></i> Template saved successfully!
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            form.parentNode.insertBefore(alertDiv, form);
-            
-            // Auto-remove alert after 3 seconds
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
-        } else {
-            console.error('Save failed:', data);
-            alert('Failed to save template: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error saving template:', error);
-        alert('Error saving template: ' + error.message);
-    });
 }
 
 function updateCharCount(templateName) {
@@ -476,44 +300,9 @@ function updateCharCount(templateName) {
     }
 }
 
-// CSRF token refresh function
-function refreshCsrfToken() {
-    return fetch('/refresh-csrf')
-        .then(response => response.json())
-        .then(data => {
-            if (data.token) {
-                // Update meta tag
-                const metaTag = document.querySelector('meta[name="csrf-token"]');
-                if (metaTag) {
-                    metaTag.content = data.token;
-                }
-                
-                // Update all _token inputs
-                const tokenInputs = document.querySelectorAll('input[name="_token"]');
-                tokenInputs.forEach(input => {
-                    input.value = data.token;
-                });
-                
-                console.log('✅ CSRF token refreshed successfully');
-                return data.token;
-            } else {
-                throw new Error('Failed to refresh CSRF token');
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error refreshing CSRF token:', error);
-            throw error;
-        });
-}
-
-// Load templates on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    loadTemplatesForLanguage(currentLanguage);
-    
-    // Refresh CSRF token on page load
-    refreshCsrfToken().catch(error => {
-        console.error('Failed to refresh CSRF token on page load:', error);
-    });
+    switchLanguage('bangla');
     
     // Add character counters for all SMS textareas
     const smsTextareas = document.querySelectorAll('textarea[maxlength="160"]');
