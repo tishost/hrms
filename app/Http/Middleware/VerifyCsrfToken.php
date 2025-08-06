@@ -12,7 +12,13 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        // Temporarily disable CSRF for all routes to test
-        '*'
+        // API routes that don't need CSRF
+        'api/*',
+        // CSRF token refresh route
+        'csrf-token',
+        // Test routes
+        'test-csrf',
+        'test-template-save',
+        'test-template-save-admin'
     ];
 }

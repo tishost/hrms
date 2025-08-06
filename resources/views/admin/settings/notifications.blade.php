@@ -1151,12 +1151,62 @@ function saveInlineTemplate(templateName, type) {
         }
     }
     
-    // Get CSRF token
+    // Refresh CSRF token before saving
+    if (typeof refreshCsrfToken === 'function') {
+        refreshCsrfToken();
+    }
+    
+    // Get CSRF token with multiple fallbacks
     let csrfToken = '';
+    
+    // Try meta tag first
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     if (csrfMeta) {
         csrfToken = csrfMeta.getAttribute('content');
+        console.log('CSRF Token from meta:', csrfToken ? 'Found' : 'Not found');
     }
+    
+    // If not found, try to get from form
+    if (!csrfToken) {
+        const tokenInput = document.querySelector('input[name="_token"]');
+        if (tokenInput) {
+            csrfToken = tokenInput.value;
+            console.log('CSRF Token from form:', csrfToken ? 'Found' : 'Not found');
+        }
+    }
+    
+    // If still not found, try to fetch fresh token
+    if (!csrfToken) {
+        console.log('Attempting to fetch fresh CSRF token...');
+        fetch('/csrf-token')
+            .then(response => response.json())
+            .then(data => {
+                csrfToken = data.token;
+                console.log('Fresh CSRF Token:', csrfToken ? 'Found' : 'Not found');
+                if (csrfToken) {
+                    // Update meta tag
+                    if (csrfMeta) {
+                        csrfMeta.setAttribute('content', csrfToken);
+                    }
+                    // Proceed with save
+                    proceedWithSave(templateName, type, content, subject, csrfToken);
+                } else {
+                    alert('Unable to get CSRF token. Please refresh the page.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching CSRF token:', error);
+                alert('Unable to get CSRF token. Please refresh the page.');
+            });
+        return;
+    }
+    
+    // Proceed with save if token is available
+    proceedWithSave(templateName, type, content, subject, csrfToken);
+}
+
+function proceedWithSave(templateName, type, content, subject, csrfToken) {
+    console.log('Proceeding with save, CSRF Token:', csrfToken ? 'Available' : 'Missing');
     
     // Prepare form data
     const formData = new FormData();
@@ -1172,11 +1222,24 @@ function saveInlineTemplate(templateName, type) {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (response.status === 419) {
+            // CSRF token mismatch - refresh and retry
+            console.log('CSRF token mismatch, refreshing...');
+            if (typeof refreshCsrfToken === 'function') {
+                refreshCsrfToken();
+            }
+            alert('Session expired. Please try again.');
+            return;
+        }
         if (response.status === 401) {
             alert('Session expired. Please log in again.');
             window.location.href = '/login';
@@ -1194,6 +1257,7 @@ function saveInlineTemplate(templateName, type) {
     .then(data => {
         if (!data) return;
         
+        console.log('Save response:', data);
         if (data.success) {
             alert('Template saved successfully!');
             // Hide edit form
@@ -1229,6 +1293,54 @@ function updateCharCount(templateName) {
     }
 }
 
+// Test CSRF function
+function testCsrfToken() {
+    console.log('Testing CSRF token...');
+    
+    // Get CSRF token
+    let csrfToken = '';
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+        csrfToken = csrfMeta.getAttribute('content');
+        console.log('CSRF Token from meta:', csrfToken ? 'Found' : 'Not found');
+    }
+    
+    if (!csrfToken) {
+        console.error('No CSRF token found');
+        return;
+    }
+    
+    // Test CSRF token
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    formData.append('test', 'data');
+    
+    fetch('/test-csrf-simple', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('CSRF test response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('CSRF test response:', data);
+        if (data.success) {
+            console.log('✅ CSRF token working correctly');
+        } else {
+            console.log('❌ CSRF token test failed');
+        }
+    })
+    .catch(error => {
+        console.error('CSRF test error:', error);
+    });
+}
+
 // Add character counter for SMS template
 document.addEventListener('DOMContentLoaded', function() {
     const smsContent = document.getElementById('sms_template_content');
@@ -1249,6 +1361,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof refreshCsrfToken === 'function') {
         refreshCsrfToken();
     }
+    
+    // Test CSRF token on page load
+    setTimeout(testCsrfToken, 1000);
 });
 
 

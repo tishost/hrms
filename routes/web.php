@@ -54,6 +54,18 @@ Route::post('/test-template-save', function (\Illuminate\Http\Request $request) 
 // Test template save route with same controller but outside admin middleware
 Route::post('/test-template-save-admin', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('test.template.save.admin');
 
+// Simple CSRF test route
+Route::post('/test-csrf-simple', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'success' => true,
+        'message' => 'CSRF test successful',
+        'csrf_token' => $request->header('X-CSRF-TOKEN'),
+        'form_token' => $request->input('_token'),
+        'session_id' => session()->getId(),
+        'session_started' => session()->isStarted()
+    ]);
+})->name('test.csrf.simple');
+
 // Template save route (working version)
 // Test route for owner creation
 Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) {

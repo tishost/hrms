@@ -168,7 +168,11 @@ class NotificationSettingsController extends Controller
         \Log::info('Template save request', [
             'method' => $request->method(),
             'headers' => $request->headers->all(),
-            'input' => $request->all()
+            'input' => $request->all(),
+            'csrf_token' => $request->header('X-CSRF-TOKEN'),
+            'form_token' => $request->input('_token'),
+            'session_id' => session()->getId(),
+            'session_status' => session()->isStarted() ? 'Started' : 'Not Started'
         ]);
         
         // Handle both GET and POST requests

@@ -1139,24 +1139,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // CSRF Token Refresh Function
 function refreshCsrfToken() {
+    console.log('Refreshing CSRF token...');
     fetch('/csrf-token', {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('CSRF token refreshed successfully');
+        
         // Update all CSRF tokens in forms
         document.querySelectorAll('input[name="_token"]').forEach(input => {
             input.value = data.token;
         });
         
         // Update meta tag
-        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            metaTag.setAttribute('content', data.token);
+        }
+        
+        // Update any other CSRF token elements
+        document.querySelectorAll('[data-csrf-token]').forEach(element => {
+            element.setAttribute('data-csrf-token', data.token);
+        });
+        
+        console.log('All CSRF tokens updated');
     })
     .catch(error => {
         console.error('Error refreshing CSRF token:', error);
+        // Try to get token from meta tag as fallback
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            console.log('Using existing CSRF token from meta tag');
+        }
     });
 }
 
