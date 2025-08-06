@@ -331,24 +331,179 @@
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="list-group">
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('password_reset_email')">
-                                                            <i class="fas fa-lock"></i> Password Reset Email
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('payment_confirmation_email')">
-                                                            <i class="fas fa-credit-card"></i> Payment Confirmation
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('invoice_notification_email')">
-                                                            <i class="fas fa-file-invoice"></i> Invoice Notification
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('subscription_reminder_email')">
-                                                            <i class="fas fa-calendar-alt"></i> Subscription Reminder
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('subscription_activation_email')">
-                                                            <i class="fas fa-check-circle"></i> Subscription Activation
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('welcome_email')">
-                                                            <i class="fas fa-handshake"></i> Welcome Email
-                                                        </a>
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-lock"></i> Password Reset Email
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('password_reset_email', 'email')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-password_reset_email" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Subject:</label>
+                                                                    <input type="text" class="form-control" id="subject-password_reset_email" placeholder="Email subject">
+                                                                </div>
+                                                                <div class="form-group mt-2">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-password_reset_email" rows="4" placeholder="Email content with {otp} variable"></textarea>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('password_reset_email', 'email')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('password_reset_email')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-credit-card"></i> Payment Confirmation
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('payment_confirmation_email', 'email')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-payment_confirmation_email" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Subject:</label>
+                                                                    <input type="text" class="form-control" id="subject-payment_confirmation_email" placeholder="Email subject">
+                                                                </div>
+                                                                <div class="form-group mt-2">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-payment_confirmation_email" rows="4" placeholder="Email content"></textarea>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('payment_confirmation_email', 'email')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('payment_confirmation_email')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-file-invoice"></i> Invoice Notification
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('invoice_notification_email', 'email')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-invoice_notification_email" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Subject:</label>
+                                                                    <input type="text" class="form-control" id="subject-invoice_notification_email" placeholder="Email subject">
+                                                                </div>
+                                                                <div class="form-group mt-2">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-invoice_notification_email" rows="4" placeholder="Email content"></textarea>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('invoice_notification_email', 'email')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('invoice_notification_email')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-calendar-alt"></i> Subscription Reminder
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('subscription_reminder_email', 'email')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-subscription_reminder_email" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Subject:</label>
+                                                                    <input type="text" class="form-control" id="subject-subscription_reminder_email" placeholder="Email subject">
+                                                                </div>
+                                                                <div class="form-group mt-2">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-subscription_reminder_email" rows="4" placeholder="Email content"></textarea>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('subscription_reminder_email', 'email')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('subscription_reminder_email')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-check-circle"></i> Subscription Activation
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('subscription_activation_email', 'email')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-subscription_activation_email" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Subject:</label>
+                                                                    <input type="text" class="form-control" id="subject-subscription_activation_email" placeholder="Email subject">
+                                                                </div>
+                                                                <div class="form-group mt-2">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-subscription_activation_email" rows="4" placeholder="Email content"></textarea>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('subscription_activation_email', 'email')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('subscription_activation_email')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-handshake"></i> Welcome Email
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('welcome_email', 'email')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-welcome_email" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Subject:</label>
+                                                                    <input type="text" class="form-control" id="subject-welcome_email" placeholder="Email subject">
+                                                                </div>
+                                                                <div class="form-group mt-2">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-welcome_email" rows="4" placeholder="Email content"></textarea>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('welcome_email', 'email')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('welcome_email')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -361,39 +516,291 @@
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="list-group">
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('password_reset_otp_sms')">
-                                                            <i class="fas fa-key"></i> Password Reset OTP SMS
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('owner_payment_confirmation_sms')">
-                                                            <i class="fas fa-credit-card"></i> Owner Payment Confirmation
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('owner_invoice_notification_sms')">
-                                                            <i class="fas fa-file-invoice"></i> Owner Invoice Notification
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('owner_subscription_reminder_sms')">
-                                                            <i class="fas fa-calendar-alt"></i> Owner Subscription Reminder
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('owner_subscription_activation_sms')">
-                                                            <i class="fas fa-check-circle"></i> Owner Subscription Activation
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('owner_welcome_sms')">
-                                                            <i class="fas fa-handshake"></i> Owner Welcome SMS
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('tenant_payment_confirmation_sms')">
-                                                            <i class="fas fa-credit-card"></i> Tenant Payment Confirmation
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('tenant_invoice_notification_sms')">
-                                                            <i class="fas fa-file-invoice"></i> Tenant Invoice Notification
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('tenant_subscription_reminder_sms')">
-                                                            <i class="fas fa-calendar-alt"></i> Tenant Subscription Reminder
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('tenant_subscription_activation_sms')">
-                                                            <i class="fas fa-check-circle"></i> Tenant Subscription Activation
-                                                        </a>
-                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('tenant_welcome_sms')">
-                                                            <i class="fas fa-handshake"></i> Tenant Welcome SMS
-                                                        </a>
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-key"></i> Password Reset OTP SMS
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('password_reset_otp_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-password_reset_otp_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-password_reset_otp_sms" rows="3" placeholder="SMS content with {otp} variable" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-password_reset_otp_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('password_reset_otp_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('password_reset_otp_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-credit-card"></i> Owner Payment Confirmation
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_payment_confirmation_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-owner_payment_confirmation_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-owner_payment_confirmation_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-owner_payment_confirmation_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('owner_payment_confirmation_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('owner_payment_confirmation_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-file-invoice"></i> Owner Invoice Notification
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_invoice_notification_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-owner_invoice_notification_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-owner_invoice_notification_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-owner_invoice_notification_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('owner_invoice_notification_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('owner_invoice_notification_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-calendar-alt"></i> Owner Subscription Reminder
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_subscription_reminder_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-owner_subscription_reminder_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-owner_subscription_reminder_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-owner_subscription_reminder_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('owner_subscription_reminder_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('owner_subscription_reminder_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-check-circle"></i> Owner Subscription Activation
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_subscription_activation_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-owner_subscription_activation_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-owner_subscription_activation_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-owner_subscription_activation_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('owner_subscription_activation_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('owner_subscription_activation_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-handshake"></i> Owner Welcome SMS
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('owner_welcome_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-owner_welcome_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-owner_welcome_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-owner_welcome_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('owner_welcome_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('owner_welcome_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-credit-card"></i> Tenant Payment Confirmation
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_payment_confirmation_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-tenant_payment_confirmation_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-tenant_payment_confirmation_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-tenant_payment_confirmation_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('tenant_payment_confirmation_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('tenant_payment_confirmation_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-file-invoice"></i> Tenant Invoice Notification
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_invoice_notification_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-tenant_invoice_notification_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-tenant_invoice_notification_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-tenant_invoice_notification_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('tenant_invoice_notification_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('tenant_invoice_notification_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-calendar-alt"></i> Tenant Subscription Reminder
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_subscription_reminder_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-tenant_subscription_reminder_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-tenant_subscription_reminder_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-tenant_subscription_reminder_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('tenant_subscription_reminder_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('tenant_subscription_reminder_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-check-circle"></i> Tenant Subscription Activation
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_subscription_activation_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-tenant_subscription_activation_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-tenant_subscription_activation_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-tenant_subscription_activation_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('tenant_subscription_activation_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('tenant_subscription_activation_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <i class="fas fa-handshake"></i> Tenant Welcome SMS
+                                                                </div>
+                                                                <button class="btn btn-sm btn-primary" onclick="toggleInlineEdit('tenant_welcome_sms', 'sms')">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </button>
+                                                            </div>
+                                                            <div id="edit-tenant_welcome_sms" class="mt-3" style="display: none;">
+                                                                <div class="form-group">
+                                                                    <label>Content:</label>
+                                                                    <textarea class="form-control" id="content-tenant_welcome_sms" rows="3" placeholder="SMS content" maxlength="160"></textarea>
+                                                                    <small class="text-muted">Character count: <span id="char-count-tenant_welcome_sms">0/160</span></small>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-success" onclick="saveInlineTemplate('tenant_welcome_sms', 'sms')">
+                                                                        <i class="fas fa-save"></i> Save
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('tenant_welcome_sms')">
+                                                                        <i class="fas fa-times"></i> Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -495,72 +902,7 @@
     </div>
 </div>
 
-<!-- Template Editor Modal -->
-<div class="modal fade" id="templateModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="templateForm" method="GET" action="{{ route('admin.notifications.template.save') }}">
-                    <div class="form-group">
-                        <label for="template_name">Template Name</label>
-                        <input type="text" class="form-control" id="template_name" name="template_name" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="template_subject">Subject (Email only)</label>
-                        <input type="text" class="form-control" id="template_subject" name="subject">
-                    </div>
-                    <div class="form-group">
-                        <label for="template_content">Content</label>
-                        <textarea class="form-control" id="template_content" name="content" rows="10"></textarea>
-                        <small class="form-text text-muted">
-                            Available variables: {name}, {email}, {amount}, {invoice_number}, {due_date}, {payment_method}
-                        </small>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="saveEmailTemplateAjax()">Save Template</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- SMS Template Editor Modal -->
-<div class="modal fade" id="smsTemplateModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit SMS Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="smsTemplateForm" method="GET" action="{{ route('admin.notifications.template.save') }}">
-                    <div class="form-group">
-                        <label for="sms_template_name">Template Name</label>
-                        <input type="text" class="form-control" id="sms_template_name" name="template_name" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="sms_template_content">SMS Content</label>
-                        <textarea class="form-control" id="sms_template_content" name="content" rows="6" maxlength="160"></textarea>
-                        <small class="form-text text-muted">
-                            Available variables: {name}, {phone}, {amount}, {invoice_number}, {due_date}, {payment_method}, {property_name}, {tenant_name}
-                            <br><span id="sms_char_count">0/160 characters</span>
-                        </small>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeSmsTemplateModal()">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="saveSmsTemplateAjax()">Save SMS Template</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
@@ -685,59 +1027,9 @@
 
 
 
-function editTemplate(templateName) {
-    document.getElementById('template_name').value = templateName;
-    document.getElementById('template_subject').value = '';
-    document.getElementById('template_content').value = '';
 
-    // Load template from database
-    fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => {
-        console.log('Template load response status:', response.status);
-        if (response.status === 401) {
-            // Authentication error - redirect to login
-            alert('Session expired. Please log in again.');
-            window.location.href = '/login';
-            return;
-        }
-        if (response.status === 403) {
-            // Permission error
-            alert('Access denied. You do not have permission to perform this action.');
-            return;
-        }
-        if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Template load response:', data);
-        if (data.success && data.template && data.template.content) {
-            // Use saved content from database
-            document.getElementById('template_content').value = data.template.content;
-        } else {
-            // Set default content
-            document.getElementById('template_content').value = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
-        }
-    })
-    .catch(error => {
-        console.error('Error loading template:', error);
-        document.getElementById('template_content').value = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
-    });
 
-    const templateModal = new bootstrap.Modal(document.getElementById('templateModal'));
-    templateModal.show();
-}
 
-function saveTemplate() {
-    // This function is no longer needed as we're using form submission
-    // The form will handle the submission automatically
-}
 
 function viewLog(logId) {
     // AJAX call to view log details
@@ -761,18 +1053,26 @@ function viewLog(logId) {
         });
 }
 
-function closeTemplateModal() {
-    const templateModal = bootstrap.Modal.getInstance(document.getElementById('templateModal'));
-    if (templateModal) {
-        templateModal.hide();
+
+
+
+
+
+
+// Inline Template Editing Functions
+function toggleInlineEdit(templateName, type) {
+    const editDiv = document.getElementById('edit-' + templateName);
+    if (editDiv.style.display === 'none') {
+        // Show edit form and load template
+        editDiv.style.display = 'block';
+        loadInlineTemplate(templateName, type);
+    } else {
+        // Hide edit form
+        editDiv.style.display = 'none';
     }
 }
 
-// SMS Template Functions
-function editSmsTemplate(templateName) {
-    document.getElementById('sms_template_name').value = templateName;
-    document.getElementById('sms_template_content').value = '';
-
+function loadInlineTemplate(templateName, type) {
     // Load template from database
     fetch('{{ route("admin.notifications.template.get") }}?template=' + encodeURIComponent(templateName), {
         method: 'GET',
@@ -781,15 +1081,12 @@ function editSmsTemplate(templateName) {
         }
     })
     .then(response => {
-        console.log('SMS template load response status:', response.status);
         if (response.status === 401) {
-            // Authentication error - redirect to login
             alert('Session expired. Please log in again.');
             window.location.href = '/login';
             return;
         }
         if (response.status === 403) {
-            // Permission error
             alert('Access denied. You do not have permission to perform this action.');
             return;
         }
@@ -799,77 +1096,78 @@ function editSmsTemplate(templateName) {
         return response.json();
     })
     .then(data => {
-        console.log('SMS template load response:', data);
+        if (!data) return;
+        
         if (data.success && data.template && data.template.content) {
-            // Use saved content from database
-            document.getElementById('sms_template_content').value = data.template.content;
+            // Load content into form
+            if (type === 'email') {
+                document.getElementById('subject-' + templateName).value = data.template.subject || '';
+                document.getElementById('content-' + templateName).value = data.template.content;
+            } else {
+                document.getElementById('content-' + templateName).value = data.template.content;
+                updateCharCount(templateName);
+            }
         } else {
             // Set default content
-            document.getElementById('sms_template_content').value = 'Welcome to HRMS! Your notification has been sent.';
+            if (type === 'email') {
+                document.getElementById('subject-' + templateName).value = 'HRMS Notification';
+                document.getElementById('content-' + templateName).value = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
+            } else {
+                document.getElementById('content-' + templateName).value = 'Welcome to HRMS! Your notification has been sent.';
+                updateCharCount(templateName);
+            }
         }
-        updateSmsCharCount();
     })
     .catch(error => {
-        console.error('Error loading SMS template:', error);
-        document.getElementById('sms_template_content').value = 'Welcome to HRMS! Your notification has been sent.';
-        updateSmsCharCount();
+        console.error('Error loading template:', error);
+        if (type === 'email') {
+            document.getElementById('subject-' + templateName).value = 'HRMS Notification';
+            document.getElementById('content-' + templateName).value = 'Dear {name},\n\nThis is a notification from HRMS.\n\nBest regards,\nHRMS Team';
+        } else {
+            document.getElementById('content-' + templateName).value = 'Welcome to HRMS! Your notification has been sent.';
+            updateCharCount(templateName);
+        }
     });
-
-    const smsTemplateModal = new bootstrap.Modal(document.getElementById('smsTemplateModal'));
-    smsTemplateModal.show();
 }
 
-function saveSmsTemplate() {
-    // This function is no longer needed as we're using form submission
-    // The form will handle the submission automatically
-}
-
-function validateSmsForm() {
-    const content = document.getElementById('sms_template_content').value;
-    const templateName = document.getElementById('sms_template_name').value;
+function saveInlineTemplate(templateName, type) {
+    let content = document.getElementById('content-' + templateName).value;
+    let subject = '';
     
-    if (!content.trim()) {
-        alert('Please enter SMS content');
-        return false;
+    if (type === 'email') {
+        subject = document.getElementById('subject-' + templateName).value;
+        if (!subject.trim() || !content.trim()) {
+            alert('Please fill in both subject and content');
+            return;
+        }
+    } else {
+        if (!content.trim()) {
+            alert('Please enter SMS content');
+            return;
+        }
+        if (content.length > 160) {
+            alert('SMS content cannot exceed 160 characters');
+            return;
+        }
     }
     
-    if (content.length > 160) {
-        alert('SMS content cannot exceed 160 characters');
-        return false;
-    }
-    
-    return true;
-}
-
-function saveSmsTemplateAjax() {
-    const templateName = document.getElementById('sms_template_name').value;
-    const content = document.getElementById('sms_template_content').value;
-    
-    if (!validateSmsForm()) {
-        return;
-    }
-    
-    // Refresh CSRF token before saving
-    if (typeof refreshCsrfToken === 'function') {
-        refreshCsrfToken();
-    }
-    
-    // Get CSRF token with fallback
+    // Get CSRF token
     let csrfToken = '';
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     if (csrfMeta) {
         csrfToken = csrfMeta.getAttribute('content');
-        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
-    } else {
-        console.error('CSRF token meta tag not found');
     }
     
-    // Use POST method with form data
+    // Prepare form data
     const formData = new FormData();
     formData.append('template_name', templateName);
     formData.append('content', content);
-    formData.append('_token', csrfToken); // Add token to form data as well
+    if (type === 'email') {
+        formData.append('subject', subject);
+    }
+    formData.append('_token', csrfToken);
     
+    // Save template
     fetch('{{ route("admin.notifications.template.save") }}', {
         method: 'POST',
         headers: {
@@ -879,15 +1177,12 @@ function saveSmsTemplateAjax() {
         body: formData
     })
     .then(response => {
-        console.log('Response status:', response.status);
         if (response.status === 401) {
-            // Authentication error - redirect to login
             alert('Session expired. Please log in again.');
             window.location.href = '/login';
             return;
         }
         if (response.status === 403) {
-            // Permission error
             alert('Access denied. You do not have permission to perform this action.');
             return;
         }
@@ -897,20 +1192,12 @@ function saveSmsTemplateAjax() {
         return response.json();
     })
     .then(data => {
-        if (!data) return; // Skip if redirected due to auth error
+        if (!data) return;
         
-        console.log('Template save response:', data);
         if (data.success) {
             alert('Template saved successfully!');
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('smsTemplateModal'));
-            if (modal) {
-                modal.hide();
-            }
-            // Reload the page to show updated templates
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            // Hide edit form
+            document.getElementById('edit-' + templateName).style.display = 'none';
         } else {
             alert('Failed to save template: ' + (data.message || 'Unknown error'));
         }
@@ -921,109 +1208,24 @@ function saveSmsTemplateAjax() {
     });
 }
 
-function saveEmailTemplateAjax() {
-    const templateName = document.getElementById('template_name').value;
-    const subject = document.getElementById('template_subject').value;
-    const content = document.getElementById('template_content').value;
-    
-    if (!templateName || !content.trim()) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    // Refresh CSRF token before saving
-    if (typeof refreshCsrfToken === 'function') {
-        refreshCsrfToken();
-    }
-    
-    // Get CSRF token with fallback
-    let csrfToken = '';
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-    if (csrfMeta) {
-        csrfToken = csrfMeta.getAttribute('content');
-        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
-    } else {
-        console.error('CSRF token meta tag not found');
-    }
-    
-    // Use POST method with form data
-    const formData = new FormData();
-    formData.append('template_name', templateName);
-    formData.append('subject', subject);
-    formData.append('content', content);
-    formData.append('_token', csrfToken); // Add token to form data as well
-    
-    fetch('{{ route("admin.notifications.template.save") }}', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
-        body: formData
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        if (response.status === 401) {
-            // Authentication error - redirect to login
-            alert('Session expired. Please log in again.');
-            window.location.href = '/login';
-            return;
-        }
-        if (response.status === 403) {
-            // Permission error
-            alert('Access denied. You do not have permission to perform this action.');
-            return;
-        }
-        if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (!data) return; // Skip if redirected due to auth error
+function cancelInlineEdit(templateName) {
+    document.getElementById('edit-' + templateName).style.display = 'none';
+}
+
+function updateCharCount(templateName) {
+    const textarea = document.getElementById('content-' + templateName);
+    const charCount = document.getElementById('char-count-' + templateName);
+    if (textarea && charCount) {
+        const count = textarea.value.length;
+        charCount.textContent = count + '/160';
         
-        console.log('Template save response:', data);
-        if (data.success) {
-            alert('Template saved successfully!');
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('templateModal'));
-            if (modal) {
-                modal.hide();
-            }
-            // Reload the page to show updated templates
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+        if (count > 160) {
+            charCount.className = 'text-danger';
+        } else if (count > 140) {
+            charCount.className = 'text-warning';
         } else {
-            alert('Failed to save template: ' + (data.message || 'Unknown error'));
+            charCount.className = 'text-muted';
         }
-    })
-    .catch(error => {
-        console.error('Error saving template:', error);
-        alert('Error saving template: ' + error.message);
-    });
-}
-
-function closeSmsTemplateModal() {
-    const smsTemplateModal = bootstrap.Modal.getInstance(document.getElementById('smsTemplateModal'));
-    if (smsTemplateModal) {
-        smsTemplateModal.hide();
-    }
-}
-
-function updateSmsCharCount() {
-    const content = document.getElementById('sms_template_content').value;
-    const count = content.length;
-    const charCount = document.getElementById('sms_char_count');
-    
-    charCount.textContent = `${count}/160 characters`;
-    
-    if (count > 160) {
-        charCount.className = 'text-danger';
-    } else if (count > 140) {
-        charCount.className = 'text-warning';
-    } else {
-        charCount.className = 'text-muted';
     }
 }
 
@@ -1033,6 +1235,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (smsContent) {
         smsContent.addEventListener('input', updateSmsCharCount);
     }
+    
+    // Add character counters for inline SMS templates
+    const smsTextareas = document.querySelectorAll('textarea[id^="content-"][maxlength="160"]');
+    smsTextareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            const templateName = this.id.replace('content-', '');
+            updateCharCount(templateName);
+        });
+    });
     
     // Refresh CSRF token before template operations
     if (typeof refreshCsrfToken === 'function') {
