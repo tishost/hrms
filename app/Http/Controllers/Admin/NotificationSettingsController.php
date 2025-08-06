@@ -134,7 +134,35 @@ class NotificationSettingsController extends Controller
 
     public function getTemplate(Request $request)
     {
-        $this->checkSuperAdmin();
+        // Log request details for debugging
+        \Log::info('Template get request', [
+            'template' => $request->get('template'),
+            'user_authenticated' => auth()->check(),
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId()
+        ]);
+        
+        // Check authentication first
+        if (!auth()->check()) {
+            \Log::warning('User not authenticated for template get');
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required. Please log in again.',
+                'code' => 'AUTH_REQUIRED'
+            ], 401);
+        }
+        
+        // Check super admin privileges
+        try {
+            $this->checkSuperAdmin();
+        } catch (\Exception $e) {
+            \Log::error('Super admin check failed for template get: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Access denied. Super admin privileges required.',
+                'code' => 'ACCESS_DENIED'
+            ], 403);
+        }
         
         $templateName = $request->get('template');
         
@@ -162,8 +190,6 @@ class NotificationSettingsController extends Controller
 
     public function saveTemplate(Request $request)
     {
-        $this->checkSuperAdmin();
-        
         // Log request details for debugging
         \Log::info('Template save request', [
             'method' => $request->method(),
@@ -172,8 +198,32 @@ class NotificationSettingsController extends Controller
             'csrf_token' => $request->header('X-CSRF-TOKEN'),
             'form_token' => $request->input('_token'),
             'session_id' => session()->getId(),
-            'session_status' => session()->isStarted() ? 'Started' : 'Not Started'
+            'session_status' => session()->isStarted() ? 'Started' : 'Not Started',
+            'user_authenticated' => auth()->check(),
+            'user_id' => auth()->id()
         ]);
+        
+        // Check authentication first
+        if (!auth()->check()) {
+            \Log::warning('User not authenticated for template save');
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required. Please log in again.',
+                'code' => 'AUTH_REQUIRED'
+            ], 401);
+        }
+        
+        // Check super admin privileges
+        try {
+            $this->checkSuperAdmin();
+        } catch (\Exception $e) {
+            \Log::error('Super admin check failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Access denied. Super admin privileges required.',
+                'code' => 'ACCESS_DENIED'
+            ], 403);
+        }
         
         // Handle both GET and POST requests
         if ($request->isMethod('GET')) {
@@ -193,25 +243,30 @@ class NotificationSettingsController extends Controller
         
         try {
             // Save template directly as string (no JSON encoding)
-            SystemSetting::updateOrCreate(
+            $result = SystemSetting::updateOrCreate(
                 ['key' => 'template_' . $templateName],
                 ['value' => $content]
             );
             
             \Log::info('Template saved successfully', [
                 'template_name' => $templateName,
-                'content_length' => strlen($content)
+                'content_length' => strlen($content),
+                'saved_id' => $result->id,
+                'saved_value' => $result->value
             ]);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Template saved successfully!'
+                'message' => 'Template saved successfully!',
+                'template_name' => $templateName,
+                'content_length' => strlen($content)
             ]);
             
         } catch (\Exception $e) {
             \Log::error('Template save failed', [
                 'error' => $e->getMessage(),
-                'template_name' => $templateName
+                'template_name' => $templateName,
+                'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([

@@ -1081,12 +1081,16 @@ function loadInlineTemplate(templateName, type) {
         }
     })
     .then(response => {
+        console.log('Load template response status:', response.status);
+        
         if (response.status === 401) {
+            console.log('Authentication required for template load');
             alert('Session expired. Please log in again.');
             window.location.href = '/login';
             return;
         }
         if (response.status === 403) {
+            console.log('Access denied for template load');
             alert('Access denied. You do not have permission to perform this action.');
             return;
         }
@@ -1151,7 +1155,11 @@ function saveInlineTemplate(templateName, type) {
         }
     }
     
-    // Refresh CSRF token before saving
+    // Refresh session and CSRF token before saving
+    if (typeof refreshSession === 'function') {
+        refreshSession();
+    }
+    
     if (typeof refreshCsrfToken === 'function') {
         refreshCsrfToken();
     }
@@ -1241,11 +1249,13 @@ function proceedWithSave(templateName, type, content, subject, csrfToken) {
             return;
         }
         if (response.status === 401) {
+            console.log('Authentication required');
             alert('Session expired. Please log in again.');
             window.location.href = '/login';
             return;
         }
         if (response.status === 403) {
+            console.log('Access denied');
             alert('Access denied. You do not have permission to perform this action.');
             return;
         }
@@ -1341,6 +1351,30 @@ function testCsrfToken() {
     });
 }
 
+// Session refresh function
+function refreshSession() {
+    console.log('Refreshing session...');
+    
+    // Make a simple request to keep session alive
+    fetch('/admin/settings/notifications', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Session refresh response:', response.status);
+        if (response.ok) {
+            console.log('✅ Session refreshed successfully');
+        } else {
+            console.log('❌ Session refresh failed');
+        }
+    })
+    .catch(error => {
+        console.error('Session refresh error:', error);
+    });
+}
+
 // Add character counter for SMS template
 document.addEventListener('DOMContentLoaded', function() {
     const smsContent = document.getElementById('sms_template_content');
@@ -1357,13 +1391,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Refresh CSRF token before template operations
+    // Refresh session and CSRF token before template operations
+    if (typeof refreshSession === 'function') {
+        refreshSession();
+    }
+    
     if (typeof refreshCsrfToken === 'function') {
         refreshCsrfToken();
     }
     
     // Test CSRF token on page load
     setTimeout(testCsrfToken, 1000);
+    
+    // Refresh session every 5 minutes to keep it alive
+    setInterval(function() {
+        if (typeof refreshSession === 'function') {
+            refreshSession();
+        }
+    }, 5 * 60 * 1000); // 5 minutes
 });
 
 
