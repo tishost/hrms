@@ -827,15 +827,31 @@ function saveSmsTemplateAjax() {
         return;
     }
     
+    // Refresh CSRF token before saving
+    if (typeof refreshCsrfToken === 'function') {
+        refreshCsrfToken();
+    }
+    
+    // Get CSRF token with fallback
+    let csrfToken = '';
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+        csrfToken = csrfMeta.getAttribute('content');
+        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+    } else {
+        console.error('CSRF token meta tag not found');
+    }
+    
     // Use POST method with form data
     const formData = new FormData();
     formData.append('template_name', templateName);
     formData.append('content', content);
+    formData.append('_token', csrfToken); // Add token to form data as well
     
     fetch('{{ route("admin.notifications.template.save") }}', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
         },
         body: formData
@@ -880,16 +896,32 @@ function saveEmailTemplateAjax() {
         return;
     }
     
+    // Refresh CSRF token before saving
+    if (typeof refreshCsrfToken === 'function') {
+        refreshCsrfToken();
+    }
+    
+    // Get CSRF token with fallback
+    let csrfToken = '';
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+        csrfToken = csrfMeta.getAttribute('content');
+        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+    } else {
+        console.error('CSRF token meta tag not found');
+    }
+    
     // Use POST method with form data
     const formData = new FormData();
     formData.append('template_name', templateName);
     formData.append('subject', subject);
     formData.append('content', content);
+    formData.append('_token', csrfToken); // Add token to form data as well
     
     fetch('{{ route("admin.notifications.template.save") }}', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
         },
         body: formData
@@ -954,7 +986,10 @@ document.addEventListener('DOMContentLoaded', function() {
         smsContent.addEventListener('input', updateSmsCharCount);
     }
     
-
+    // Refresh CSRF token before template operations
+    if (typeof refreshCsrfToken === 'function') {
+        refreshCsrfToken();
+    }
 });
 
 

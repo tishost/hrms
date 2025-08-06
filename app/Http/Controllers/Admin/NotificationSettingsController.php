@@ -146,6 +146,13 @@ class NotificationSettingsController extends Controller
     {
         $this->checkSuperAdmin();
         
+        // Log request details for debugging
+        \Log::info('Template save request', [
+            'method' => $request->method(),
+            'headers' => $request->headers->all(),
+            'input' => $request->all()
+        ]);
+        
         // Handle both GET and POST requests
         if ($request->isMethod('GET')) {
             $templateName = $request->get('template_name');
@@ -169,12 +176,22 @@ class NotificationSettingsController extends Controller
                 ['value' => $content]
             );
             
+            \Log::info('Template saved successfully', [
+                'template_name' => $templateName,
+                'content_length' => strlen($content)
+            ]);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Template saved successfully!'
             ]);
             
         } catch (\Exception $e) {
+            \Log::error('Template save failed', [
+                'error' => $e->getMessage(),
+                'template_name' => $templateName
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save template: ' . $e->getMessage()
