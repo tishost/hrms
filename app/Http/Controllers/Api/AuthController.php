@@ -419,20 +419,8 @@ class AuthController extends Controller
             ]);
 
             if ($resetMethod === 'email') {
-                // Send email reset link
-                $resetUrl = url("/reset-password?token={$token}&email=" . urlencode($user->email));
-                
-                // Use NotificationHelper to send email
-                \App\Helpers\NotificationHelper::sendEmail(
-                    $user->email,
-                    'Password Reset Request',
-                    'emails.password-reset',
-                    [
-                        'user' => $user,
-                        'resetUrl' => $resetUrl,
-                        'token' => $token
-                    ]
-                );
+                // Use NotificationHelper to send password reset email with template
+                \App\Helpers\NotificationHelper::sendPasswordResetEmail($user, $token);
 
                 return response()->json([
                     'success' => true,
@@ -444,11 +432,8 @@ class AuthController extends Controller
                 // Send OTP for mobile
                 $otp = \App\Models\Otp::generateOtp($user->phone, 'password_reset');
                 
-                // Use NotificationHelper to send SMS
-                \App\Helpers\NotificationHelper::sendSms(
-                    $user->phone,
-                    "Your password reset OTP is: {$otp}. Valid for 10 minutes."
-                );
+                // Use NotificationHelper to send OTP SMS with template
+                \App\Helpers\NotificationHelper::sendOtpSms($user->phone, $otp);
 
                 return response()->json([
                     'success' => true,
