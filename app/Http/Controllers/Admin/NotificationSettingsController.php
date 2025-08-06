@@ -245,6 +245,24 @@ class NotificationSettingsController extends Controller
             ], 419);
         }
         
+        // Validate template data
+        try {
+            $request->validate([
+                'template_name' => 'required|string|max:255',
+                'content' => 'required|string|max:10000'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Template validation failed', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Template validation failed: ' . implode(', ', array_flatten($e->errors())),
+                'code' => 'VALIDATION_FAILED'
+            ], 422);
+        }
+        
         // Check super admin privileges
         try {
             $this->checkSuperAdmin();
@@ -301,6 +319,20 @@ class NotificationSettingsController extends Controller
                 'content_length' => strlen($content)
             ]);
             
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error while saving template', [
+                'error' => $e->getMessage(),
+                'template_name' => $templateName,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Database error: Unable to save template. Please try again.',
+                'code' => 'DATABASE_ERROR'
+            ], 500);
+            
         } catch (\Exception $e) {
             \Log::error('Template save failed', [
                 'error' => $e->getMessage(),
@@ -310,8 +342,9 @@ class NotificationSettingsController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save template: ' . $e->getMessage()
-            ]);
+                'message' => 'Failed to save template: ' . $e->getMessage(),
+                'code' => 'SAVE_ERROR'
+            ], 500);
         }
     }
 

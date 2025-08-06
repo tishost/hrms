@@ -414,6 +414,20 @@ function saveSmsTemplate(templateName, lang, event) {
                 });
         }
         
+        if (response.status === 422) {
+            // Validation error
+            return response.json().then(data => {
+                throw new Error(data.message || 'Validation failed');
+            });
+        }
+        
+        if (response.status === 500) {
+            // Server error
+            return response.json().then(data => {
+                throw new Error(data.message || 'Server error occurred');
+            });
+        }
+        
         return response.json();
     })
     .then(data => {
@@ -435,6 +449,7 @@ function saveSmsTemplate(templateName, lang, event) {
                 alertDiv.remove();
             }, 3000);
         } else {
+            console.error('Save failed:', data);
             alert('Failed to save template: ' + (data.message || 'Unknown error'));
         }
     })
