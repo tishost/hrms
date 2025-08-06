@@ -25,25 +25,25 @@
                         </div>
                     </div>
 
-                    <!-- Tenant Welcome Email -->
-                    <div class="template-section mb-4" id="tenant-welcome-email">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-user-plus"></i> Tenant Welcome Email (বাংলা)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="tenant-welcome-form" onsubmit="saveEmailTemplate('tenant_welcome_email', 'bangla', event)">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label for="subject-tenant-welcome" class="form-label">Subject</label>
-                                        <input type="text" class="form-control" id="subject-tenant-welcome" name="subject" 
-                                               value="স্বাগতম! আপনার ইউনিট প্রস্তুত" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="content-tenant-welcome" class="form-label">Email Content</label>
-                                        <textarea class="form-control" id="content-tenant-welcome" name="content" rows="8" required>স্বাগতম {tenant_name}!
+                                         <!-- Tenant Welcome Email -->
+                     <div class="template-section mb-4" id="tenant-welcome-email">
+                         <div class="card">
+                             <div class="card-header">
+                                 <h5 class="mb-0">
+                                     <i class="fas fa-user-plus"></i> Tenant Welcome Email (<span id="lang-indicator-bangla">বাংলা</span>)
+                                 </h5>
+                             </div>
+                             <div class="card-body">
+                                 <form id="tenant-welcome-form" onsubmit="saveEmailTemplate('tenant_welcome_email', currentLanguage, event)">
+                                     @csrf
+                                     <div class="mb-3">
+                                         <label for="subject-tenant-welcome" class="form-label">Subject</label>
+                                         <input type="text" class="form-control" id="subject-tenant-welcome" name="subject" 
+                                                value="স্বাগতম! আপনার ইউনিট প্রস্তুত" required>
+                                     </div>
+                                     <div class="mb-3">
+                                         <label for="content-tenant-welcome" class="form-label">Email Content</label>
+                                         <textarea class="form-control" id="content-tenant-welcome" name="content" rows="8" required>স্বাগতম {tenant_name}!
 
 আপনার ইউনিট {unit_name} প্রস্তুত। আপনি এখন আপনার নতুন বাড়িতে প্রবেশ করতে পারেন।
 
@@ -54,19 +54,19 @@
 
 ধন্যবাদ,
 {company_name}</textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <small class="text-muted">
-                                            <strong>Available placeholders:</strong> {tenant_name}, {unit_name}, {property_name}, {owner_email}, {company_name}
-                                        </small>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Template
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                                     </div>
+                                     <div class="mb-3">
+                                         <small class="text-muted">
+                                             <strong>Available placeholders:</strong> {tenant_name}, {unit_name}, {property_name}, {owner_email}, {company_name}
+                                         </small>
+                                     </div>
+                                     <button type="submit" class="btn btn-primary">
+                                         <i class="fas fa-save"></i> Save Template
+                                     </button>
+                                 </form>
+                             </div>
+                         </div>
+                     </div>
 
                     <!-- Rent Due Email -->
                     <div class="template-section mb-4" id="rent-due-email">
@@ -283,6 +283,20 @@ function switchLanguage(lang) {
     event.target.classList.remove('btn-outline-secondary');
     event.target.classList.add('btn-success', 'active');
     
+    // Update language indicators
+    const langIndicators = document.querySelectorAll('[id^="lang-indicator-"]');
+    langIndicators.forEach(indicator => {
+        indicator.textContent = lang === 'bangla' ? 'বাংলা' : 'English';
+    });
+    
+    // Update template titles
+    const templateTitles = document.querySelectorAll('.template-section .card-header h5');
+    templateTitles.forEach(title => {
+        const icon = title.querySelector('i');
+        const baseText = title.textContent.replace(/\(বাংলা\)|\(English\)/, '');
+        title.innerHTML = icon.outerHTML + ' ' + baseText + ` (${lang === 'bangla' ? 'বাংলা' : 'English'})`;
+    });
+    
     // Load templates for selected language
     loadTemplatesForLanguage(lang);
 }
@@ -302,7 +316,7 @@ function loadTemplatesForLanguage(lang) {
 }
 
 function loadEmailTemplate(templateName, lang) {
-    fetch(`/admin/notifications/template/get?template=${templateName}_${lang}`, {
+    fetch(`/admin/settings/notifications/template?template=${templateName}_${lang}`, {
         method: 'GET',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -336,7 +350,7 @@ function saveEmailTemplate(templateName, lang, event) {
     const formData = new FormData(form);
     formData.append('template_name', `${templateName}_${lang}`);
     
-    fetch('/admin/notifications/template/save', {
+    fetch('/admin/settings/notifications/template', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,

@@ -25,16 +25,16 @@
                         </div>
                     </div>
 
-                    <!-- Welcome SMS -->
-                    <div class="template-section mb-4" id="welcome-sms">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-user-plus"></i> Welcome SMS (বাংলা)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="welcome-sms-form" onsubmit="saveSmsTemplate('welcome_sms', 'bangla', event)">
+                                         <!-- Welcome SMS -->
+                     <div class="template-section mb-4" id="welcome-sms">
+                         <div class="card">
+                             <div class="card-header">
+                                 <h5 class="mb-0">
+                                     <i class="fas fa-user-plus"></i> Welcome SMS (<span id="lang-indicator-bangla">বাংলা</span>)
+                                 </h5>
+                             </div>
+                             <div class="card-body">
+                                 <form id="welcome-sms-form" onsubmit="saveSmsTemplate('welcome_sms', currentLanguage, event)">
                                     @csrf
                                     <div class="mb-3">
                                         <label for="content-welcome-sms" class="form-label">SMS Content</label>
@@ -271,6 +271,20 @@ function switchLanguage(lang) {
     event.target.classList.remove('btn-outline-secondary');
     event.target.classList.add('btn-success', 'active');
     
+    // Update language indicators
+    const langIndicators = document.querySelectorAll('[id^="lang-indicator-"]');
+    langIndicators.forEach(indicator => {
+        indicator.textContent = lang === 'bangla' ? 'বাংলা' : 'English';
+    });
+    
+    // Update template titles
+    const templateTitles = document.querySelectorAll('.template-section .card-header h5');
+    templateTitles.forEach(title => {
+        const icon = title.querySelector('i');
+        const baseText = title.textContent.replace(/\(বাংলা\)|\(English\)/, '');
+        title.innerHTML = icon.outerHTML + ' ' + baseText + ` (${lang === 'bangla' ? 'বাংলা' : 'English'})`;
+    });
+    
     // Load templates for selected language
     loadTemplatesForLanguage(lang);
 }
@@ -291,7 +305,7 @@ function loadTemplatesForLanguage(lang) {
 }
 
 function loadSmsTemplate(templateName, lang) {
-    fetch(`/admin/notifications/template/get?template=${templateName}_${lang}`, {
+    fetch(`/admin/settings/notifications/template?template=${templateName}_${lang}`, {
         method: 'GET',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -337,7 +351,7 @@ function saveSmsTemplate(templateName, lang, event) {
     const formData = new FormData(form);
     formData.append('template_name', `${templateName}_${lang}`);
     
-    fetch('/admin/notifications/template/save', {
+    fetch('/admin/settings/notifications/template', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
