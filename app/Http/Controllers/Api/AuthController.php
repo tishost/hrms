@@ -396,50 +396,79 @@ class AuthController extends Controller
             $hasEmail = !empty($user->email);
             $hasMobile = !empty($user->phone);
 
-            // Determine reset method
-            if ($hasEmail && $hasMobile) {
-                // Both available, use the one provided in request
-                $resetMethod = $email ? 'email' : 'mobile';
-            } elseif ($hasEmail) {
-                $resetMethod = 'email';
-            } elseif ($hasMobile) {
-                $resetMethod = 'mobile';
-            } else {
+            if (!$hasEmail && !$hasMobile) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No email or mobile found for password reset'
                 ], 400);
             }
 
-            // Generate reset token
-            $token = \Str::random(60);
-            $user->update([
-                'password_reset_token' => $token,
-                'password_reset_expires_at' => now()->addHours(1)
-            ]);
+            // Generate OTP for password reset
+            $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Store OTP in password_reset_tokens table
+            \DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                [
+                    'email' => $user->email,
+                    'token' => $otp,
+                    'created_at' => now()
+                ]
+            );
 
-            if ($resetMethod === 'email') {
-                // Use NotificationHelper to send password reset email with template
-                \App\Helpers\NotificationHelper::sendPasswordResetEmail($user, $token);
+            $results = [];
+            $sentMethods = [];
 
+            // Send OTP via SMS if mobile exists
+            if ($hasMobile) {
+                try {
+                    $smsResult = \App\Helpers\NotificationHelper::sendOtpSms($user->phone, $otp);
+                    $results['sms'] = $smsResult;
+                    if ($smsResult['success']) {
+                        $sentMethods[] = 'SMS';
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('SMS sending failed: ' . $e->getMessage());
+                    $results['sms'] = ['success' => false, 'message' => 'Failed to send SMS'];
+                }
+            }
+
+            // Send OTP via Email if email exists
+            if ($hasEmail) {
+                try {
+                    $emailResult = \App\Helpers\NotificationHelper::sendPasswordResetEmail($user, $otp);
+                    $results['email'] = $emailResult;
+                    if ($emailResult['success']) {
+                        $sentMethods[] = 'Email';
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Email sending failed: ' . $e->getMessage());
+                    $results['email'] = ['success' => false, 'message' => 'Failed to send email'];
+                }
+            }
+
+            // Check if at least one method succeeded
+            $successCount = 0;
+            foreach ($results as $method => $result) {
+                if ($result['success']) {
+                    $successCount++;
+                }
+            }
+
+            if ($successCount > 0) {
+                $methodText = implode(' and ', $sentMethods);
                 return response()->json([
                     'success' => true,
-                    'message' => 'Password reset link sent to your email',
-                    'method' => 'email'
+                    'message' => "OTP sent via {$methodText}",
+                    'methods' => $sentMethods,
+                    'results' => $results
                 ]);
-
             } else {
-                // Send OTP for mobile
-                $otp = \App\Models\Otp::generateOtp($user->phone, 'password_reset');
-                
-                // Use NotificationHelper to send OTP SMS with template
-                \App\Helpers\NotificationHelper::sendOtpSms($user->phone, $otp);
-
                 return response()->json([
-                    'success' => true,
-                    'message' => 'OTP sent to your mobile number',
-                    'method' => 'mobile'
-                ]);
+                    'success' => false,
+                    'message' => 'Failed to send OTP via any method',
+                    'results' => $results
+                ], 500);
             }
 
         } catch (\Exception $e) {
@@ -489,20 +518,18 @@ class AuthController extends Controller
                 ], 404);
             }
 
-            // Verify OTP for mobile
-            if ($mobile && !\App\Models\Otp::verifyOtp($mobile, $otp, 'password_reset')) {
+            // Check if OTP matches the stored token and is not expired
+            $resetToken = \DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->where('token', $otp)
+                ->where('created_at', '>', now()->subMinutes(10))
+                ->first();
+                
+            if (!$resetToken) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid or expired OTP'
                 ], 400);
-            }
-
-            // For email, we'll verify the token later in resetPassword
-            if ($email) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'OTP verification will be done during password reset'
-                ]);
             }
 
             return response()->json([
@@ -523,53 +550,57 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
+            'otp' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
             'email' => 'required_without:mobile|email',
             'mobile' => 'required_without:email|string',
-            'otp' => 'required_with:mobile|string',
         ]);
 
         try {
             $email = $request->email;
             $mobile = $request->mobile;
-            $token = $request->token;
-            $password = $request->password;
             $otp = $request->otp;
+            $password = $request->password;
 
             $user = null;
 
             // Find user
             if ($email) {
-                $user = User::where('email', $email)
-                    ->where('password_reset_token', $token)
-                    ->where('password_reset_expires_at', '>', now())
-                    ->first();
+                $user = User::where('email', $email)->first();
             } elseif ($mobile) {
                 $user = User::where('phone', $mobile)->first();
-                
-                // Verify OTP for mobile reset
-                if ($user && !\App\Models\Otp::verifyOtp($mobile, $otp, 'password_reset')) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid or expired OTP'
-                    ], 400);
-                }
             }
 
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid or expired reset token'
+                    'message' => 'User not found'
+                ], 404);
+            }
+
+            // Verify OTP matches and is not expired
+            $resetToken = \DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->where('token', $otp)
+                ->where('created_at', '>', now()->subMinutes(10))
+                ->first();
+                
+            if (!$resetToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired OTP'
                 ], 400);
             }
 
             // Update password
             $user->update([
-                'password' => Hash::make($password),
-                'password_reset_token' => null,
-                'password_reset_expires_at' => null
+                'password' => Hash::make($password)
             ]);
+            
+            // Delete the used reset token
+            \DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->delete();
 
             // Log the password reset
             $this->loginLogService->logLogin($request, $user, 'success', 'Password reset successful');
