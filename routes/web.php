@@ -405,14 +405,14 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('settings/notifications/log/details', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getLogDetails'])->name('notifications.log.details');
 
 
-// SMS Group Settings Route
-Route::put('settings/notifications/sms-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsGroupSettings'])->name('notifications.sms-groups.update');
+    // SMS Group Settings Route
+    Route::put('settings/notifications/sms-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'updateSmsGroupSettings'])->name('notifications.sms-groups.update');
 
-// Company Information Settings
-Route::get('settings/company', [App\Http\Controllers\Admin\CompanySettingsController::class, 'index'])->name('settings.company');
-Route::post('settings/company/update', [App\Http\Controllers\Admin\CompanySettingsController::class, 'update'])->name('settings.company.update');
+    // Company Information Settings
+    Route::get('settings/company', [App\Http\Controllers\Admin\CompanySettingsController::class, 'index'])->name('settings.company');
+    Route::post('settings/company/update', [App\Http\Controllers\Admin\CompanySettingsController::class, 'update'])->name('settings.company.update');
 
-// System Settings
+    // System Settings
     Route::get('settings/system', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('settings.system');
     Route::post('settings/system/update', [App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('settings.system.update');
 
@@ -470,10 +470,10 @@ Route::post('settings/company/update', [App\Http\Controllers\Admin\CompanySettin
         Route::post('settings/backup/schedule', [App\Http\Controllers\Admin\BackupSettingsController::class, 'scheduleBackup'])->name('settings.backup.schedule');
 
         // Email Configuration Routes
-Route::get('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'index'])->name('settings.email-configuration');
-Route::put('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'updateEmailSettings'])->name('settings.email-configuration.update');
-Route::post('settings/email-configuration/test', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'testEmail'])->name('settings.email-configuration.test');
-Route::get('settings/email-configuration/debug', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'debugEmailSettings'])->name('settings.email-configuration.debug');
+        Route::get('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'index'])->name('settings.email-configuration');
+        Route::put('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'updateEmailSettings'])->name('settings.email-configuration.update');
+        Route::post('settings/email-configuration/test', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'testEmail'])->name('settings.email-configuration.test');
+        Route::get('settings/email-configuration/debug', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'debugEmailSettings'])->name('settings.email-configuration.debug');
 
     // Tickets Management
     Route::get('tickets', [App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets.index');
