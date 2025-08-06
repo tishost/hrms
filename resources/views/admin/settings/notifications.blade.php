@@ -369,6 +369,9 @@
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="list-group">
+                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('password_reset_email')">
+                                                            <i class="fas fa-lock"></i> Password Reset Email
+                                                        </a>
                                                         <a href="#" class="list-group-item list-group-item-action" onclick="editTemplate('payment_confirmation_email')">
                                                             <i class="fas fa-credit-card"></i> Payment Confirmation
                                                         </a>
@@ -396,6 +399,9 @@
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="list-group">
+                                                        <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('password_reset_otp_sms')">
+                                                            <i class="fas fa-key"></i> Password Reset OTP SMS
+                                                        </a>
                                                         <a href="#" class="list-group-item list-group-item-action" onclick="editSmsTemplate('owner_payment_confirmation_sms')">
                                                             <i class="fas fa-credit-card"></i> Owner Payment Confirmation
                                                         </a>
