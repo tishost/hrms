@@ -83,7 +83,68 @@ class LoginLogService
     {
         $userAgent = $request->userAgent();
         
-        // Simple device detection
+        // Check for Flutter app headers first
+        $appVersion = $request->header('App-Version');
+        $userAgentString = $request->header('User-Agent');
+        $appType = $request->header('X-App-Type');
+        $platform = $request->header('X-Platform');
+        
+        // Debug logging
+        \Log::info('Device detection debug', [
+            'user_agent' => $userAgent,
+            'app_version' => $appVersion,
+            'user_agent_header' => $userAgentString,
+            'app_type' => $appType,
+            'platform' => $platform,
+            'all_headers' => $request->headers->all()
+        ]);
+        
+        // Detect Flutter app - check multiple conditions
+        if ($appVersion || 
+            $appType === 'mobile' ||
+            strpos($userAgentString, 'Flutter') !== false || 
+            strpos($userAgentString, 'Dart') !== false ||
+            strpos($userAgent, 'Flutter') !== false ||
+            strpos($userAgent, 'Dart') !== false) {
+            
+            // Flutter app detection
+            $deviceType = 'mobile';
+            $platform = 'flutter';
+            $browser = 'Flutter App';
+            $os = 'Mobile';
+            
+            // Try to detect OS from user agent and headers
+            if ($platform === 'android' || preg_match('/Android/i', $userAgentString) || preg_match('/Android/i', $userAgent)) {
+                $platform = 'android';
+                $os = 'Android';
+            } elseif ($platform === 'ios' || preg_match('/iPhone|iPad|iPod/i', $userAgentString) || preg_match('/iPhone|iPad|iPod/i', $userAgent)) {
+                $platform = 'ios';
+                $os = 'iOS';
+            } else {
+                // Default to android for mobile app
+                $platform = 'android';
+                $os = 'Android';
+            }
+            
+            \Log::info('Flutter app detected', [
+                'device_type' => $deviceType,
+                'platform' => $platform,
+                'browser' => $browser,
+                'os' => $os
+            ]);
+            
+            return [
+                'device_type' => $deviceType,
+                'platform' => $platform,
+                'browser' => $browser,
+                'browser_version' => $appVersion,
+                'os' => $os,
+                'os_version' => null,
+                'device_model' => $this->getDeviceModel($userAgentString ?: $userAgent)
+            ];
+        }
+        
+        // Regular web browser detection
         $deviceType = 'web';
         $platform = 'web';
         $browser = 'Unknown';
