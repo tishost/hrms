@@ -628,4 +628,120 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Check mobile number in database and return role
+     */
+    public function checkMobileRole(Request $request)
+    {
+        $request->validate([
+            'mobile' => 'required|string|max:15',
+        ]);
+
+        $mobile = $request->mobile;
+
+        try {
+            // Check in tenants table
+            $tenant = DB::table('tenants')->where('mobile', $mobile)->first();
+            if ($tenant) {
+                return response()->json([
+                    'success' => true,
+                    'role' => 'tenant',
+                    'message' => 'Mobile number found in tenant records',
+                    'user_data' => [
+                        'name' => $tenant->name,
+                        'email' => $tenant->email,
+                        'mobile' => $tenant->mobile,
+                    ]
+                ]);
+            }
+
+            // Check in owners table
+            $owner = DB::table('owners')->where('mobile', $mobile)->first();
+            if ($owner) {
+                return response()->json([
+                    'success' => true,
+                    'role' => 'owner',
+                    'message' => 'Mobile number found in owner records',
+                    'user_data' => [
+                        'name' => $owner->name,
+                        'email' => $owner->email,
+                        'mobile' => $owner->mobile,
+                    ]
+                ]);
+            }
+
+            // Not found in any table
+            return response()->json([
+                'success' => true,
+                'role' => null,
+                'message' => 'Mobile number not found in database',
+                'user_data' => null
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking mobile number: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check Google email in database and return role
+     */
+    public function checkGoogleRole(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = $request->email;
+
+        try {
+            // Check in tenants table
+            $tenant = DB::table('tenants')->where('email', $email)->first();
+            if ($tenant) {
+                return response()->json([
+                    'success' => true,
+                    'role' => 'tenant',
+                    'message' => 'Email found in tenant records',
+                    'user_data' => [
+                        'name' => $tenant->name,
+                        'email' => $tenant->email,
+                        'mobile' => $tenant->mobile,
+                    ]
+                ]);
+            }
+
+            // Check in owners table
+            $owner = DB::table('owners')->where('email', $email)->first();
+            if ($owner) {
+                return response()->json([
+                    'success' => true,
+                    'role' => 'owner',
+                    'message' => 'Email found in owner records',
+                    'user_data' => [
+                        'name' => $owner->name,
+                        'email' => $owner->email,
+                        'mobile' => $owner->mobile,
+                    ]
+                ]);
+            }
+
+            // Not found in any table
+            return response()->json([
+                'success' => true,
+                'role' => null,
+                'message' => 'Email not found in database',
+                'user_data' => null
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

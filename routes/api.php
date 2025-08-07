@@ -24,6 +24,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 
+// Smart registration routes
+Route::post('/check-mobile-role', [AuthController::class, 'checkMobileRole']);
+Route::post('/check-google-role', [AuthController::class, 'checkGoogleRole']);
+
 // Password reset routes
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/verify-password-otp', [AuthController::class, 'verifyOtp']);
@@ -89,6 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Owner PDF Routes
     Route::get('/owner/invoices/{id}/pdf-file', [OwnerController::class, 'downloadInvoicePDF']);
     Route::get('/owner/profile', [OwnerController::class, 'profile']);
+    
+    // Owner Subscription
+    Route::get('/owner/subscription', [OwnerController::class, 'getSubscription']);
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);

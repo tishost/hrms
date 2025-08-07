@@ -204,4 +204,68 @@ class OwnerController extends Controller
             ], 500);
         }
     }
+
+    public function getSubscription(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+            if (!$owner) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner not found'
+                ], 404);
+            }
+
+            // Get active subscription
+            $subscription = \App\Models\OwnerSubscription::where('owner_id', $owner->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now()->toDateString())
+                ->with('plan')
+                ->first();
+
+            if ($subscription) {
+                return response()->json([
+                    'success' => true,
+                    'subscription' => [
+                        'id' => $subscription->id,
+                        'plan_name' => $subscription->plan_name,
+                        'status' => $subscription->status,
+                        'start_date' => $subscription->start_date,
+                        'end_date' => $subscription->end_date,
+                        'auto_renew' => $subscription->auto_renew,
+                        'sms_credits' => $subscription->sms_credits,
+                        'plan' => $subscription->plan ? [
+                            'id' => $subscription->plan->id,
+                            'name' => $subscription->plan->name,
+                            'price' => $subscription->plan->price,
+                            'duration' => $subscription->plan->duration,
+                            'properties_limit' => $subscription->plan->properties_limit,
+                            'tenants_limit' => $subscription->plan->tenants_limit,
+                        ] : null
+                    ]
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'subscription' => null,
+                    'message' => 'No active subscription found'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Owner subscription error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to get subscription: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
