@@ -369,19 +369,22 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required_without:mobile|email',
-            'mobile' => 'required_without:email|string',
+            'identifier' => 'required|string', // Single field for email or mobile
         ]);
 
         try {
-            $email = $request->email;
-            $mobile = $request->mobile;
+            $identifier = $request->identifier;
             $user = null;
 
-            // Find user by email or mobile
-            if ($email) {
-                $user = User::where('email', $email)->first();
-            } elseif ($mobile) {
+            // Check if identifier is email or mobile
+            $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+            
+            if ($isEmail) {
+                // Search by email
+                $user = User::where('email', $identifier)->first();
+            } else {
+                // Search by mobile (remove any non-digit characters)
+                $mobile = preg_replace('/[^0-9]/', '', $identifier);
                 $user = User::where('phone', $mobile)->first();
             }
 
@@ -485,8 +488,7 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
-                'email' => 'required_without:mobile|email',
-                'mobile' => 'required_without:email|string',
+                'identifier' => 'required|string', // Single field for email or mobile
                 'otp' => 'required|string',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -498,16 +500,19 @@ class AuthController extends Controller
         }
 
         try {
-            $email = $request->email;
-            $mobile = $request->mobile;
+            $identifier = $request->identifier;
             $otp = $request->otp;
-
             $user = null;
 
-            // Find user by email or mobile
-            if ($email) {
-                $user = User::where('email', $email)->first();
-            } elseif ($mobile) {
+            // Check if identifier is email or mobile
+            $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+            
+            if ($isEmail) {
+                // Search by email
+                $user = User::where('email', $identifier)->first();
+            } else {
+                // Search by mobile (remove any non-digit characters)
+                $mobile = preg_replace('/[^0-9]/', '', $identifier);
                 $user = User::where('phone', $mobile)->first();
             }
 
@@ -553,22 +558,24 @@ class AuthController extends Controller
         $request->validate([
             'otp' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
-            'email' => 'required_without:mobile|email',
-            'mobile' => 'required_without:email|string',
+            'identifier' => 'required|string', // Single field for email or mobile
         ]);
 
         try {
-            $email = $request->email;
-            $mobile = $request->mobile;
+            $identifier = $request->identifier;
             $otp = $request->otp;
             $password = $request->password;
-
             $user = null;
 
-            // Find user by email or mobile
-            if ($email) {
-                $user = User::where('email', $email)->first();
-            } elseif ($mobile) {
+            // Check if identifier is email or mobile
+            $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+            
+            if ($isEmail) {
+                // Search by email
+                $user = User::where('email', $identifier)->first();
+            } else {
+                // Search by mobile (remove any non-digit characters)
+                $mobile = preg_replace('/[^0-9]/', '', $identifier);
                 $user = User::where('phone', $mobile)->first();
             }
 

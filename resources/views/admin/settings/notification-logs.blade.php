@@ -42,6 +42,13 @@
     .table td {
         vertical-align: middle;
         color: #333 !important;
+        background-color: #fff !important;
+    }
+    
+    /* Force text color for all table cells */
+    .table tbody tr td {
+        color: #333 !important;
+        background-color: #fff !important;
     }
     
     .table-hover tbody tr:hover {
@@ -51,6 +58,19 @@
     /* Ensure text visibility */
     .table td * {
         color: inherit !important;
+    }
+    
+    /* Specific styling for Type column */
+    .table td:nth-child(2) {
+        color: #333 !important;
+    }
+    
+    .table td:nth-child(2) * {
+        color: #333 !important;
+    }
+    
+    .table td:nth-child(2) .badge {
+        color: #fff !important;
     }
     
     /* Text color fixes */
@@ -169,8 +189,8 @@
                                             <small class="text-muted">{{ $log->created_at->format('H:i:s') }}</small>
                                         </div>
                                     </td>
-                                    <td>
-                                        <span class="badge badge-{{ $log->type === 'email' ? 'info' : 'success' }}" style="display: inline-block; min-width: 80px; text-align: center;">
+                                    <td style="color: #333 !important;">
+                                        <span class="badge badge-{{ $log->type === 'email' ? 'info' : 'success' }}" style="display: inline-block; min-width: 80px; text-align: center; color: #fff !important;">
                                             <i class="fas fa-{{ $log->type === 'email' ? 'envelope' : 'mobile-alt' }} me-1"></i>
                                             {{ ucfirst($log->type) }}
                                         </span>
