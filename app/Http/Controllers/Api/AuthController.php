@@ -389,10 +389,11 @@ class AuthController extends Controller
             }
 
             if (!$user) {
+                // Don't reveal if user exists or not for security reasons
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found with provided email/mobile'
-                ], 404);
+                    'message' => 'If this email or mobile number is registered, you will receive an OTP shortly.'
+                ], 200); // Return 200 instead of 404 to avoid revealing user existence
             }
 
             // Check if user has email or mobile
@@ -519,8 +520,8 @@ class AuthController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                    'message' => 'Invalid OTP or user information'
+                ], 400);
             }
 
             // Check if OTP matches the stored token and is not expired
@@ -582,8 +583,8 @@ class AuthController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                    'message' => 'Invalid request or user information'
+                ], 400);
             }
 
             // Verify OTP matches and is not expired
