@@ -3,6 +3,86 @@
 @section('title', 'Notification Logs')
 
 @section('content')
+<style>
+    /* Custom styling for notification logs */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+    
+    .badge-info {
+        background-color: #17a2b8 !important;
+        color: #fff !important;
+    }
+    
+    .badge-success {
+        background-color: #28a745 !important;
+        color: #fff !important;
+    }
+    
+    .badge-danger {
+        background-color: #dc3545 !important;
+        color: #fff !important;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+    
+    /* Table styling */
+    .table th {
+        background-color: #343a40;
+        color: #fff;
+        border-color: #454d55;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        color: #333 !important;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.075);
+    }
+    
+    /* Ensure text visibility */
+    .table td * {
+        color: inherit !important;
+    }
+    
+    /* Text color fixes */
+    .text-break {
+        color: #333 !important;
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    /* Button styling */
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0.2rem;
+    }
+    
+    /* Modal styling */
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+    
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -90,8 +170,8 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge badge-{{ $log->type === 'email' ? 'info' : 'success' }}">
-                                            <i class="fas fa-{{ $log->type === 'email' ? 'envelope' : 'mobile-alt' }}"></i>
+                                        <span class="badge badge-{{ $log->type === 'email' ? 'info' : 'success' }}" style="display: inline-block; min-width: 80px; text-align: center;">
+                                            <i class="fas fa-{{ $log->type === 'email' ? 'envelope' : 'mobile-alt' }} me-1"></i>
                                             {{ ucfirst($log->type) }}
                                         </span>
                                     </td>
@@ -112,12 +192,12 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge badge-{{ $log->status === 'sent' ? 'success' : 'danger' }}">
-                                            <i class="fas fa-{{ $log->status === 'sent' ? 'check' : 'times' }}"></i>
+                                        <span class="badge badge-{{ $log->status === 'sent' ? 'success' : 'danger' }}" style="display: inline-block; min-width: 70px; text-align: center;">
+                                            <i class="fas fa-{{ $log->status === 'sent' ? 'check' : 'times' }} me-1"></i>
                                             {{ ucfirst($log->status) }}
                                         </span>
                                         @if($log->status === 'failed' && $log->error_message)
-                                            <br><small class="text-danger">{{ Str::limit($log->error_message, 50) }}</small>
+                                            <br><small class="text-danger" style="font-size: 0.75rem;">{{ Str::limit($log->error_message, 50) }}</small>
                                         @endif
                                     </td>
                                     <td>
