@@ -501,4 +501,41 @@ class NotificationSettingsController extends Controller
             file_put_contents($path, $content);
         }
     }
+
+    public function notificationLogs(Request $request)
+    {
+        $this->checkSuperAdmin();
+        
+        // Get notification logs with pagination and filtering
+        $query = NotificationLog::orderBy('created_at', 'desc');
+        
+        // Apply filters
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+        
+        if ($request->filled('recipient')) {
+            $query->where('recipient', 'like', '%' . $request->recipient . '%');
+        }
+        
+        $notificationLogs = $query->paginate(\App\Helpers\SystemHelper::getPaginationLimit());
+        
+        // Get statistics
+        $stats = [
+            'total' => NotificationLog::count(),
+            'sent' => NotificationLog::where('status', 'sent')->count(),
+            'failed' => NotificationLog::where('status', 'failed')->count(),
+            'pending' => NotificationLog::where('status', 'pending')->count(),
+        ];
+        
+        return view('admin.settings.notification-logs', compact('notificationLogs', 'stats'));
+    }
 }

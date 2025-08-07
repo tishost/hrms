@@ -75,8 +75,11 @@
                         <a href="{{ route('admin.settings.email.templates') }}" class="btn btn-primary btn-sm me-2">
                             <i class="fas fa-envelope"></i> Email Templates
                         </a>
-                        <a href="{{ route('admin.settings.sms.templates') }}" class="btn btn-success btn-sm">
+                        <a href="{{ route('admin.settings.sms.templates') }}" class="btn btn-success btn-sm me-2">
                             <i class="fas fa-sms"></i> SMS Templates
+                        </a>
+                        <a href="{{ route('admin.settings.notification-logs') }}" class="btn btn-info btn-sm">
+                            <i class="fas fa-history"></i> Notification Logs
                         </a>
                     </div>
                 </div>

@@ -871,6 +871,12 @@
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.settings.notification-logs.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.notification-logs') }}">
+                                <i class="fas fa-history me-2"></i>Notification Logs
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item {{ request()->routeIs('admin.settings.email-configuration.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.email-configuration') }}">
                                 <i class="fas fa-envelope me-2"></i>Email Configuration

@@ -436,6 +436,9 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('settings/notifications/template/save', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplates'])->name('settings.notifications.template.save');
     Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
     Route::get('settings/notifications/log/details', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getLogDetails'])->name('notifications.log.details');
+    
+    // Notification Logs
+    Route::get('settings/notification-logs', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'notificationLogs'])->name('settings.notification-logs');
 
 
     // SMS Group Settings Route
