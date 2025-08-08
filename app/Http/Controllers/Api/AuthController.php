@@ -650,10 +650,20 @@ class AuthController extends Controller
         $mobile = $request->mobile;
 
         try {
-            // Check in tenants table (conditionally support 'phone' column)
-            $tenantQuery = DB::table('tenants')->where('mobile', $mobile);
-            if (Schema::hasColumn('tenants', 'phone')) {
-                $tenantQuery->orWhere('phone', $mobile);
+            // Check in tenants table (conditionally support 'mobile'/'phone')
+            $tenantQuery = DB::table('tenants');
+            $tenantHasMobile = Schema::hasColumn('tenants', 'mobile');
+            $tenantHasPhone  = Schema::hasColumn('tenants', 'phone');
+            if ($tenantHasMobile && $tenantHasPhone) {
+                $tenantQuery->where(function($q) use ($mobile) {
+                    $q->where('mobile', $mobile)->orWhere('phone', $mobile);
+                });
+            } elseif ($tenantHasMobile) {
+                $tenantQuery->where('mobile', $mobile);
+            } elseif ($tenantHasPhone) {
+                $tenantQuery->where('phone', $mobile);
+            } else {
+                $tenantQuery->whereRaw('1=0'); // no such column
             }
             $tenant = $tenantQuery->first();
             if ($tenant) {
@@ -669,10 +679,20 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Check in owners table (conditionally support 'phone' column)
-            $ownerQuery = DB::table('owners')->where('mobile', $mobile);
-            if (Schema::hasColumn('owners', 'phone')) {
-                $ownerQuery->orWhere('phone', $mobile);
+            // Check in owners table (conditionally support 'mobile'/'phone')
+            $ownerQuery = DB::table('owners');
+            $ownerHasMobile = Schema::hasColumn('owners', 'mobile');
+            $ownerHasPhone  = Schema::hasColumn('owners', 'phone');
+            if ($ownerHasMobile && $ownerHasPhone) {
+                $ownerQuery->where(function($q) use ($mobile) {
+                    $q->where('mobile', $mobile)->orWhere('phone', $mobile);
+                });
+            } elseif ($ownerHasMobile) {
+                $ownerQuery->where('mobile', $mobile);
+            } elseif ($ownerHasPhone) {
+                $ownerQuery->where('phone', $mobile);
+            } else {
+                $ownerQuery->whereRaw('1=0');
             }
             $owner = $ownerQuery->first();
             if ($owner) {
