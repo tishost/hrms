@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UploadController extends Controller
 {
@@ -18,10 +19,16 @@ class UploadController extends Controller
         try {
             $file = $request->file('file');
             $folder = trim($request->input('folder', 'uploads'), '/');
-            $path = $file->store("public/{$folder}");
+            // Save directly under public folder to avoid storage symlink issues
+            $publicDir = public_path($folder);
+            if (!is_dir($publicDir)) {
+                @mkdir($publicDir, 0755, true);
+            }
+            $ext = strtolower($file->getClientOriginalExtension());
+            $safeName = Str::random(40) . '.' . $ext;
+            $file->move($publicDir, $safeName);
 
-            // Build URL
-            $relativePath = str_replace('public/', 'storage/', $path);
+            $relativePath = '/' . $folder . '/' . $safeName;
             $url = url($relativePath);
 
             return response()->json([
