@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRegistrationController;
 use App\Http\Controllers\Api\TenantDashboardController;
+use App\Models\District;
 use App\Http\Controllers\Api\CheckoutController;
 
 
@@ -27,6 +28,10 @@ Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 // Smart registration routes
 Route::post('/check-mobile-role', [AuthController::class, 'checkMobileRole']);
 Route::post('/check-google-role', [AuthController::class, 'checkGoogleRole']);
+// Public districts list
+Route::get('/districts', function () {
+    return response()->json(District::orderBy('name')->pluck('name'));
+});
 
 // Password reset routes
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
