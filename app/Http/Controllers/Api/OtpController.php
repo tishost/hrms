@@ -67,9 +67,9 @@ class OtpController extends Controller
 
         try {
             // If OTP is for profile update, allow existing phone (do not block)
-            if ($type === 'registration') {
-                // Allow existing phone when request originally came for profile_update
-                if ($request->type !== 'profile_update') {
+            if ($requestedType === 'registration') {
+                // If unauthenticated (true registration flow), block duplicate numbers
+                if (!$request->user()) {
                     $existingOwner = \App\Models\Owner::where('phone', $phone)->first();
                     if ($existingOwner) {
                         return response()->json([
@@ -78,6 +78,7 @@ class OtpController extends Controller
                         ], 422);
                     }
                 }
+                // If authenticated, treat as phone verification for current account → allow existing phone
             }
 
             // Generate OTP with settings
