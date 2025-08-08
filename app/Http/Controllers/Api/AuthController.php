@@ -716,6 +716,9 @@ class AuthController extends Controller
             // Check in tenants table
             $tenant = DB::table('tenants')->where('email', $email)->first();
             if ($tenant) {
+                // Try to locate linked user and create token
+                $linkedUser = User::where('email', $email)->first();
+                $token = $linkedUser ? $linkedUser->createToken('auth_token')->plainTextToken : null;
                 return response()->json([
                     'success' => true,
                     'role' => 'tenant',
@@ -724,6 +727,7 @@ class AuthController extends Controller
                         'name' => $this->safeField($tenant, 'name'),
                         'email' => $this->safeField($tenant, 'email') ?? $email,
                         'mobile' => $this->safeField($tenant, 'mobile') ?? $this->safeField($tenant, 'phone'),
+                        'token' => $token,
                     ]
                 ]);
             }
@@ -731,6 +735,12 @@ class AuthController extends Controller
             // Check in owners table
             $owner = DB::table('owners')->where('email', $email)->first();
             if ($owner) {
+                // Try to locate linked user and create token
+                $linkedUser = User::where('email', $email)->first();
+                if (!$linkedUser && $this->safeField($owner, 'user_id')) {
+                    $linkedUser = User::find($this->safeField($owner, 'user_id'));
+                }
+                $token = $linkedUser ? $linkedUser->createToken('auth_token')->plainTextToken : null;
                 return response()->json([
                     'success' => true,
                     'role' => 'owner',
@@ -739,6 +749,7 @@ class AuthController extends Controller
                         'name' => $this->safeField($owner, 'name'),
                         'email' => $this->safeField($owner, 'email') ?? $email,
                         'mobile' => $this->safeField($owner, 'mobile') ?? $this->safeField($owner, 'phone'),
+                        'token' => $token,
                     ]
                 ]);
             }
