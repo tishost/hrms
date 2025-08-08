@@ -195,6 +195,26 @@ class OtpController extends Controller
         $type = $request->type;
 
         try {
+            // Enforce max attempts per OTP based on settings
+            $settings = OtpSetting::getSettings();
+            $maxAttempts = (int) $settings->max_attempts;
+            $latestOtp = \App\Models\Otp::where('phone', $phone)
+                ->where('type', $type)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            if ($maxAttempts > 0 && $latestOtp) {
+                $failedAttempts = \App\Models\OtpLog::where('phone', $phone)
+                    ->where('type', $type)
+                    ->where('status', 'failed')
+                    ->where('created_at', '>', $latestOtp->created_at)
+                    ->count();
+                if ($failedAttempts >= $maxAttempts) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'OTP verification attempt limit exceeded. Please request a new OTP.'
+                    ], 429);
+                }
+            }
             $isValid = Otp::verifyOtp($phone, $otp, $type);
 
             if ($isValid) {
