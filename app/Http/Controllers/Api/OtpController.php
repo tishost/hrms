@@ -26,7 +26,7 @@ class OtpController extends Controller
         }
 
         // Check if OTP is required for this action
-        // For profile_update, apply registration requirement settings
+        // For profile_update, apply registration requirement settings and templates
         $requestedType = $request->type;
         $effectiveType = $requestedType === 'profile_update' ? 'registration' : $requestedType;
         if (!$otpSettings->isOtpRequiredFor($effectiveType)) {
@@ -50,7 +50,8 @@ class OtpController extends Controller
         }
 
         $phone = $request->phone;
-        $type = $request->type;
+        // Use effective type for OTP generation and templates
+        $type = $effectiveType;
 
         // Enforce daily OTP send limit
         $otpLimitSetting = SystemSetting::where('key', 'otp_send_limit')->first();
@@ -67,7 +68,7 @@ class OtpController extends Controller
 
         try {
             // If OTP is for profile update, allow existing phone (do not block)
-            if ($requestedType === 'registration') {
+            if ($effectiveType === 'registration') {
                 // If unauthenticated (true registration flow), block duplicate numbers
                 if (!$request->user()) {
                     $existingOwner = \App\Models\Owner::where('phone', $phone)->first();
@@ -81,7 +82,7 @@ class OtpController extends Controller
                 // If authenticated, treat as phone verification for current account → allow existing phone
             }
 
-            // Generate OTP with settings
+            // Generate OTP with settings (effective type)
             $otp = Otp::generateOtp($phone, $type, $otpSettings->otp_length);
 
             // TODO: Integrate with SMS service (Twilio, etc.)
