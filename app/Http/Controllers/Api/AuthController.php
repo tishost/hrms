@@ -12,6 +12,7 @@ use App\Models\Owner;
 use App\Http\Requests\OwnerRegistrationRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AuthController extends Controller
 {
@@ -649,11 +650,12 @@ class AuthController extends Controller
         $mobile = $request->mobile;
 
         try {
-            // Check in tenants table (support both 'mobile' and 'phone')
-            $tenant = DB::table('tenants')
-                ->where('mobile', $mobile)
-                ->orWhere('phone', $mobile)
-                ->first();
+            // Check in tenants table (conditionally support 'phone' column)
+            $tenantQuery = DB::table('tenants')->where('mobile', $mobile);
+            if (Schema::hasColumn('tenants', 'phone')) {
+                $tenantQuery->orWhere('phone', $mobile);
+            }
+            $tenant = $tenantQuery->first();
             if ($tenant) {
                 return response()->json([
                     'success' => true,
@@ -667,11 +669,12 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Check in owners table (support both 'mobile' and 'phone')
-            $owner = DB::table('owners')
-                ->where('mobile', $mobile)
-                ->orWhere('phone', $mobile)
-                ->first();
+            // Check in owners table (conditionally support 'phone' column)
+            $ownerQuery = DB::table('owners')->where('mobile', $mobile);
+            if (Schema::hasColumn('owners', 'phone')) {
+                $ownerQuery->orWhere('phone', $mobile);
+            }
+            $owner = $ownerQuery->first();
             if ($owner) {
                 return response()->json([
                     'success' => true,
