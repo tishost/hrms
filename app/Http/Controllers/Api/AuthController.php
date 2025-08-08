@@ -22,6 +22,14 @@ class AuthController extends Controller
         $this->loginLogService = $loginLogService;
     }
 
+    /**
+     * Safely read a field from stdClass without triggering undefined property errors
+     */
+    private function safeField($record, string $field)
+    {
+        return (is_object($record) && property_exists($record, $field)) ? $record->{$field} : null;
+    }
+
     // Register
     public function register(Request $request)
     {
@@ -713,9 +721,9 @@ class AuthController extends Controller
                     'role' => 'tenant',
                     'message' => 'Email found in tenant records',
                     'user_data' => [
-                        'name' => $tenant->name,
-                        'email' => $tenant->email,
-                        'mobile' => $tenant->mobile ?? $tenant->phone,
+                        'name' => $this->safeField($tenant, 'name'),
+                        'email' => $this->safeField($tenant, 'email') ?? $email,
+                        'mobile' => $this->safeField($tenant, 'mobile') ?? $this->safeField($tenant, 'phone'),
                     ]
                 ]);
             }
@@ -728,9 +736,9 @@ class AuthController extends Controller
                     'role' => 'owner',
                     'message' => 'Email found in owner records',
                     'user_data' => [
-                        'name' => $owner->name,
-                        'email' => $owner->email,
-                        'mobile' => $owner->mobile ?? $owner->phone,
+                        'name' => $this->safeField($owner, 'name'),
+                        'email' => $this->safeField($owner, 'email') ?? $email,
+                        'mobile' => $this->safeField($owner, 'mobile') ?? $this->safeField($owner, 'phone'),
                     ]
                 ]);
             }
