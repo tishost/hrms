@@ -332,6 +332,8 @@ class OtpController extends Controller
                     'profile_update_required' => $otpSettings->isOtpRequiredFor('profile_update'),
                     'otp_length' => $otpSettings->otp_length,
                     'otp_expiry_minutes' => $otpSettings->otp_expiry_minutes,
+                    'resend_cooldown_seconds' => (int) $otpSettings->resend_cooldown_seconds,
+                    'max_attempts' => (int) $otpSettings->max_attempts,
                 ]
             ]);
         } catch (\Exception $e) {
