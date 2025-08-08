@@ -214,6 +214,16 @@ class AuthController extends Controller
                 ], 401);
             }
 
+            // Auto-verify email when logging in with email (first time)
+            if (!empty($email) && !empty($user->email) && is_null($user->email_verified_at)) {
+                try {
+                    $user->email_verified_at = now();
+                    $user->save();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to auto-verify email at login: ' . $e->getMessage());
+                }
+            }
+
             // Check role and set owner_id if needed
             if ($user->hasRole('owner')) {
                 $role = 'owner';
@@ -744,6 +754,15 @@ class AuthController extends Controller
             if ($tenant) {
                 // Try to locate linked user and create token
                 $linkedUser = User::where('email', $email)->first();
+                // Auto-verify linked user's email if missing
+                if ($linkedUser && is_null($linkedUser->email_verified_at)) {
+                    try {
+                        $linkedUser->email_verified_at = now();
+                        $linkedUser->save();
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to auto-verify google email (tenant): ' . $e->getMessage());
+                    }
+                }
                 $token = $linkedUser ? $linkedUser->createToken('auth_token')->plainTextToken : null;
                 return response()->json([
                     'success' => true,
@@ -765,6 +784,15 @@ class AuthController extends Controller
                 $linkedUser = User::where('email', $email)->first();
                 if (!$linkedUser && $this->safeField($owner, 'user_id')) {
                     $linkedUser = User::find($this->safeField($owner, 'user_id'));
+                }
+                // Auto-verify linked user's email if missing
+                if ($linkedUser && is_null($linkedUser->email_verified_at)) {
+                    try {
+                        $linkedUser->email_verified_at = now();
+                        $linkedUser->save();
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to auto-verify google email (owner): ' . $e->getMessage());
+                    }
                 }
                 $token = $linkedUser ? $linkedUser->createToken('auth_token')->plainTextToken : null;
                 return response()->json([
