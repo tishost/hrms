@@ -28,7 +28,8 @@ class OtpController extends Controller
         // Check if OTP is required for this action
         // For profile_update, apply registration requirement settings and templates
         $requestedType = $request->type;
-        $effectiveType = $requestedType === 'profile_update' ? 'registration' : $requestedType;
+        $isProfileUpdate = ($requestedType === 'profile_update');
+        $effectiveType = $isProfileUpdate ? 'registration' : $requestedType;
         if (!$otpSettings->isOtpRequiredFor($effectiveType)) {
             return response()->json([
                 'success' => false,
@@ -67,19 +68,21 @@ class OtpController extends Controller
         }
 
         try {
-            // If OTP is for profile update, allow existing phone (do not block)
+            // If OTP is for profile update, allow existing phone (do not block), regardless of auth state
             if ($effectiveType === 'registration') {
-                // If unauthenticated (true registration flow), block duplicate numbers
-                if (!$request->user()) {
-                    $existingOwner = \App\Models\Owner::where('phone', $phone)->first();
-                    if ($existingOwner) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Phone number is already registered'
-                        ], 422);
+                if (!$isProfileUpdate) {
+                    // True registration flow: if unauthenticated, block duplicate numbers
+                    if (!$request->user()) {
+                        $existingOwner = \App\Models\Owner::where('phone', $phone)->first();
+                        if ($existingOwner) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Phone number is already registered'
+                            ], 422);
+                        }
                     }
                 }
-                // If authenticated, treat as phone verification for current account → allow existing phone
+                // profile_update flow falls through without duplicate check
             }
 
             // Generate OTP with settings (effective type)
