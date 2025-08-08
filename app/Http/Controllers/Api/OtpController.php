@@ -54,6 +54,9 @@ class OtpController extends Controller
         // Use effective type for OTP generation and templates
         $type = $effectiveType;
 
+        // Load OTP settings
+        $otpSettings = OtpSetting::getSettings();
+
         // Enforce daily OTP send limit
         $otpLimitSetting = SystemSetting::where('key', 'otp_send_limit')->first();
         $otpLimit = $otpLimitSetting ? intval($otpLimitSetting->value) : 5;
@@ -85,16 +88,79 @@ class OtpController extends Controller
                 // profile_update flow falls through without duplicate check
             }
 
+            // If a valid OTP already exists within expiry, reuse it instead of generating a new one
+            $existing = Otp::where('phone', $phone)
+                ->where('type', $type)
+                ->where('is_used', false)
+                ->where('expires_at', '>', now())
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($existing) {
+                $expiresInSeconds = max(0, $existing->expires_at->diffInSeconds(now()));
+                $resendCooldown = (int) $otpSettings->resend_cooldown_seconds;
+                if ($isProfileUpdate) {
+                    $resendCooldown = 300; // 5 minutes for profile update
+                }
+                $elapsedSinceCreate = now()->diffInSeconds($existing->created_at);
+                $resendInSeconds = max(0, $resendCooldown - $elapsedSinceCreate);
+
+                // Log send attempt (reuse)
+                try {
+                    \App\Models\OtpLog::create([
+                        'phone' => $phone,
+                        'otp' => $existing->otp,
+                        'type' => $type,
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'status' => 'sent',
+                        'user_id' => optional($request->user())->id,
+                        'session_id' => session()->getId(),
+                        'reason' => 'reuse_existing',
+                    ]);
+                } catch (\Exception $e) {}
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP already sent',
+                    'otp' => $existing->otp, // Remove in production
+                    'expires_in' => ceil($expiresInSeconds / 60), // minutes
+                    'expires_in_seconds' => $expiresInSeconds,
+                    'resend_in_seconds' => $resendInSeconds,
+                ]);
+            }
+
             // Generate OTP with settings (effective type)
             $otp = Otp::generateOtp($phone, $type, $otpSettings->otp_length);
 
+            // Log sent OTP
+            try {
+                \App\Models\OtpLog::create([
+                    'phone' => $phone,
+                    'otp' => $otp->otp,
+                    'type' => $type,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'status' => 'sent',
+                    'user_id' => optional($request->user())->id,
+                    'session_id' => session()->getId(),
+                ]);
+            } catch (\Exception $e) {}
+
             // TODO: Integrate with SMS service (Twilio, etc.)
             // For now, we'll return the OTP in response for testing
+            $resendCooldownForType = (int) $otpSettings->resend_cooldown_seconds;
+            if ($isProfileUpdate) {
+                $resendCooldownForType = 300; // 5 minutes for profile update
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'OTP sent successfully',
                 'otp' => $otp->otp, // Remove this in production
-                'expires_in' => $otpSettings->otp_expiry_minutes // minutes
+                'expires_in' => $otpSettings->otp_expiry_minutes, // minutes
+                'expires_in_seconds' => $otpSettings->otp_expiry_minutes * 60,
+                'resend_in_seconds' => $resendCooldownForType,
             ]);
 
         } catch (\Exception $e) {
@@ -140,11 +206,37 @@ class OtpController extends Controller
                         $owner->save();
                     }
                 }
+                // Log verified
+                try {
+                    \App\Models\OtpLog::create([
+                        'phone' => $phone,
+                        'otp' => $otp,
+                        'type' => $type,
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'status' => 'verified',
+                        'user_id' => optional($request->user())->id,
+                        'session_id' => session()->getId(),
+                    ]);
+                } catch (\Exception $e) {}
                 return response()->json([
                     'success' => true,
                     'message' => 'OTP verified successfully'
                 ]);
             } else {
+                // Log failed verification
+                try {
+                    \App\Models\OtpLog::create([
+                        'phone' => $phone,
+                        'otp' => $otp,
+                        'type' => $type,
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'status' => 'failed',
+                        'user_id' => optional($request->user())->id,
+                        'session_id' => session()->getId(),
+                    ]);
+                } catch (\Exception $e) {}
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid or expired OTP'
@@ -181,16 +273,23 @@ class OtpController extends Controller
         $type = $request->type;
 
         try {
-            // Check if there's a recent OTP (within 1 minute)
+            $settings = OtpSetting::getSettings();
+            $cooldownSeconds = (int) $settings->resend_cooldown_seconds;
+            if ($type === 'profile_update') {
+                $cooldownSeconds = 300; // 5 minutes for profile update
+            }
+            // Check if there's a recent OTP within cooldown window
             $recentOtp = Otp::where('phone', $phone)
                 ->where('type', $type)
-                ->where('created_at', '>', now()->subMinute())
+                ->orderBy('created_at', 'desc')
                 ->first();
 
-            if ($recentOtp) {
+            if ($recentOtp && $recentOtp->created_at->gt(now()->subSeconds($cooldownSeconds))) {
+                $remaining = max(0, $cooldownSeconds - now()->diffInSeconds($recentOtp->created_at));
                 return response()->json([
                     'success' => false,
-                    'message' => 'Please wait 1 minute before requesting another OTP'
+                    'message' => 'Please wait before requesting another OTP',
+                    'resend_in_seconds' => $remaining,
                 ], 429);
             }
 
@@ -202,7 +301,9 @@ class OtpController extends Controller
                 'success' => true,
                 'message' => 'OTP resent successfully',
                 'otp' => $otp->otp, // Remove this in production
-                'expires_in' => 10 // minutes
+                'expires_in' => OtpSetting::getSettings()->otp_expiry_minutes, // minutes
+                'expires_in_seconds' => OtpSetting::getSettings()->otp_expiry_minutes * 60,
+                'resend_in_seconds' => $cooldownSeconds,
             ]);
 
         } catch (\Exception $e) {
