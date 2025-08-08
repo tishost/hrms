@@ -24,6 +24,33 @@ class AuthController extends Controller
     }
 
     /**
+     * Normalize profile picture URL to a fully qualified, publicly accessible URL.
+     */
+    private function normalizeProfilePic(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        // Absolute URL
+        if (preg_match('/^https?:\/\//i', $path)) {
+            // If uses /storage/ which might be forbidden, try public fallback
+            if (str_contains($path, '/storage/')) {
+                return preg_replace('#/storage/#', '/', $path, 1);
+            }
+            return $path;
+        }
+        // Relative path starting with '/'
+        if (str_starts_with($path, '/')) {
+            if (str_starts_with($path, '/storage/')) {
+                return url(preg_replace('#^/storage/#', '/', $path, 1));
+            }
+            return url($path);
+        }
+        // Bare relative path like 'profiles/abc.jpg'
+        return url('/' . ltrim($path, '/'));
+    }
+
+    /**
      * Safely read a field from stdClass without triggering undefined property errors
      */
     private function safeField($record, string $field)
@@ -322,7 +349,7 @@ class AuthController extends Controller
                 'district' => $owner ? ($owner->district ?? null) : null,
                 'gender' => $owner ? $owner->gender : null,
                 'phone_verified' => $owner ? (bool)$owner->phone_verified : false,
-                'profile_pic' => $owner ? ($owner->profile_pic ?? null) : null,
+                'profile_pic' => $this->normalizeProfilePic($owner ? ($owner->profile_pic ?? null) : null),
                 'owner_id' => $owner ? $owner->id : null,
                 'tenant_id' => $user->tenant_id,
             ]);
@@ -353,6 +380,7 @@ class AuthController extends Controller
                     'last_name' => $user->owner->last_name ?? '',
                     'mobile' => $user->owner->mobile ?? $user->owner->phone,
                     'email' => $user->owner->email ?? $user->email,
+                    'profile_pic' => $this->normalizeProfilePic($user->owner->profile_pic ?? null),
                 ];
                 $profileData['tenant'] = null;
             }
