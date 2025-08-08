@@ -102,6 +102,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Owner Subscription
     Route::get('/owner/subscription', [OwnerController::class, 'getSubscription']);
 
+    // File Upload (common)
+    Route::post('/common/upload', [\App\Http\Controllers\Api\UploadController::class, 'store']);
+
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
     Route::get('/dashboard/recent-transactions', [DashboardController::class, 'getRecentTransactions']);
