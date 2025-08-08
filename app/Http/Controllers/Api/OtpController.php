@@ -57,17 +57,36 @@ class OtpController extends Controller
         // Load OTP settings
         $otpSettings = OtpSetting::getSettings();
 
-        // Enforce daily OTP send limit
+        // Enforce daily OTP send limit (use logs, not OTP records)
         $otpLimitSetting = SystemSetting::where('key', 'otp_send_limit')->first();
         $otpLimit = $otpLimitSetting ? intval($otpLimitSetting->value) : 5;
-        $todayCount = Otp::where('phone', $phone)
-            ->whereDate('created_at', now()->toDateString())
-            ->count();
-        if ($todayCount >= $otpLimit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You have reached the daily OTP send limit. Please try again tomorrow.'
-            ], 429);
+        if ($otpLimit > 0) {
+            $todaySendCount = \App\Models\OtpLog::where('phone', $phone)
+                ->where('type', $effectiveType)
+                ->where('status', 'sent')
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
+            if ($todaySendCount >= $otpLimit) {
+                // Log blocked attempt
+                try {
+                    \App\Models\OtpLog::create([
+                        'phone' => $phone,
+                        'otp' => null,
+                        'type' => $effectiveType,
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'status' => 'blocked',
+                        'reason' => 'daily_limit',
+                        'user_id' => optional($request->user())->id,
+                        'session_id' => session()->getId(),
+                    ]);
+                } catch (\Exception $e) {}
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have reached the daily OTP send limit. Please try again tomorrow.'
+                ], 429);
+            }
         }
 
         try {
