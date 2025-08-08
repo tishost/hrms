@@ -66,14 +66,17 @@ class OtpController extends Controller
         }
 
         try {
-            // Check if phone already exists for registration
+            // If OTP is for profile update, allow existing phone (do not block)
             if ($type === 'registration') {
-                $existingOwner = \App\Models\Owner::where('phone', $phone)->first();
-                if ($existingOwner) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Phone number is already registered'
-                    ], 422);
+                // Allow existing phone when request originally came for profile_update
+                if ($request->type !== 'profile_update') {
+                    $existingOwner = \App\Models\Owner::where('phone', $phone)->first();
+                    if ($existingOwner) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Phone number is already registered'
+                        ], 422);
+                    }
                 }
             }
 
