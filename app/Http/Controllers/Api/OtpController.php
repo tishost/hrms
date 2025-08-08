@@ -26,7 +26,10 @@ class OtpController extends Controller
         }
 
         // Check if OTP is required for this action
-        if (!$otpSettings->isOtpRequiredFor($request->type)) {
+        // For profile_update, apply registration requirement settings
+        $requestedType = $request->type;
+        $effectiveType = $requestedType === 'profile_update' ? 'registration' : $requestedType;
+        if (!$otpSettings->isOtpRequiredFor($effectiveType)) {
             return response()->json([
                 'success' => false,
                 'message' => 'OTP verification is not required for this action'
