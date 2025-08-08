@@ -308,6 +308,7 @@ class AuthController extends Controller
                 'phone' => $owner ? $owner->phone : $user->phone,
                 'address' => $owner ? $owner->address : null,
                 'country' => $owner ? $owner->country : null,
+                'district' => $owner ? ($owner->district ?? null) : null,
                 'gender' => $owner ? $owner->gender : null,
                 'phone_verified' => $owner ? (bool)$owner->phone_verified : false,
                 'owner_id' => $owner ? $owner->id : null,
