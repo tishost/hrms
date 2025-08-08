@@ -641,8 +641,11 @@ class AuthController extends Controller
         $mobile = $request->mobile;
 
         try {
-            // Check in tenants table
-            $tenant = DB::table('tenants')->where('mobile', $mobile)->first();
+            // Check in tenants table (support both 'mobile' and 'phone')
+            $tenant = DB::table('tenants')
+                ->where('mobile', $mobile)
+                ->orWhere('phone', $mobile)
+                ->first();
             if ($tenant) {
                 return response()->json([
                     'success' => true,
@@ -651,13 +654,16 @@ class AuthController extends Controller
                     'user_data' => [
                         'name' => $tenant->name,
                         'email' => $tenant->email,
-                        'mobile' => $tenant->mobile,
+                        'mobile' => $tenant->mobile ?? $tenant->phone,
                     ]
                 ]);
             }
 
-            // Check in owners table
-            $owner = DB::table('owners')->where('mobile', $mobile)->first();
+            // Check in owners table (support both 'mobile' and 'phone')
+            $owner = DB::table('owners')
+                ->where('mobile', $mobile)
+                ->orWhere('phone', $mobile)
+                ->first();
             if ($owner) {
                 return response()->json([
                     'success' => true,
@@ -666,7 +672,7 @@ class AuthController extends Controller
                     'user_data' => [
                         'name' => $owner->name,
                         'email' => $owner->email,
-                        'mobile' => $owner->mobile,
+                        'mobile' => $owner->mobile ?? $owner->phone,
                     ]
                 ]);
             }
@@ -709,7 +715,7 @@ class AuthController extends Controller
                     'user_data' => [
                         'name' => $tenant->name,
                         'email' => $tenant->email,
-                        'mobile' => $tenant->mobile,
+                        'mobile' => $tenant->mobile ?? $tenant->phone,
                     ]
                 ]);
             }
@@ -724,7 +730,7 @@ class AuthController extends Controller
                     'user_data' => [
                         'name' => $owner->name,
                         'email' => $owner->email,
-                        'mobile' => $owner->mobile,
+                        'mobile' => $owner->mobile ?? $owner->phone,
                     ]
                 ]);
             }
