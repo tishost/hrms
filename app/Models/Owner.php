@@ -13,6 +13,7 @@ protected $fillable = [
     'name',
     'email',
     'phone',
+    'district',
     'address',
     'country',
     'gender',

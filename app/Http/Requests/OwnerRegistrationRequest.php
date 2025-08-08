@@ -24,10 +24,10 @@ class OwnerRegistrationRequest extends FormRequest
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:owners,phone',
-            'address' => 'required|string|max:500',
-            'country' => 'required|string|max:100',
+            'district' => 'required|string|max:100',
+            'country' => 'nullable|string|max:100',
             'password' => 'required|string|min:6|confirmed',
         ];
 
@@ -77,15 +77,13 @@ class OwnerRegistrationRequest extends FormRequest
         $messages = [
             'name.required' => 'Name is required.',
             'name.max' => 'Name cannot exceed 255 characters.',
-            'email.required' => 'Email is required.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email is already registered.',
             'phone.required' => 'Phone number is required.',
             'phone.max' => 'Phone number cannot exceed 20 characters.',
             'phone.unique' => 'This phone number is already registered.',
-            'address.required' => 'Address is required.',
-            'address.max' => 'Address cannot exceed 500 characters.',
-            'country.required' => 'Country is required.',
+            'district.required' => 'District is required.',
+            'district.max' => 'District cannot exceed 100 characters.',
             'country.max' => 'Country name cannot exceed 100 characters.',
             'password.required' => 'Password is required.',
             'password.min' => 'Password must be at least 6 characters.',
