@@ -9,6 +9,90 @@ use Illuminate\Support\Facades\Auth;
 
 class OwnerController extends Controller
 {
+    /**
+     * Update authenticated owner's profile (API for mobile)
+     */
+    public function updateProfile(\Illuminate\Http\Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            // Find linked owner
+            $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+            if (!$owner) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner profile not found',
+                ], 404);
+            }
+
+            // Validate input
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'address' => 'nullable|string|max:500',
+                'district' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'gender' => 'nullable|in:male,female,other',
+            ]);
+
+            // Prepare updates for owner
+            $ownerUpdates = [
+                'name' => $validated['name'],
+                'email' => $validated['email'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'district' => $validated['district'] ?? null,
+                'country' => $validated['country'] ?? ($owner->country ?: 'Bangladesh'),
+                'gender' => $validated['gender'] ?? null,
+            ];
+
+            // Update owner
+            $owner->fill($ownerUpdates);
+            $owner->save();
+
+            // Keep user record in sync for name/email (optional, best-effort)
+            $user->name = $validated['name'];
+            if (!empty($validated['email'])) {
+                $user->email = $validated['email'];
+            }
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $owner->phone,
+                    'address' => $owner->address,
+                    'district' => $owner->district,
+                    'country' => $owner->country,
+                    'gender' => $owner->gender,
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Owner profile update error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
         // Download invoice PDF file (API version for mobile)
     public function downloadInvoicePDF(Request $request, $id)
     {
