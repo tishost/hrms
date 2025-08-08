@@ -41,6 +41,7 @@ class OwnerController extends Controller
                 'district' => 'nullable|string|max:100',
                 'country' => 'nullable|string|max:100',
                 'gender' => 'nullable|in:male,female,other',
+                'profile_pic' => 'nullable|string|max:255',
             ]);
 
             // Prepare updates for owner
@@ -51,6 +52,7 @@ class OwnerController extends Controller
                 'district' => $validated['district'] ?? null,
                 'country' => $validated['country'] ?? ($owner->country ?: 'Bangladesh'),
                 'gender' => $validated['gender'] ?? null,
+                'profile_pic' => $validated['profile_pic'] ?? $owner->profile_pic,
             ];
 
             // Update owner
@@ -76,6 +78,7 @@ class OwnerController extends Controller
                     'district' => $owner->district,
                     'country' => $owner->country,
                     'gender' => $owner->gender,
+                    'profile_pic' => $owner->profile_pic,
                 ],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
