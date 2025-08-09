@@ -331,20 +331,53 @@ class SubscriptionController extends Controller
                 return response()->json(['success' => false, 'message' => 'Payment method not available'], 422);
             }
 
+            // Reject already paid invoices
+            if (strtolower($invoice->status) === 'paid') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice is already paid'
+                ], 422);
+            }
+
             switch ($method->code) {
                 case 'bkash':
-                    $bkashService = new \App\Services\BkashTokenizedService();
-                    if (!$bkashService->isConfigured()) {
-                        return response()->json(['success' => false, 'message' => 'bKash not configured'], 500);
+                    try {
+                        $bkashService = new \App\Services\BkashTokenizedService();
+                    } catch (\Exception $e) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'bKash not configured: ' . $e->getMessage()
+                        ], 422);
                     }
+
+                    if (!$bkashService->isConfigured()) {
+                        return response()->json(['success' => false, 'message' => 'bKash not configured'], 422);
+                    }
+
                     $conn = $bkashService->testConnection();
                     if (!$conn['success']) {
-                        return response()->json(['success' => false, 'message' => 'bKash connection failed: ' . ($conn['message'] ?? '')], 500);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'bKash connection failed: ' . ($conn['message'] ?? 'Unknown error')
+                        ], 422);
                     }
                     $paymentId = 'PAY_' . time() . '_' . uniqid();
-                    $result = $bkashService->createTokenizedCheckout($invoice->net_amount ?? $invoice->amount, $invoice->invoice_number, $paymentId, 'Subscription: ' . ($invoice->subscription->plan->name ?? ''));
+                    $planName = '';
+                    if ($invoice->subscription && $invoice->subscription->plan) {
+                        $planName = $invoice->subscription->plan->name ?? '';
+                    }
+                    $result = $bkashService->createTokenizedCheckout(
+                        $invoice->net_amount ?? $invoice->amount,
+                        $invoice->invoice_number,
+                        $paymentId,
+                        'Subscription: ' . $planName
+                    );
                     if (!($result['success'] ?? false)) {
-                        return response()->json(['success' => false, 'message' => $result['error'] ?? 'Payment create failed', 'details' => $result['details'] ?? null], 500);
+                        return response()->json([
+                            'success' => false,
+                            'message' => $result['error'] ?? 'Payment create failed',
+                            'details' => $result['details'] ?? null
+                        ], 422);
                     }
                     $invoice->update([
                         'transaction_id' => $result['paymentID'] ?? null,
@@ -388,9 +421,15 @@ class SubscriptionController extends Controller
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            \Log::error('Subscription checkout API error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to initiate checkout'], 500);
+        } catch (\Throwable $e) {
+            \Log::error('Subscription checkout API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
