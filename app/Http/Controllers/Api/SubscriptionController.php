@@ -382,7 +382,7 @@ class SubscriptionController extends Controller
                     $invoice->update([
                         'transaction_id' => $result['paymentID'] ?? null,
                         'payment_method_id' => $method->id,
-                        'status' => 'pending',
+                        // Keep original status (e.g., 'unpaid') until success callback
                     ]);
                     return response()->json([
                         'success' => true,
