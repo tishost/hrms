@@ -38,6 +38,7 @@ class SubscriptionController extends Controller
                         'sms_credit' => (int) ($plan->sms_credit ?? 0),
                         'is_popular' => (bool) $plan->is_popular,
                         'features' => $plan->features ?? [],
+                        'features_css' => $plan->features_css ?? [],
                     ];
                 });
 
