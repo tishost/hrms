@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRegistrationController;
 use App\Http\Controllers\Api\TenantDashboardController;
+use App\Http\Controllers\Api\SystemController;
 use App\Models\District;
 use App\Http\Controllers\Api\CheckoutController;
 
@@ -47,6 +48,9 @@ Route::get('/otp-settings', [OtpController::class, 'getOtpSettings']);
 
 // OTP Settings API Route (Public)
 Route::get('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'getSettings']);
+
+// Public system status/maintenance endpoint
+Route::get('/system/status', [SystemController::class, 'status']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
