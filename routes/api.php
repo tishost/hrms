@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\TenantDashboardController;
 use App\Http\Controllers\Api\SystemController;
 use App\Models\District;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\SubscriptionController as ApiSubscriptionController;
 
 
 // Tenant Registration Routes
@@ -51,6 +52,9 @@ Route::get('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::c
 
 // Public system status/maintenance endpoint
 Route::get('/system/status', [SystemController::class, 'status']);
+
+// Public subscription plans
+Route::get('/subscription/plans', [ApiSubscriptionController::class, 'plans']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -113,6 +117,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Owner Subscription
     Route::get('/owner/subscription', [OwnerController::class, 'getSubscription']);
+    Route::post('/subscription/purchase', [ApiSubscriptionController::class, 'purchase']);
 
     // File Upload (common)
     Route::post('/common/upload', [\App\Http\Controllers\Api\UploadController::class, 'store']);
