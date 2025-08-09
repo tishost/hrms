@@ -32,22 +32,13 @@ class AuthController extends Controller
             return null;
         }
 
-        $appendVersion = function (string $absPathLike, string $url) {
-            $trimmed = ltrim($absPathLike, '/');
-            $publicCandidate = public_path($trimmed);
-            $storageCandidate = storage_path('app/public/' . $trimmed);
-            $filePath = null;
-            if (is_file($publicCandidate)) {
-                $filePath = $publicCandidate;
-            } elseif (is_file($storageCandidate)) {
-                $filePath = $storageCandidate;
-            }
-            if ($filePath) {
-                $v = @filemtime($filePath) ?: time();
-                return strpos($url, '?') !== false ? ($url . '&v=' . $v) : ($url . '?v=' . $v);
-            }
-            return $url;
+        // Always append current timestamp for cache busting
+        $appendVersion = function (string $url) {
+            $timestamp = time();
+            $separator = strpos($url, '?') !== false ? '&' : '?';
+            return $url . $separator . 'v=' . $timestamp;
         };
+
         // Absolute URL
         if (preg_match('/^https?:\/\//i', $path)) {
             $parts = parse_url($path);
@@ -57,24 +48,24 @@ class AuthController extends Controller
             }
             if (str_starts_with($absPath, '/profiles/')) {
                 $url = url('/api/media' . $absPath);
-                return $appendVersion($absPath, $url);
+                return $appendVersion($url);
             }
-            return $path;
+            return $appendVersion($path);
         }
         // Relative path starting with '/'
         if (str_starts_with($path, '/')) {
             if (str_starts_with($path, '/storage/')) {
                 $public = preg_replace('#^/storage/#', '/', $path, 1);
                 $url = url('/api/media' . $public);
-                return $appendVersion($public, $url);
+                return $appendVersion($url);
             }
             $url = url('/api/media' . $path);
-            return $appendVersion($path, $url);
+            return $appendVersion($url);
         }
         // Bare relative path like 'profiles/abc.jpg'
         $rel = '/' . ltrim($path, '/');
         $url = url('/api/media' . $rel);
-        return $appendVersion($rel, $url);
+        return $appendVersion($url);
     }
 
     /**
