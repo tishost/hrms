@@ -44,6 +44,22 @@ class OwnerController extends Controller
                 'profile_pic' => 'nullable|string|max:255',
             ]);
 
+            // Handle profile picture update - delete old file if new one is provided
+            $oldProfilePic = $owner->profile_pic;
+            if (!empty($validated['profile_pic']) && $validated['profile_pic'] !== $oldProfilePic) {
+                // Delete old profile picture file if it exists
+                if (!empty($oldProfilePic)) {
+                    try {
+                        $oldPath = public_path(ltrim($oldProfilePic, '/'));
+                        if (is_file($oldPath)) {
+                            unlink($oldPath);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete old profile picture: ' . $e->getMessage());
+                    }
+                }
+            }
+
             // Prepare updates for owner
             $ownerUpdates = [
                 'name' => $validated['name'],

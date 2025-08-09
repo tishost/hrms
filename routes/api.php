@@ -90,6 +90,10 @@ Route::middleware('auth:sanctum')->group(function () {
 // Media proxy for public assets (profiles/...)
 Route::get('/media/{path}', [MediaController::class, 'show'])->where('path', '.*');
 
+// File upload routes
+Route::post('/common/upload', [App\Http\Controllers\Api\UploadController::class, 'store']);
+Route::post('/common/delete-profile-pic', [App\Http\Controllers\Api\UploadController::class, 'deleteOldProfilePic']);
+
 Route::middleware('auth:sanctum')->group(function () {
     // Invoices
     Route::get('/invoices', [InvoiceController::class, 'index']);
