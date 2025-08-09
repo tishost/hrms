@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\PropertyController;
@@ -85,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkouts', [CheckoutController::class, 'store']);
     Route::get('/checkouts/{id}', [CheckoutController::class, 'show']);
 });
+
+// Media proxy for public assets (profiles/...)
+Route::get('/media/{path}', [MediaController::class, 'show'])->where('path', '.*');
 
 Route::middleware('auth:sanctum')->group(function () {
     // Invoices

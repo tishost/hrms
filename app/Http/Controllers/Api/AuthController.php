@@ -33,21 +33,26 @@ class AuthController extends Controller
         }
         // Absolute URL
         if (preg_match('/^https?:\/\//i', $path)) {
-            // If uses /storage/ which might be forbidden, try public fallback
-            if (str_contains($path, '/storage/')) {
-                return preg_replace('#/storage/#', '/', $path, 1);
+            $parts = parse_url($path);
+            $absPath = $parts['path'] ?? '';
+            if (str_starts_with($absPath, '/storage/')) {
+                $absPath = preg_replace('#^/storage/#', '/', $absPath, 1);
+            }
+            if (str_starts_with($absPath, '/profiles/')) {
+                return url('/api/media' . $absPath);
             }
             return $path;
         }
         // Relative path starting with '/'
         if (str_starts_with($path, '/')) {
             if (str_starts_with($path, '/storage/')) {
-                return url(preg_replace('#^/storage/#', '/', $path, 1));
+                $public = preg_replace('#^/storage/#', '/', $path, 1);
+                return url('/api/media' . $public);
             }
-            return url($path);
+            return url('/api/media' . $path);
         }
         // Bare relative path like 'profiles/abc.jpg'
-        return url('/' . ltrim($path, '/'));
+        return url('/api/media/' . ltrim($path, '/'));
     }
 
     /**
