@@ -118,6 +118,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Owner Subscription
     Route::get('/owner/subscription', [OwnerController::class, 'getSubscription']);
     Route::post('/subscription/purchase', [ApiSubscriptionController::class, 'purchase']);
+    Route::get('/subscription/payment-methods', [ApiSubscriptionController::class, 'paymentMethods']);
+    Route::get('/subscription/invoices', [ApiSubscriptionController::class, 'invoices']);
+    Route::post('/subscription/checkout', [ApiSubscriptionController::class, 'checkout']);
 
     // File Upload (common)
     Route::post('/common/upload', [\App\Http\Controllers\Api\UploadController::class, 'store']);

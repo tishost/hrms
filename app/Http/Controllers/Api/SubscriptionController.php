@@ -240,6 +240,159 @@ class SubscriptionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Auth: List active payment methods for subscription
+     */
+    public function paymentMethods(Request $request)
+    {
+        try {
+            $methods = PaymentMethod::where('is_active', true)
+                ->orderBy('id', 'asc')
+                ->get()
+                ->map(function ($m) {
+                    return [
+                        'id' => $m->id,
+                        'code' => $m->code,
+                        'name' => $m->display_name,
+                        'logo_url' => $m->logo_url,
+                        'transaction_fee' => (float)($m->transaction_fee ?? 0),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'methods' => $methods,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Payment methods API error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to load payment methods'], 500);
+        }
+    }
+
+    /**
+     * Auth: List subscription invoices (billing) for owner
+     */
+    public function invoices(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $owner = \App\Models\Owner::where('user_id', $user->id)->firstOrFail();
+
+            $invoices = Billing::with(['subscription.plan'])
+                ->where('owner_id', $owner->id)
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(function ($b) {
+                    return [
+                        'id' => $b->id,
+                        'invoice_number' => $b->invoice_number,
+                        'amount' => (float)$b->amount,
+                        'status' => $b->status,
+                        'due_date' => optional($b->due_date)->toDateString(),
+                        'paid_date' => optional($b->paid_date)->toDateString(),
+                        'plan' => $b->subscription && $b->subscription->plan ? [
+                            'id' => $b->subscription->plan->id,
+                            'name' => $b->subscription->plan->name,
+                        ] : null,
+                    ];
+                });
+
+            return response()->json(['success' => true, 'invoices' => $invoices]);
+        } catch (\Exception $e) {
+            \Log::error('Subscription invoices API error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to load invoices'], 500);
+        }
+    }
+
+    /**
+     * Auth: Initiate checkout for a subscription invoice with selected method
+     */
+    public function checkout(Request $request)
+    {
+        try {
+            $request->validate([
+                'invoice_id' => 'required|exists:billing,id',
+                'payment_method' => 'required|string',
+            ]);
+
+            $user = $request->user();
+            $owner = \App\Models\Owner::where('user_id', $user->id)->firstOrFail();
+            $invoice = Billing::with(['subscription.plan'])
+                ->where('id', $request->invoice_id)
+                ->where('owner_id', $owner->id)
+                ->firstOrFail();
+
+            $method = PaymentMethod::where('code', $request->payment_method)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$method) {
+                return response()->json(['success' => false, 'message' => 'Payment method not available'], 422);
+            }
+
+            switch ($method->code) {
+                case 'bkash':
+                    $bkashService = new \App\Services\BkashTokenizedService();
+                    if (!$bkashService->isConfigured()) {
+                        return response()->json(['success' => false, 'message' => 'bKash not configured'], 500);
+                    }
+                    $conn = $bkashService->testConnection();
+                    if (!$conn['success']) {
+                        return response()->json(['success' => false, 'message' => 'bKash connection failed: ' . ($conn['message'] ?? '')], 500);
+                    }
+                    $paymentId = 'PAY_' . time() . '_' . uniqid();
+                    $result = $bkashService->createTokenizedCheckout($invoice->net_amount ?? $invoice->amount, $invoice->invoice_number, $paymentId, 'Subscription: ' . ($invoice->subscription->plan->name ?? ''));
+                    if (!($result['success'] ?? false)) {
+                        return response()->json(['success' => false, 'message' => $result['error'] ?? 'Payment create failed', 'details' => $result['details'] ?? null], 500);
+                    }
+                    $invoice->update([
+                        'transaction_id' => $result['paymentID'] ?? null,
+                        'payment_method_id' => $method->id,
+                        'status' => 'pending',
+                    ]);
+                    return response()->json([
+                        'success' => true,
+                        'payment' => [
+                            'method' => 'bkash',
+                            'payment_id' => $result['paymentID'] ?? null,
+                            'payment_url' => $result['bkashURL'] ?? null,
+                            'callback_url' => $result['callbackURL'] ?? null,
+                        ],
+                        'invoice' => [
+                            'id' => $invoice->id,
+                            'invoice_number' => $invoice->invoice_number,
+                            'amount' => (float)$invoice->amount,
+                            'status' => $invoice->status,
+                        ],
+                    ]);
+                case 'bank_transfer':
+                    return response()->json([
+                        'success' => true,
+                        'payment' => [
+                            'method' => 'bank_transfer',
+                            'instructions' => 'Contact support to complete payment via bank transfer.',
+                        ],
+                        'invoice' => [
+                            'id' => $invoice->id,
+                            'invoice_number' => $invoice->invoice_number,
+                            'amount' => (float)$invoice->amount,
+                            'status' => $invoice->status,
+                        ],
+                    ]);
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Payment method not supported yet',
+                    ], 422);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            \Log::error('Subscription checkout API error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to initiate checkout'], 500);
+        }
+    }
 }
 
 
