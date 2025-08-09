@@ -36,9 +36,11 @@ class MediaController extends Controller
 
         foreach ($candidates as $absPath) {
             if (is_file($absPath) && is_readable($absPath)) {
-                // Cache for 7 days
+                // No cache - always serve fresh content
                 return response()->file($absPath, [
-                    'Cache-Control' => 'public, max-age=604800',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                    'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
                 ]);
             }
         }
