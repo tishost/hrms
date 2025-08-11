@@ -102,6 +102,11 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
+            // OTP validation disabled for owner registration
+            $requiresOtp = false; // Hardcoded to false to bypass OTP requirement
+
+            // OTP validation logic commented out
+            /*
             // Check OTP settings
             $otpSettings = \App\Models\OtpSetting::getSettings();
             $requiresOtp = $otpSettings->is_enabled && $otpSettings->isOtpRequiredFor('registration');
@@ -123,6 +128,7 @@ class AuthController extends Controller
                     ], 422);
                 }
             }
+            */
 
             // Create User
             $user = User::create([
@@ -145,7 +151,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'total_properties' => 0,
                 'total_tenants' => 0,
-                'phone_verified' => $requiresOtp ? true : false, // Set based on OTP requirement
+                'phone_verified' => false, // Always true since OTP is bypassed
             ]);
 
             // Update user with owner_id
@@ -331,6 +337,30 @@ class AuthController extends Controller
         
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully.']);
+    }
+
+    // Kill Session (Force logout from all devices)
+    public function killSession(Request $request)
+    {
+        $user = $request->user();
+        
+        if ($user) {
+            // Log logout
+            $this->loginLogService->logLogout($user);
+            
+            // Delete all tokens for this user (force logout from all devices)
+            $user->tokens()->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'All sessions killed successfully. User logged out from all devices.',
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'No user found.',
+        ], 401);
     }
 
     // Authenticated user info

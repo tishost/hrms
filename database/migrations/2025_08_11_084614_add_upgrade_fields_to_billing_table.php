@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('billing', function (Blueprint $table) {
-            $table->foreignId('upgrade_request_id')->nullable()->constrained('subscription_upgrade_requests');
-            $table->enum('billing_type', ['subscription', 'upgrade', 'renewal'])->default('subscription');
+            if (!Schema::hasColumn('billing', 'upgrade_request_id')) {
+                $table->foreignId('upgrade_request_id')->nullable()->constrained('subscription_upgrade_requests');
+            }
+            if (!Schema::hasColumn('billing', 'billing_type')) {
+                $table->enum('billing_type', ['subscription', 'upgrade', 'renewal'])->default('subscription');
+            }
         });
     }
 
@@ -23,8 +27,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('billing', function (Blueprint $table) {
-            $table->dropForeign(['upgrade_request_id']);
-            $table->dropColumn(['upgrade_request_id', 'billing_type']);
+            if (Schema::hasColumn('billing', 'upgrade_request_id')) {
+                $table->dropForeign(['upgrade_request_id']);
+                $table->dropColumn('upgrade_request_id');
+            }
+            if (Schema::hasColumn('billing', 'billing_type')) {
+                $table->dropColumn('billing_type');
+            }
         });
     }
 };

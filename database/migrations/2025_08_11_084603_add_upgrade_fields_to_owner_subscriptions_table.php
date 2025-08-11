@@ -12,10 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('owner_subscriptions', function (Blueprint $table) {
-            $table->foreignId('upgrade_request_id')->nullable()->constrained('subscription_upgrade_requests');
-            $table->foreignId('previous_plan_id')->nullable()->constrained('subscription_plans');
-            $table->timestamp('upgrade_date')->nullable();
-            $table->boolean('is_upgrading')->default(false);
+            if (!Schema::hasColumn('owner_subscriptions', 'upgrade_request_id')) {
+                $table->foreignId('upgrade_request_id')->nullable()->constrained('subscription_upgrade_requests');
+            }
+            if (!Schema::hasColumn('owner_subscriptions', 'previous_plan_id')) {
+                $table->foreignId('previous_plan_id')->nullable()->constrained('subscription_plans');
+            }
+            if (!Schema::hasColumn('owner_subscriptions', 'upgrade_date')) {
+                $table->timestamp('upgrade_date')->nullable();
+            }
+            if (!Schema::hasColumn('owner_subscriptions', 'is_upgrading')) {
+                $table->boolean('is_upgrading')->default(false);
+            }
         });
     }
 
@@ -25,9 +33,20 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('owner_subscriptions', function (Blueprint $table) {
-            $table->dropForeign(['upgrade_request_id']);
-            $table->dropForeign(['previous_plan_id']);
-            $table->dropColumn(['upgrade_request_id', 'previous_plan_id', 'upgrade_date', 'is_upgrading']);
+            if (Schema::hasColumn('owner_subscriptions', 'upgrade_request_id')) {
+                $table->dropForeign(['upgrade_request_id']);
+                $table->dropColumn('upgrade_request_id');
+            }
+            if (Schema::hasColumn('owner_subscriptions', 'previous_plan_id')) {
+                $table->dropForeign(['previous_plan_id']);
+                $table->dropColumn('previous_plan_id');
+            }
+            if (Schema::hasColumn('owner_subscriptions', 'upgrade_date')) {
+                $table->dropColumn('upgrade_date');
+            }
+            if (Schema::hasColumn('owner_subscriptions', 'is_upgrading')) {
+                $table->dropColumn('is_upgrading');
+            }
         });
     }
 };

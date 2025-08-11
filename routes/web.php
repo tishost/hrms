@@ -392,6 +392,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('owners/{id}/test-email', [App\Http\Controllers\Admin\AdminDashboardController::class, 'testEmail'])->name('owners.test-email');
     Route::post('owners/{id}/test-sms', [App\Http\Controllers\Admin\AdminDashboardController::class, 'testSms'])->name('owners.test-sms');
     Route::post('owners/{id}/resend-notification/{log_id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'resendNotification'])->name('owners.resend-notification');
+    Route::post('owners/{id}/kill-session', [App\Http\Controllers\Admin\AdminDashboardController::class, 'killUserSession'])->name('owners.kill-session');
     Route::post('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'storeOwner'])->name('owners.store');
     Route::delete('owners/{id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'destroyOwner'])->name('owners.destroy');
 

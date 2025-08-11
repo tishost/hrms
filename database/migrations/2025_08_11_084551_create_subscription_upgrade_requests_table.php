@@ -11,20 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscription_upgrade_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('current_subscription_id')->constrained('owner_subscriptions');
-            $table->foreignId('requested_plan_id')->constrained('subscription_plans');
-            $table->enum('upgrade_type', ['plan_change', 'renewal', 'upgrade'])->default('upgrade');
-            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'failed'])->default('pending');
-            $table->decimal('amount', 10, 2);
-            $table->foreignId('invoice_id')->nullable()->constrained('billing');
-            $table->timestamp('requested_at')->useCurrent();
-            $table->timestamp('processed_at')->nullable();
-            $table->text('notes')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('subscription_upgrade_requests')) {
+            Schema::create('subscription_upgrade_requests', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('owner_id')->constrained('owners')->onDelete('cascade');
+                $table->foreignId('current_subscription_id')->constrained('owner_subscriptions');
+                $table->foreignId('requested_plan_id')->constrained('subscription_plans');
+                $table->enum('upgrade_type', ['plan_change', 'renewal', 'upgrade'])->default('upgrade');
+                $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'failed'])->default('pending');
+                $table->decimal('amount', 10, 2);
+                $table->foreignId('invoice_id')->nullable()->constrained('billing');
+                $table->timestamp('requested_at')->useCurrent();
+                $table->timestamp('processed_at')->nullable();
+                $table->text('notes')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -32,6 +34,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subscription_upgrade_requests');
+        if (Schema::hasTable('subscription_upgrade_requests')) {
+            Schema::dropIfExists('subscription_upgrade_requests');
+        }
     }
 };

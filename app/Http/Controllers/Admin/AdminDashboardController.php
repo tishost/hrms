@@ -12,6 +12,7 @@ use App\Helpers\CountryHelper;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class AdminDashboardController extends Controller
 {
@@ -805,6 +806,52 @@ class AdminDashboardController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error removing owner: ' . $e->getMessage());
             return redirect()->route('admin.owners.index')->with('error', 'Error removing owner: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Kill user session (force logout from all devices)
+     */
+    public function killUserSession(Request $request, $userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            
+            // Check if user has owner role
+            if (!$user->hasRole('owner')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is not an owner'
+                ], 400);
+            }
+
+            // Delete all tokens for this user (force logout from all devices)
+            $user->tokens()->delete();
+            
+            Log::info('Admin killed user session', [
+                'admin_id' => auth()->id(),
+                'user_id' => $userId,
+                'user_email' => $user->email,
+                'action' => 'session_kill'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User session killed successfully. User will be logged out from all devices.',
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to kill user session: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to kill user session: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

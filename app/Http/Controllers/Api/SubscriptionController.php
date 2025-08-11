@@ -10,6 +10,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\OwnerSubscription;
 use App\Models\Billing;
 use App\Models\PaymentMethod;
+use App\Services\SubscriptionUpgradeService;
 
 class SubscriptionController extends Controller
 {
@@ -423,6 +424,239 @@ class SubscriptionController extends Controller
             return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
         } catch (\Throwable $e) {
             \Log::error('Subscription checkout API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Auth: Upgrade subscription plan
+     */
+    public function upgradePlan(Request $request)
+    {
+        try {
+            $request->validate([
+                'plan_id' => 'required|exists:subscription_plans,id',
+            ]);
+
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            // Must be an owner
+            $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+            if (!$owner) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner profile not found',
+                ], 403);
+            }
+
+            $newPlan = SubscriptionPlan::findOrFail($request->plan_id);
+            $currentSubscription = $owner->activeSubscription;
+
+            // Check if user has active subscription
+            if (!$currentSubscription || !$currentSubscription->isActive()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active subscription found.',
+                ], 400);
+            }
+
+            $currentPlan = $currentSubscription->plan;
+
+            // Check if it's an upgrade (higher price)
+            if ($newPlan->price <= $currentPlan->price) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only upgrade to a higher-priced plan.',
+                ], 400);
+            }
+
+            // Check if already upgrading
+            if ($currentSubscription->isUpgrading()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Upgrade already in progress. Please complete the current upgrade first.',
+                ], 400);
+            }
+
+            try {
+                // Use the upgrade service
+                $upgradeService = new SubscriptionUpgradeService();
+                $result = $upgradeService->initiateUpgrade($owner->id, $newPlan->id);
+
+                if ($result['success']) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Upgrade request created successfully',
+                        'upgrade_request' => [
+                            'id' => $result['upgrade_request']->id,
+                            'status' => $result['upgrade_request']->status,
+                            'requested_plan' => $result['upgrade_request']->requestedPlan->name,
+                            'amount' => (float) $result['upgrade_request']->amount,
+                        ],
+                        'invoice' => [
+                            'id' => $result['invoice']->id,
+                            'invoice_number' => $result['invoice']->invoice_number,
+                            'amount' => (float) $result['invoice']->amount,
+                            'status' => $result['invoice']->status,
+                            'due_date' => $result['invoice']->due_date,
+                        ],
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $result['message'],
+                    ], 400);
+                }
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create upgrade request: ' . $e->getMessage(),
+                ], 500);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Throwable $e) {
+            \Log::error('Subscription upgrade API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Auth: Complete subscription upgrade after payment
+     */
+    public function completeUpgrade(Request $request, $invoiceId)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $upgradeService = new SubscriptionUpgradeService();
+            $result = $upgradeService->completeUpgrade($invoiceId);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Subscription upgraded successfully!',
+                    'subscription' => [
+                        'id' => $result['subscription']->id,
+                        'plan_name' => $result['subscription']->plan->name,
+                        'status' => $result['subscription']->status,
+                        'start_date' => $result['subscription']->start_date,
+                        'end_date' => $result['subscription']->end_date,
+                    ],
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Subscription upgrade completion API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Auth: Cancel subscription upgrade
+     */
+    public function cancelUpgrade(Request $request, $upgradeRequestId)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $upgradeService = new SubscriptionUpgradeService();
+            $result = $upgradeService->cancelUpgrade($upgradeRequestId);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Upgrade request cancelled successfully.',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Subscription upgrade cancellation API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Auth: Get upgrade status for current user
+     */
+    public function getUpgradeStatus(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+            if (!$owner) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner profile not found',
+                ], 403);
+            }
+
+            $upgradeService = new SubscriptionUpgradeService();
+            $status = $upgradeService->getUpgradeStatus($owner->id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $status,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Subscription upgrade status API error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

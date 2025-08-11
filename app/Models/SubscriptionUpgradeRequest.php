@@ -31,6 +31,11 @@ class SubscriptionUpgradeRequest extends Model
         return $this->belongsTo(Owner::class, 'owner_id');
     }
 
+    public function user()
+    {
+        return $this->hasOneThrough(User::class, Owner::class, 'id', 'id', 'owner_id', 'user_id');
+    }
+
     public function currentSubscription()
     {
         return $this->belongsTo(OwnerSubscription::class, 'current_subscription_id');

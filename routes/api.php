@@ -58,6 +58,7 @@ Route::get('/subscription/plans', [ApiSubscriptionController::class, 'plans']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/kill-session', [AuthController::class, 'killSession']);
     Route::get('/user', [AuthController::class, 'user']);
 
     // Admin Test Routes (No CSRF protection)
@@ -121,6 +122,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/payment-methods', [ApiSubscriptionController::class, 'paymentMethods']);
     Route::get('/subscription/invoices', [ApiSubscriptionController::class, 'invoices']);
     Route::post('/subscription/checkout', [ApiSubscriptionController::class, 'checkout']);
+    
+    // Subscription Upgrade Routes
+    Route::post('/subscription/upgrade', [ApiSubscriptionController::class, 'upgradePlan']);
+    Route::post('/subscription/upgrade/complete/{invoiceId}', [ApiSubscriptionController::class, 'completeUpgrade']);
+    Route::post('/subscription/upgrade/cancel/{upgradeRequestId}', [ApiSubscriptionController::class, 'cancelUpgrade']);
+    Route::get('/subscription/upgrade/status', [ApiSubscriptionController::class, 'getUpgradeStatus']);
 
     // File Upload (common)
     Route::post('/common/upload', [\App\Http\Controllers\Api\UploadController::class, 'store']);
