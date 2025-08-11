@@ -33,17 +33,24 @@ class OtpSetting extends Model
      */
     public static function getSettings()
     {
-        return static::firstOrCreate([], [
-            'is_enabled' => true,
-            'otp_length' => 6,
-            'otp_expiry_minutes' => 10,
-            'max_attempts' => 3,
-            'resend_cooldown_seconds' => 60,
-            'require_otp_for_registration' => true,
-            'require_otp_for_login' => false,
-            'require_otp_for_password_reset' => true,
-            'otp_message_template' => 'Your OTP is: {otp}. Valid for {minutes} minutes.',
-        ]);
+        $settings = static::first();
+        
+        if (!$settings) {
+            // Create default settings if none exist
+            $settings = static::create([
+                'is_enabled' => true,
+                'otp_length' => 6,
+                'otp_expiry_minutes' => 10,
+                'max_attempts' => 5,
+                'resend_cooldown_seconds' => 30,
+                'require_otp_for_registration' => true,
+                'require_otp_for_login' => false,
+                'require_otp_for_password_reset' => true,
+                'otp_message_template' => 'Your OTP is: {otp}. Valid for {minutes} minutes.',
+            ]);
+        }
+        
+        return $settings;
     }
 
     /**

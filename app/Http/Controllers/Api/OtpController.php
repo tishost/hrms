@@ -119,7 +119,7 @@ class OtpController extends Controller
                 $expiresInSeconds = max(0, $existing->expires_at->diffInSeconds(now()));
                 $resendCooldown = (int) $otpSettings->resend_cooldown_seconds;
                 if ($isProfileUpdate) {
-                    $resendCooldown = 300; // 5 minutes for profile update
+                    $resendCooldown = 30; // 30 seconds for profile update (more user-friendly)
                 }
                 $elapsedSinceCreate = now()->diffInSeconds($existing->created_at);
                 $resendInSeconds = max(0, $resendCooldown - $elapsedSinceCreate);
@@ -315,7 +315,7 @@ class OtpController extends Controller
             $settings = OtpSetting::getSettings();
             $cooldownSeconds = (int) $settings->resend_cooldown_seconds;
             if ($type === 'profile_update') {
-                $cooldownSeconds = 300; // 5 minutes for profile update
+                $cooldownSeconds = 30; // 30 seconds for profile update (more user-friendly)
             }
             // Check if there's a recent OTP within cooldown window
             $recentOtp = Otp::where('phone', $phone)

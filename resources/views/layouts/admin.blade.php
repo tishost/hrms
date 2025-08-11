@@ -692,6 +692,9 @@
             <a href="{{ route('admin.settings.backup') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-database me-2"></i>Backup Settings
             </a>
+            <a href="{{ route('admin.charges.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-money-bill-wave me-2"></i>Charges Setup
+            </a>
             <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-comments me-2"></i>Chat Agent Dashboard
             </a>
@@ -904,6 +907,12 @@
                             <a class="dropdown-item {{ request()->routeIs('admin.settings.backup.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.backup') }}">
                                 <i class="fas fa-database me-2"></i>Backup Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.charges.*') ? 'active' : '' }}"
+                               href="{{ route('admin.charges.index') }}">
+                                <i class="fas fa-money-bill-wave me-2"></i>Charges Setup
                             </a>
                         </li>
                         <li>

@@ -547,6 +547,11 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('settings/sms', [App\Http\Controllers\Admin\SmsSettingsController::class, 'index'])->name('settings.sms');
     Route::put('settings/sms', [App\Http\Controllers\Admin\SmsSettingsController::class, 'update'])->name('settings.sms.update');
     Route::post('settings/sms/test', [App\Http\Controllers\Admin\SmsSettingsController::class, 'testSms'])->name('settings.sms.test');
+    
+    // Charges Setup Routes
+    Route::resource('charges', App\Http\Controllers\Admin\ChargeController::class);
+    Route::post('charges/{charge}/toggle-status', [App\Http\Controllers\Admin\ChargeController::class, 'toggleStatus'])->name('charges.toggle-status');
+    Route::get('charges-api', [App\Http\Controllers\Admin\ChargeController::class, 'getCharges'])->name('charges.api');
     Route::get('settings/sms/test-connection', [App\Http\Controllers\Admin\SmsSettingsController::class, 'testConnection'])->name('settings.sms.test-connection');
     Route::get('settings/sms/settings', [App\Http\Controllers\Admin\SmsSettingsController::class, 'getSmsSettings'])->name('settings.sms.settings');
     Route::post('settings/sms/bulk', [App\Http\Controllers\Admin\SmsSettingsController::class, 'sendBulkSms'])->name('settings.sms.bulk');
