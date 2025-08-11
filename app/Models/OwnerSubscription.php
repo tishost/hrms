@@ -18,14 +18,20 @@ class OwnerSubscription extends Model
         'start_date',
         'end_date',
         'auto_renew',
-        'sms_credits'
+        'sms_credits',
+        'upgrade_request_id',
+        'previous_plan_id',
+        'upgrade_date',
+        'is_upgrading'
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'auto_renew' => 'boolean',
-        'status' => 'string'
+        'status' => 'string',
+        'upgrade_date' => 'datetime',
+        'is_upgrading' => 'boolean'
     ];
 
     public function owner()
@@ -41,6 +47,16 @@ class OwnerSubscription extends Model
     public function billing()
     {
         return $this->hasMany(Billing::class, 'subscription_id');
+    }
+
+    public function upgradeRequest()
+    {
+        return $this->belongsTo(SubscriptionUpgradeRequest::class, 'upgrade_request_id');
+    }
+
+    public function previousPlan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'previous_plan_id');
     }
 
     public function isActive()
@@ -217,5 +233,78 @@ class OwnerSubscription extends Model
     public function getPendingInvoice()
     {
         return $this->billing()->whereIn('status', ['pending', 'unpaid', 'fail', 'cancel'])->first();
+    }
+
+    // Upgrade Methods
+    public function requestUpgrade($newPlanId, $amount = null)
+    {
+        // Create upgrade request
+        $upgradeRequest = SubscriptionUpgradeRequest::create([
+            'owner_id' => $this->owner_id,
+            'current_subscription_id' => $this->id,
+            'requested_plan_id' => $newPlanId,
+            'upgrade_type' => 'upgrade',
+            'status' => 'pending',
+            'amount' => $amount ?? SubscriptionPlan::find($newPlanId)->price
+        ]);
+
+        // Mark subscription as upgrading
+        $this->update([
+            'is_upgrading' => true,
+            'upgrade_request_id' => $upgradeRequest->id
+        ]);
+
+        return $upgradeRequest;
+    }
+
+    public function completeUpgrade()
+    {
+        if (!$this->upgradeRequest) {
+            throw new \Exception('No upgrade request found');
+        }
+
+        // Store current plan as previous
+        $this->update([
+            'previous_plan_id' => $this->plan_id,
+            'plan_id' => $this->upgradeRequest->requested_plan_id,
+            'is_upgrading' => false,
+            'upgrade_date' => now(),
+            'status' => 'active',
+            'start_date' => now(),
+            'end_date' => now()->addYear()
+        ]);
+
+        // Mark upgrade request as completed
+        $this->upgradeRequest->markAsCompleted();
+
+        return $this;
+    }
+
+    public function cancelUpgrade()
+    {
+        if (!$this->upgradeRequest) {
+            throw new \Exception('No upgrade request found');
+        }
+
+        // Mark upgrade request as cancelled
+        $this->upgradeRequest->markAsCancelled();
+
+        // Remove upgrading flag
+        $this->update([
+            'is_upgrading' => false,
+            'upgrade_request_id' => null
+        ]);
+
+        return $this;
+    }
+
+    public function isUpgrading()
+    {
+        return $this->is_upgrading && $this->upgradeRequest && $this->upgradeRequest->isPending();
+    }
+
+    public function hasUpgradeRequest()
+    {
+        return $this->upgradeRequest !== null;
     }
 }

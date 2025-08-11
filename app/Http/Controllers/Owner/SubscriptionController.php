@@ -8,6 +8,7 @@ use App\Models\OwnerSubscription;
 use App\Models\Billing;
 use App\Models\PaymentMethod;
 use App\Services\BkashTokenizedService;
+use App\Services\SubscriptionUpgradeService;
 use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -107,8 +108,10 @@ class SubscriptionController extends Controller
             return redirect()->back()->with('error', 'You can only upgrade to a higher-priced plan.');
         }
 
-        // Calculate price difference
-        $priceDifference = $newPlan->price - $currentPlan->price;
+        // Check if already upgrading
+        if ($currentSubscription->isUpgrading()) {
+            return redirect()->back()->with('error', 'Upgrade already in progress. Please complete the current upgrade first.');
+        }
 
         // Get the owner record
         $owner = $user->owner;
@@ -116,26 +119,20 @@ class SubscriptionController extends Controller
             return redirect()->back()->with('error', 'Owner profile not found. Please contact support.');
         }
 
-        // Create billing record for upgrade (unpaid status)
-        $billing = Billing::create([
-            'owner_id' => $owner->id,
-            'subscription_id' => $currentSubscription->id,
-            'invoice_number' => 'INV-UPGRADE-' . date('Y') . '-' . str_pad($currentSubscription->id, 6, '0', STR_PAD_LEFT),
-            'amount' => $priceDifference,
-            'status' => 'unpaid',
-            'payment_method' => 'upgrade',
-            'due_date' => now()->addDays(7),
-            'description' => "Upgrade from {$currentPlan->name} to {$newPlan->name} Plan"
-        ]);
+        try {
+            // Use the upgrade service
+            $upgradeService = new SubscriptionUpgradeService();
+            $result = $upgradeService->initiateUpgrade($owner->id, $newPlan->id);
 
-        // Update subscription plan but keep status pending until payment
-        $currentSubscription->update([
-            'plan_id' => $newPlan->id,
-            'status' => 'pending_upgrade'
-        ]);
-
-        // Redirect to payment page
-        return redirect()->route('owner.subscription.payment', ['invoice_id' => $billing->id])->with('success', 'Upgrade invoice generated. Please complete the payment to activate the new plan.');
+            if ($result['success']) {
+                return redirect()->route('owner.subscription.payment', ['invoice_id' => $result['invoice']->id])
+                    ->with('success', 'Upgrade request created successfully. Please complete the payment to activate the new plan.');
+            } else {
+                return redirect()->back()->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create upgrade request: ' . $e->getMessage());
+        }
     }
 
     public function billingHistory()
@@ -154,9 +151,71 @@ class SubscriptionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-
-
         return view('owner.subscription.billing', compact('billingHistory'));
+    }
+
+    /**
+     * Complete subscription upgrade after payment
+     */
+    public function completeUpgrade(Request $request, $invoiceId)
+    {
+        try {
+            $upgradeService = new SubscriptionUpgradeService();
+            $result = $upgradeService->completeUpgrade($invoiceId);
+
+            if ($result['success']) {
+                return redirect()->route('owner.subscription.current')
+                    ->with('success', 'Subscription upgraded successfully!');
+            } else {
+                return redirect()->back()->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to complete upgrade: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel subscription upgrade
+     */
+    public function cancelUpgrade(Request $request, $upgradeRequestId)
+    {
+        try {
+            $upgradeService = new SubscriptionUpgradeService();
+            $result = $upgradeService->cancelUpgrade($upgradeRequestId);
+
+            if ($result['success']) {
+                return redirect()->route('owner.subscription.current')
+                    ->with('success', 'Upgrade request cancelled successfully.');
+            } else {
+                return redirect()->back()->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to cancel upgrade: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get upgrade status for current user
+     */
+    public function getUpgradeStatus()
+    {
+        $user = Auth::user();
+        $owner = $user->owner;
+        
+        if (!$owner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Owner profile not found'
+            ]);
+        }
+
+        $upgradeService = new SubscriptionUpgradeService();
+        $status = $upgradeService->getUpgradeStatus($owner->id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $status
+        ]);
     }
 
     public function paymentMethods(Request $request)
@@ -611,20 +670,28 @@ class SubscriptionController extends Controller
                 $newPlan = SubscriptionPlan::find($subscription->plan_id);
                 
                 // Check if this is an upgrade payment
-                if ($billing->payment_method === 'upgrade' && $subscription->status === 'pending_upgrade') {
-                    // Activate the upgrade
-                    if ($newPlan) {
-                        $subscription->update([
-                            'status' => 'active',
-                            'sms_credits' => $newPlan->sms_notification ? 200 : 0,
-                            'start_date' => now(),
-                            'end_date' => now()->addDays(30)
-                        ]);
+                if ($billing->isUpgradeBilling() && $subscription->isUpgrading()) {
+                    try {
+                        // Use the upgrade service to complete the upgrade
+                        $upgradeService = new SubscriptionUpgradeService();
+                        $result = $upgradeService->completeUpgrade($billing->id);
 
-                        \Log::info('Upgrade activated after payment', [
+                        if ($result['success']) {
+                            \Log::info('Upgrade completed after payment', [
+                                'subscription_id' => $subscription->id,
+                                'new_plan' => $result['subscription']->plan->name,
+                                'user_id' => Auth::id()
+                            ]);
+                        } else {
+                            \Log::error('Failed to complete upgrade after payment', [
+                                'subscription_id' => $subscription->id,
+                                'error' => $result['message']
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Exception during upgrade completion', [
                             'subscription_id' => $subscription->id,
-                            'new_plan' => $newPlan->name,
-                            'user_id' => Auth::id()
+                            'error' => $e->getMessage()
                         ]);
                     }
                 } 

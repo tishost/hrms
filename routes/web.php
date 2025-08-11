@@ -322,6 +322,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('subscription/plans', [App\Http\Controllers\Owner\SubscriptionController::class, 'availablePlans'])->name('subscription.plans');
     Route::post('subscription/purchase', [App\Http\Controllers\Owner\SubscriptionController::class, 'purchasePlan'])->name('subscription.purchase');
     Route::post('subscription/upgrade', [App\Http\Controllers\Owner\SubscriptionController::class, 'upgradePlan'])->name('subscription.upgrade');
+    Route::post('subscription/upgrade/complete/{invoiceId}', [App\Http\Controllers\Owner\SubscriptionController::class, 'completeUpgrade'])->name('subscription.upgrade.complete');
+    Route::post('subscription/upgrade/cancel/{upgradeRequestId}', [App\Http\Controllers\Owner\SubscriptionController::class, 'cancelUpgrade'])->name('subscription.upgrade.cancel');
+    Route::get('subscription/upgrade/status', [App\Http\Controllers\Owner\SubscriptionController::class, 'getUpgradeStatus'])->name('subscription.upgrade.status');
     Route::get('subscription/billing', [App\Http\Controllers\Owner\SubscriptionController::class, 'billingHistory'])->name('subscription.billing');
     Route::get('subscription/payment', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentMethods'])->name('subscription.payment');
     Route::match(['GET', 'POST'], 'subscription/initiate-gateway', [App\Http\Controllers\Owner\SubscriptionController::class, 'initiatePaymentGateway'])->name('subscription.initiate-gateway');

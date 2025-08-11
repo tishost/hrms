@@ -23,14 +23,17 @@ class Billing extends Model
         'transaction_id',
         'payment_method_id',
         'transaction_fee',
-        'net_amount'
+        'net_amount',
+        'upgrade_request_id',
+        'billing_type'
     ];
 
     protected $casts = [
         'due_date' => 'date',
         'paid_date' => 'date',
         'transaction_fee' => 'decimal:2',
-        'net_amount' => 'decimal:2'
+        'net_amount' => 'decimal:2',
+        'billing_type' => 'string'
     ];
 
     public function owner()
@@ -46,6 +49,11 @@ class Billing extends Model
     public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class);
+    }
+
+    public function upgradeRequest()
+    {
+        return $this->belongsTo(SubscriptionUpgradeRequest::class, 'upgrade_request_id');
     }
 
     public function isPaid()
@@ -78,5 +86,35 @@ class Billing extends Model
         ];
 
         return $badges[$this->status] ?? 'secondary';
+    }
+
+    // Upgrade Billing Methods
+    public static function createUpgradeInvoice($upgradeRequest)
+    {
+        return self::create([
+            'owner_id' => $upgradeRequest->owner_id,
+            'subscription_id' => $upgradeRequest->current_subscription_id,
+            'upgrade_request_id' => $upgradeRequest->id,
+            'amount' => $upgradeRequest->amount,
+            'status' => 'unpaid',
+            'billing_type' => 'upgrade',
+            'due_date' => now()->addDays(7),
+            'invoice_number' => 'UPG-' . date('Y') . '-' . str_pad($upgradeRequest->id, 6, '0', STR_PAD_LEFT)
+        ]);
+    }
+
+    public function isUpgradeBilling()
+    {
+        return $this->billing_type === 'upgrade';
+    }
+
+    public function isSubscriptionBilling()
+    {
+        return $this->billing_type === 'subscription';
+    }
+
+    public function isRenewalBilling()
+    {
+        return $this->billing_type === 'renewal';
     }
 }
