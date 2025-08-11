@@ -136,11 +136,11 @@
                         <div class="col-md-6">
                             <p class="mb-1">
                                 <strong>Created:</strong>
-                                <span class="text-muted">{{ $charge->created_at->format('M d, Y H:i') }}</span>
+                                <span class="text-muted">{{ $charge->formatted_created_at_display }}</span>
                             </p>
                             <p class="mb-1">
                                 <strong>Last Updated:</strong>
-                                <span class="text-muted">{{ $charge->updated_at->format('M d, Y H:i') }}</span>
+                                <span class="text-muted">{{ $charge->formatted_updated_at }}</span>
                             </p>
                         </div>
                         <div class="col-md-6">

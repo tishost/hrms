@@ -18,6 +18,18 @@ class ChargeController extends Controller
         try {
             $charges = Charge::orderBy('created_at', 'desc')->get();
             
+            // Ensure all charges have valid timestamps
+            $charges->each(function ($charge) {
+                if (!$charge->created_at) {
+                    $charge->created_at = now();
+                    $charge->save();
+                }
+                if (!$charge->updated_at) {
+                    $charge->updated_at = now();
+                    $charge->save();
+                }
+            });
+            
             return view('admin.charges.index', compact('charges'));
         } catch (\Exception $e) {
             Log::error('Error in ChargeController@index: ' . $e->getMessage());

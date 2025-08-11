@@ -15,6 +15,8 @@ class Charge extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected $attributes = [
@@ -35,5 +37,29 @@ class Charge extends Model
     public function getFormattedAmountAttribute()
     {
         return '৳' . number_format($this->amount, 2);
+    }
+
+    /**
+     * Get formatted created date safely
+     */
+    public function getFormattedCreatedAtAttribute()
+    {
+        return $this->created_at ? $this->created_at->format('M d, Y') : 'N/A';
+    }
+
+    /**
+     * Get formatted updated date safely
+     */
+    public function getFormattedUpdatedAtAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->format('M d, Y H:i') : 'N/A';
+    }
+
+    /**
+     * Get formatted created date for display
+     */
+    public function getFormattedCreatedAtDisplayAttribute()
+    {
+        return $this->created_at ? $this->created_at->format('M d, Y H:i') : 'N/A';
     }
 }

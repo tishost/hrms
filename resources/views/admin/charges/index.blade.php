@@ -73,7 +73,7 @@
                                         </td>
                                         <td>
                                             <small class="text-muted">
-                                                {{ $charge->created_at->format('M d, Y') }}
+                                                {{ $charge->formatted_created_at }}
                                             </small>
                                         </td>
                                         <td>
