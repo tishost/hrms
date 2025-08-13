@@ -7,6 +7,7 @@ use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Services\PackageLimitService;
 
 class PropertyController extends Controller
 {
@@ -86,6 +87,20 @@ class PropertyController extends Controller
                 ], 404);
             }
 
+            // Enforce subscription limit: properties
+            $packageLimitService = new PackageLimitService();
+            if (!$packageLimitService->canPerformAction($owner, 'properties')) {
+                $stats = $packageLimitService->getUsageStats($owner);
+                $propStats = $stats['properties'] ?? null;
+                return response()->json([
+                    'error' => 'Property limit exceeded. Please upgrade your plan.',
+                    'limit_type' => 'properties',
+                    'current_usage' => $propStats['current'] ?? null,
+                    'max_limit' => $propStats['max'] ?? null,
+                    'upgrade_required' => true,
+                ], 403);
+            }
+
             $property = Property::create([
                 'owner_id' => $owner->id,
                 'name' => $request->name,
@@ -99,6 +114,9 @@ class PropertyController extends Controller
                 'description' => $request->description,
                 'status' => 'active',
             ]);
+
+            // Increment usage after successful creation
+            $packageLimitService->incrementUsage($owner, 'properties');
 
             return response()->json([
                 'success' => true,

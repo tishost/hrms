@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Unit;
 use App\Models\Property;
+use App\Services\PackageLimitService;
 
 class UnitController extends Controller
 {
@@ -89,6 +90,20 @@ class UnitController extends Controller
         $property = Property::where('id', $request->property_id)
             ->where('owner_id', $ownerId)
             ->firstOrFail();
+
+        // Enforce subscription limit: units
+        $packageLimitService = new PackageLimitService();
+        if (!$packageLimitService->canPerformAction($request->user()->owner, 'units')) {
+            $stats = $packageLimitService->getUsageStats($request->user()->owner);
+            $uStats = $stats['units'] ?? null;
+            return response()->json([
+                'error' => 'Unit limit exceeded. Please upgrade your plan.',
+                'limit_type' => 'units',
+                'current_usage' => $uStats['current'] ?? null,
+                'max_limit' => $uStats['max'] ?? null,
+                'upgrade_required' => true,
+            ], 403);
+        }
         $unit = Unit::create([
             'property_id' => $property->id,
             'name' => $request->name,
@@ -102,6 +117,9 @@ class UnitController extends Controller
                 ]);
             }
         }
+        // Increment unit usage
+        $packageLimitService->incrementUsage($request->user()->owner, 'units');
+
         return response()->json(['success' => true, 'unit' => $unit], 201);
     }
 
