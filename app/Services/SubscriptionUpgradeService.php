@@ -38,6 +38,11 @@ class SubscriptionUpgradeService
                 throw new \Exception('Selected plan is not available');
             }
 
+            // Calculate upgrade amount (difference between new and current plan price unless provided)
+            $currentPrice = (float) ($currentSubscription->plan->price ?? 0);
+            $requestedPrice = (float) ($requestedPlan->price ?? 0);
+            $calculatedAmount = $amount !== null ? (float)$amount : max(0.0, $requestedPrice - $currentPrice);
+
             // Create upgrade request
             $upgradeRequest = SubscriptionUpgradeRequest::create([
                 'owner_id' => $ownerId,
@@ -45,7 +50,7 @@ class SubscriptionUpgradeService
                 'requested_plan_id' => $newPlanId,
                 'upgrade_type' => 'upgrade',
                 'status' => 'pending',
-                'amount' => $amount ?? $requestedPlan->price,
+                'amount' => $calculatedAmount,
                 'notes' => "Upgrade from {$currentSubscription->plan->name} to {$requestedPlan->name}"
             ]);
 
