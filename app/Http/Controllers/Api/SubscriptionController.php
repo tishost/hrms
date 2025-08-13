@@ -177,8 +177,21 @@ class SubscriptionController extends Controller
                             ], 500);
                         }
 
+                        // Determine amount to charge (prefer net_amount only when > 0)
+                        $amountToCharge = (float) (isset($invoice->net_amount) && (float)$invoice->net_amount > 0
+                            ? $invoice->net_amount
+                            : $invoice->amount);
+
+                        // Guard: bKash requires positive amount
+                        if ($amountToCharge < 1) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'bKash minimum amount is 1 BDT. Please use Bank Transfer.',
+                            ], 422);
+                        }
+
                         $paymentId = 'PAY_' . time() . '_' . uniqid();
-                        $result = $bkashService->createTokenizedCheckout($invoice->net_amount ?? $invoice->amount, $invoice->invoice_number, $paymentId, 'Subscription: ' . ($subscription->plan->name ?? ''));
+                        $result = $bkashService->createTokenizedCheckout($amountToCharge, $invoice->invoice_number, $paymentId, 'Subscription: ' . ($subscription->plan->name ?? ''));
 
                         if (!($result['success'] ?? false)) {
                             return response()->json([
@@ -340,6 +353,17 @@ class SubscriptionController extends Controller
                 ], 422);
             }
 
+            // Amount to charge
+            $amountToCharge = (float) ($invoice->net_amount ?? $invoice->amount);
+
+            // Guard: bKash requires positive amount (>= 1 BDT typically)
+            if ($method->code === 'bkash' && $amountToCharge < 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'bKash minimum amount is 1 BDT. Please use Bank Transfer.',
+                ], 422);
+            }
+
             switch ($method->code) {
                 case 'bkash':
                     try {
@@ -368,7 +392,7 @@ class SubscriptionController extends Controller
                         $planName = $invoice->subscription->plan->name ?? '';
                     }
                     $result = $bkashService->createTokenizedCheckout(
-                        $invoice->net_amount ?? $invoice->amount,
+                        $amountToCharge,
                         $invoice->invoice_number,
                         $paymentId,
                         'Subscription: ' . $planName
