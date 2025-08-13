@@ -91,11 +91,13 @@ class Billing extends Model
     // Upgrade Billing Methods
     public static function createUpgradeInvoice($upgradeRequest)
     {
+        $amount = (float) ($upgradeRequest->amount ?? 0);
         return self::create([
             'owner_id' => $upgradeRequest->owner_id,
             'subscription_id' => $upgradeRequest->current_subscription_id,
             'upgrade_request_id' => $upgradeRequest->id,
-            'amount' => $upgradeRequest->amount,
+            'amount' => $amount,
+            'net_amount' => $amount,
             'status' => 'unpaid',
             'billing_type' => 'upgrade',
             'due_date' => now()->addDays(7),

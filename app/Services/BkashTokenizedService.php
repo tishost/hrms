@@ -177,13 +177,17 @@ class BkashTokenizedService
             if (empty($safePayer)) {
                 $safePayer = substr((string) time(), 0, 11);
             }
+            // orderId per API examples – keep simple and <= 20 chars
+            $orderId = $safeInvoice;
             $payload = [
                 'intent' => 'sale',
                 'currency' => 'BDT',
                 'amount' => number_format((float)$amount, 2, '.', ''),
                 'merchantInvoiceNumber' => $safeInvoice,
                 'payerReference' => $safePayer,
-                'callbackURL' => $this->callbackUrl
+                'callbackURL' => $this->callbackUrl,
+                'orderId' => $orderId,
+                'mode' => '0011'
             ];
 
             // Log the request payload for debugging
