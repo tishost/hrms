@@ -386,6 +386,23 @@ class SubscriptionController extends Controller
                             'message' => 'bKash connection failed: ' . ($conn['message'] ?? 'Unknown error')
                         ], 422);
                     }
+                    // Sandbox vs Live minimum amount policy
+                    $config = $bkashService->getConfigurationStatus();
+                    $minRequired = ($config['sandbox_mode'] ?? false) ? 10.0 : 1.0;
+                    \Log::info('bKash amount check', [
+                        'invoice_id' => $invoice->id,
+                        'amount' => (float)$invoice->amount,
+                        'net_amount' => (float)($invoice->net_amount ?? 0),
+                        'amount_to_charge' => $amountToCharge,
+                        'sandbox_mode' => $config['sandbox_mode'] ?? null,
+                        'min_required' => $minRequired,
+                    ]);
+                    if ($amountToCharge < $minRequired) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'bKash minimum amount is ' . number_format($minRequired, 2) . ' BDT. Please use Bank Transfer or increase amount.',
+                        ], 422);
+                    }
                     $paymentId = 'PAY_' . time() . '_' . uniqid();
                     $planName = '';
                     if ($invoice->subscription && $invoice->subscription->plan) {
