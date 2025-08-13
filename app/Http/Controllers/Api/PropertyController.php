@@ -17,7 +17,7 @@ class PropertyController extends Controller
     public function index()
     {
         try {
-            $owner = Auth::user()->owner;
+            $owner = Auth::user()->owner()->with(['subscriptions', 'properties'])->first();
 
             if (!$owner) {
                 return response()->json([

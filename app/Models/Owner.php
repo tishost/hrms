@@ -62,6 +62,17 @@ public function subscription()
     return $this->hasOne(OwnerSubscription::class, 'owner_id')->latest();
 }
 
+// Active subscription including lifetime (end_date = null)
+public function activeSubscription()
+{
+    return $this->hasOne(OwnerSubscription::class, 'owner_id')
+        ->where('status', 'active')
+        ->where(function ($q) {
+            $q->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+        })
+        ->latest();
+}
+
 public function billing()
 {
     return $this->hasMany(Billing::class, 'owner_id');
