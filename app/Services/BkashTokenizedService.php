@@ -195,9 +195,9 @@ class BkashTokenizedService
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $token,
-                    'X-APP-Key' => $this->appKey,
-                    'X-APP-Secret' => $this->appSecret
+                    // Per bKash Tokenized API spec, Authorization should be the raw id_token (no Bearer)
+                    'Authorization' => $token,
+                    'X-APP-Key' => $this->appKey
                 ])
                 ->withOptions([
                     'verify' => false,
