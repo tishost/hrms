@@ -170,11 +170,13 @@ class BkashTokenizedService
                 throw new \Exception('Failed to get access token');
             }
 
+            // Ensure merchant invoice number meets length/char constraints (<=20)
+            $safeInvoice = substr(preg_replace('/[^A-Za-z0-9\-]/', '', (string)$invoiceId), 0, 20);
             $payload = [
                 'intent' => 'sale',
                 'currency' => 'BDT',
-                'amount' => number_format($amount, 2, '.', ''),
-                'merchantInvoiceNumber' => $invoiceId,
+                'amount' => number_format((float)$amount, 2, '.', ''),
+                'merchantInvoiceNumber' => $safeInvoice,
                 'payerReference' => $paymentId,
                 'callbackURL' => $this->callbackUrl,
                 'mode' => '0011'
@@ -193,7 +195,8 @@ class BkashTokenizedService
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->getAccessToken(),
+                    // Use the same token we already fetched
+                    'Authorization' => 'Bearer ' . $token,
                     'X-APP-Key' => $this->appKey,
                     'X-APP-Secret' => $this->appSecret
                 ])
@@ -298,7 +301,8 @@ class BkashTokenizedService
 
                 case '0002':
                     return [
-                        'success' => false,
+                        'success' =>
+                         false,
                         'error' => 'Amount validation failed: ' . $statusMessage,
                         'details' => $errorData,
                         'suggestion' => 'Check payment amount'
