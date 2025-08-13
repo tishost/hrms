@@ -14,7 +14,7 @@ class PropertyController extends Controller
     /**
      * Get all properties for the authenticated owner
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $owner = Auth::user()->owner()->with(['subscriptions', 'properties'])->first();
@@ -25,9 +25,18 @@ class PropertyController extends Controller
                 ], 404);
             }
 
-            $properties = Property::where('owner_id', $owner->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Property::where('owner_id', $owner->id);
+
+            $includeArchived = $request->boolean('include_archived');
+            if (!$includeArchived) {
+                $query->where('status', '!=', 'archived');
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->get('status'));
+            }
+
+            $properties = $query->orderBy('created_at', 'desc')->get();
 
             return response()->json([
                 'success' => true,
