@@ -170,12 +170,10 @@ class BkashTokenizedService
                 throw new \Exception('Failed to get access token');
             }
 
-            // bKash requires amount to be a string with two decimals without commas
-            $normalizedAmount = number_format((float)$amount, 2, '.', '');
             $payload = [
                 'intent' => 'sale',
                 'currency' => 'BDT',
-                'amount' => $normalizedAmount,
+                'amount' => number_format($amount, 2, '.', ''),
                 'merchantInvoiceNumber' => $invoiceId,
                 'payerReference' => $paymentId,
                 'callbackURL' => $this->callbackUrl,
@@ -195,9 +193,9 @@ class BkashTokenizedService
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
-                    // Per bKash Tokenized API spec, Authorization should be the raw id_token (no Bearer)
-                    'Authorization' => $token,
-                    'X-APP-Key' => $this->appKey
+                    'Authorization' => 'Bearer ' . $this->getAccessToken(),
+                    'X-APP-Key' => $this->appKey,
+                    'X-APP-Secret' => $this->appSecret
                 ])
                 ->withOptions([
                     'verify' => false,
