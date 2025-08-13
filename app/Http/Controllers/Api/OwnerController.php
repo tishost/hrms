@@ -353,6 +353,7 @@ class OwnerController extends Controller
                             'price' => $subscription->plan->price,
                             'duration' => $subscription->plan->duration,
                             'properties_limit' => $subscription->plan->properties_limit,
+                            'units_limit' => $subscription->plan->units_limit,
                             'tenants_limit' => $subscription->plan->tenants_limit,
                         ] : null
                     ]
