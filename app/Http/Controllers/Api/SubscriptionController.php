@@ -462,7 +462,14 @@ class SubscriptionController extends Controller
             }
 
             $newPlan = SubscriptionPlan::findOrFail($request->plan_id);
-            $currentSubscription = $owner->activeSubscription;
+            // Find current active subscription (allow null end_date as lifetime)
+            $currentSubscription = \App\Models\OwnerSubscription::where('owner_id', $owner->id)
+                ->where('status', 'active')
+                ->where(function($q){
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+                })
+                ->with('plan')
+                ->first();
 
             // Check if user has active subscription
             if (!$currentSubscription || !$currentSubscription->isActive()) {

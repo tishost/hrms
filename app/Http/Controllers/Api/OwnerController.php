@@ -327,10 +327,12 @@ class OwnerController extends Controller
                 ], 404);
             }
 
-            // Get active subscription
+            // Get active subscription (end_date may be null for lifetime/free)
             $subscription = \App\Models\OwnerSubscription::where('owner_id', $owner->id)
                 ->where('status', 'active')
-                ->where('end_date', '>=', now()->toDateString())
+                ->where(function($q){
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+                })
                 ->with('plan')
                 ->first();
 
@@ -339,10 +341,10 @@ class OwnerController extends Controller
                     'success' => true,
                     'subscription' => [
                         'id' => $subscription->id,
-                        'plan_name' => $subscription->plan_name,
+                        'plan_name' => $subscription->plan_name ?? optional($subscription->plan)->name,
                         'status' => $subscription->status,
                         'start_date' => $subscription->start_date,
-                        'end_date' => $subscription->end_date,
+                        'end_date' => $subscription->end_date, // may be null for lifetime
                         'auto_renew' => $subscription->auto_renew,
                         'sms_credits' => $subscription->sms_credits,
                         'plan' => $subscription->plan ? [

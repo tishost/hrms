@@ -61,7 +61,11 @@ class OwnerSubscription extends Model
 
     public function isActive()
     {
-        return $this->status === 'active' && $this->end_date && $this->end_date->isFuture();
+        return $this->status === 'active'
+            && (
+                // Treat null end_date as lifetime (e.g., free package)
+                !$this->end_date || $this->end_date->isFuture()
+            );
     }
 
     public function isExpired()

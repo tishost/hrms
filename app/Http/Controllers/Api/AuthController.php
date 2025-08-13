@@ -175,8 +175,9 @@ class AuthController extends Controller
             }
 
             // Automatically activate free package for new owner
+            // Only when no plan is explicitly selected during registration
             $freePlan = \App\Models\SubscriptionPlan::where('price', 0)->first();
-            if ($freePlan) {
+            if ($freePlan && !$request->filled('plan_id')) {
                 \Log::info('Activating free package for new API owner', [
                     'user_id' => $user->id,
                     'owner_id' => $owner->id,
@@ -185,14 +186,19 @@ class AuthController extends Controller
                 ]);
 
                 // Create free subscription
+                $startDate = now()->toDateString();
+                // Determine end date from plan definition (lifetime => null)
+                $endDate = $freePlan->isLifetime() ? null : now()->addDays($freePlan->getDurationInDays())->toDateString();
+                $smsCredits = (int) ($freePlan->sms_credit ?? 0);
+
                 $freeSubscription = \App\Models\OwnerSubscription::create([
                     'owner_id' => $owner->id,
                     'plan_id' => $freePlan->id,
                     'status' => 'active',
                     'auto_renew' => true,
-                    'sms_credits' => $freePlan->sms_notification ? 100 : 0,
-                    'start_date' => now()->toDateString(),
-                    'end_date' => now()->addYear()->toDateString(),
+                    'sms_credits' => $smsCredits,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
                     'plan_name' => $freePlan->name
                 ]);
 
