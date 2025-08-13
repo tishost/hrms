@@ -267,11 +267,12 @@ class PropertyController extends Controller
                 ], 404);
             }
 
-            // Check if property has any units or tenants
+            // Check if property has any units or linked records
             if ($property->units()->count() > 0) {
                 return response()->json([
-                    'message' => 'Cannot delete property with existing units'
-                ], 400);
+                    'message' => 'Property has linked units. Please archive instead.',
+                    'can_archive' => true
+                ], 409);
             }
 
             $property->delete();
@@ -284,6 +285,52 @@ class PropertyController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete property',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Archive a property (and its units) while keeping invoices/billing intact
+     */
+    public function archive($id)
+    {
+        try {
+            $owner = Auth::user()->owner;
+
+            if (!$owner) {
+                return response()->json([
+                    'message' => 'Owner not found'
+                ], 404);
+            }
+
+            $property = Property::where('id', $id)
+                ->where('owner_id', $owner->id)
+                ->with('units')
+                ->first();
+
+            if (!$property) {
+                return response()->json([
+                    'message' => 'Property not found'
+                ], 404);
+            }
+
+            // Mark property and its units as archived/inactive
+            $property->status = 'archived';
+            $property->save();
+
+            foreach ($property->units as $unit) {
+                $unit->status = 'archived';
+                $unit->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Property and its units archived successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to archive property',
                 'error' => $e->getMessage()
             ], 500);
         }

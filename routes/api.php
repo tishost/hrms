@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/properties', [PropertyController::class, 'store']);
     Route::get('/properties/{id}', [PropertyController::class, 'show']);
     Route::put('/properties/{id}', [PropertyController::class, 'update']);
+    Route::post('/properties/{id}/archive', [PropertyController::class, 'archive']);
     Route::delete('/properties/{id}', [PropertyController::class, 'destroy']);
     Route::get('/properties/stats', [PropertyController::class, 'stats']);
 
