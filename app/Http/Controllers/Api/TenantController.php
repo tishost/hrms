@@ -8,6 +8,7 @@ use App\Models\Property;
 use App\Models\Unit;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class TenantController extends Controller
 {
@@ -451,12 +452,19 @@ class TenantController extends Controller
                 ], 401);
             }
 
-            // Validate request
+            // Validate request (prevent duplicate mobile under same owner only on create)
             $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'nullable|string|max:255',
                 'gender' => 'nullable|string|max:20',
-                'mobile' => 'required|string|max:20',
+                'mobile' => [
+                    'required',
+                    'string',
+                    'max:20',
+                    Rule::unique('tenants', 'mobile')->where(function ($q) use ($user) {
+                        return $q->where('owner_id', $user->owner_id);
+                    }),
+                ],
                 'alt_mobile' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'nid_number' => 'required|string|max:50',
@@ -484,6 +492,8 @@ class TenantController extends Controller
                 'remarks' => 'nullable|string|max:1000',
                 'nid_front_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'nid_back_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            ], [
+                'mobile.unique' => 'This mobile number is already registered under your account.',
             ]);
 
             // Check if unit is available
