@@ -172,14 +172,18 @@ class BkashTokenizedService
 
             // Ensure merchant invoice number meets length/char constraints (<=20)
             $safeInvoice = substr(preg_replace('/[^A-Za-z0-9\-]/', '', (string)$invoiceId), 0, 20);
+            // Sanitize payerReference to numeric (<=11 chars per bKash tokenized guideline); fallback to timestamp
+            $safePayer = substr(preg_replace('/\D/', '', (string)$paymentId), 0, 11);
+            if (empty($safePayer)) {
+                $safePayer = substr((string) time(), 0, 11);
+            }
             $payload = [
                 'intent' => 'sale',
                 'currency' => 'BDT',
                 'amount' => number_format((float)$amount, 2, '.', ''),
                 'merchantInvoiceNumber' => $safeInvoice,
-                'payerReference' => $paymentId,
-                'callbackURL' => $this->callbackUrl,
-                'mode' => '0011'
+                'payerReference' => $safePayer,
+                'callbackURL' => $this->callbackUrl
             ];
 
             // Log the request payload for debugging
