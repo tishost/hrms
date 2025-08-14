@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Services\PackageLimitService;
+use Illuminate\Support\Facades\DB;
 
 class PropertyController extends Controller
 {
@@ -277,7 +278,31 @@ class PropertyController extends Controller
             }
 
             // Check if property has any units or linked records
-            if ($property->units()->count() > 0) {
+            $totalUnits = $property->units()->count();
+            if ($totalUnits > 0) {
+                $rentedUnits = $property->units()
+                    ->where('status', 'rent')
+                    ->with(['tenant:id,first_name,last_name,mobile'])
+                    ->get()
+                    ->map(function ($unit) {
+                        return [
+                            'unit_id' => $unit->id,
+                            'unit_name' => $unit->name,
+                            'tenant_id' => $unit->tenant_id,
+                            'tenant_name' => trim(($unit->tenant->first_name ?? '') . ' ' . ($unit->tenant->last_name ?? '')),
+                            'tenant_mobile' => $unit->tenant->mobile ?? null,
+                        ];
+                    });
+
+                if ($rentedUnits->count() > 0) {
+                    return response()->json([
+                        'message' => 'Property has rented units. Please checkout tenants before deleting.',
+                        'requires_checkout' => true,
+                        'rented_units' => $rentedUnits,
+                    ], 409);
+                }
+
+                // Has units but none rented → suggest archive
                 return response()->json([
                     'message' => 'Property has linked units. Please archive instead.',
                     'can_archive' => true
@@ -329,8 +354,12 @@ class PropertyController extends Controller
             $property->save();
 
             foreach ($property->units as $unit) {
-                $unit->status = 'archived';
-                $unit->save();
+                $currentStatus = strtolower((string) $unit->status);
+                // Only archive vacant/free units; keep rented units unchanged
+                if (in_array($currentStatus, ['free', 'vacant'], true)) {
+                    $unit->status = 'archived';
+                    $unit->save();
+                }
             }
 
             return response()->json([

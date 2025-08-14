@@ -162,6 +162,16 @@ class UnitController extends Controller
                 $q->where('owner_id', $ownerId);
             })
             ->firstOrFail();
+        // Guard: if unit is rented, require checkout first
+        if (strtolower((string)$unit->status) === 'rent' && $unit->tenant_id) {
+            return response()->json([
+                'message' => 'Unit is currently rented. Please checkout tenant before deleting.',
+                'requires_checkout' => true,
+                'tenant_id' => $unit->tenant_id,
+                'unit_id' => $unit->id,
+                'property_id' => $unit->property_id,
+            ], 409);
+        }
         $unit->delete();
         return response()->json(['success' => true]);
     }
