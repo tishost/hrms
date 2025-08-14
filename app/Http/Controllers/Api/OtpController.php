@@ -26,10 +26,12 @@ class OtpController extends Controller
         }
 
         // Check if OTP is required for this action
-        // For profile_update, apply registration requirement settings and templates
+        // For profile_update, apply registration requirement settings and templates,
+        // but keep record type as the requested type to avoid mismatches during verify
         $requestedType = $request->type;
         $isProfileUpdate = ($requestedType === 'profile_update');
-        $effectiveType = $isProfileUpdate ? 'registration' : $requestedType;
+        $effectiveType = $isProfileUpdate ? 'registration' : $requestedType; // for settings/templates only
+        $otpRecordType = $requestedType; // persist OTP with the original requested type
         if (!$otpSettings->isOtpRequiredFor($effectiveType)) {
             return response()->json([
                 'success' => false,
@@ -62,7 +64,7 @@ class OtpController extends Controller
         $otpLimit = $otpLimitSetting ? intval($otpLimitSetting->value) : 5;
         if ($otpLimit > 0) {
             $todaySendCount = \App\Models\OtpLog::where('phone', $phone)
-                ->where('type', $effectiveType)
+                ->where('type', $otpRecordType)
                 ->where('status', 'sent')
                 ->whereDate('created_at', now()->toDateString())
                 ->count();
@@ -72,7 +74,7 @@ class OtpController extends Controller
                     \App\Models\OtpLog::create([
                         'phone' => $phone,
                         'otp' => null,
-                        'type' => $effectiveType,
+                        'type' => $otpRecordType,
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'blocked',
@@ -109,7 +111,7 @@ class OtpController extends Controller
 
             // If a valid OTP already exists within expiry, reuse it instead of generating a new one
             $existing = Otp::where('phone', $phone)
-                ->where('type', $type)
+                ->where('type', $otpRecordType)
                 ->where('is_used', false)
                 ->where('expires_at', '>', now())
                 ->orderBy('created_at', 'desc')
@@ -129,7 +131,7 @@ class OtpController extends Controller
                     \App\Models\OtpLog::create([
                         'phone' => $phone,
                         'otp' => $existing->otp,
-                        'type' => $type,
+                        'type' => $otpRecordType,
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'sent',
@@ -150,14 +152,14 @@ class OtpController extends Controller
             }
 
             // Generate OTP with settings (effective type)
-            $otp = Otp::generateOtp($phone, $type, $otpSettings->otp_length);
+            $otp = Otp::generateOtp($phone, $otpRecordType, $otpSettings->otp_length);
 
             // Log sent OTP
             try {
                 \App\Models\OtpLog::create([
                     'phone' => $phone,
                     'otp' => $otp->otp,
-                    'type' => $type,
+                    'type' => $otpRecordType,
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->header('User-Agent'),
                     'status' => 'sent',
@@ -214,26 +216,14 @@ class OtpController extends Controller
         $type = $request->type;
 
         try {
-            // Enforce max attempts per OTP based on settings
+            // Verify first; if correct, succeed regardless of prior failed attempts
             $settings = OtpSetting::getSettings();
             $maxAttempts = (int) $settings->max_attempts;
             $latestOtp = \App\Models\Otp::where('phone', $phone)
                 ->where('type', $type)
                 ->orderBy('created_at', 'desc')
                 ->first();
-            if ($maxAttempts > 0 && $latestOtp) {
-                $failedAttempts = \App\Models\OtpLog::where('phone', $phone)
-                    ->where('type', $type)
-                    ->where('status', 'failed')
-                    ->where('created_at', '>', $latestOtp->created_at)
-                    ->count();
-                if ($failedAttempts >= $maxAttempts) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'OTP verification attempt limit exceeded. Please request a new OTP.'
-                    ], 429);
-                }
-            }
+
             $isValid = Otp::verifyOtp($phone, $otp, $type);
 
             if ($isValid) {
@@ -263,6 +253,16 @@ class OtpController extends Controller
                     'message' => 'OTP verified successfully'
                 ]);
             } else {
+                // Before enforcing limit, compute failed attempts AFTER the latest OTP was created
+                $failedAttempts = 0;
+                if ($maxAttempts > 0 && $latestOtp) {
+                    $failedAttempts = \App\Models\OtpLog::where('phone', $phone)
+                        ->where('type', $type)
+                        ->where('status', 'failed')
+                        ->where('created_at', '>', $latestOtp->created_at)
+                        ->count();
+                }
+
                 // Log failed verification
                 try {
                     \App\Models\OtpLog::create([
@@ -276,9 +276,24 @@ class OtpController extends Controller
                         'session_id' => session()->getId(),
                     ]);
                 } catch (\Exception $e) {}
+
+                // After logging this failed attempt, check if limit is exceeded
+                $failedAttemptsPlusOne = $failedAttempts + 1;
+                if ($maxAttempts > 0 && $latestOtp && $failedAttemptsPlusOne >= $maxAttempts) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'OTP verification attempt limit exceeded. Please request a new OTP.',
+                        'resend_required' => true,
+                        'failed_attempts' => $failedAttemptsPlusOne,
+                        'max_attempts' => $maxAttempts,
+                    ], 429);
+                }
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid or expired OTP'
+                    'message' => 'Invalid or expired OTP',
+                    'failed_attempts' => $failedAttemptsPlusOne,
+                    'max_attempts' => $maxAttempts,
                 ], 422);
             }
 
