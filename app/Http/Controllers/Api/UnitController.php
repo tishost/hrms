@@ -18,9 +18,12 @@ class UnitController extends Controller
             $q->where('owner_id', $ownerId);
         });
 
-        // Filter by property_id if provided
-        if ($request->has('property_id')) {
+        // Optional filters
+        if ($request->filled('property_id')) {
             $query->where('property_id', $request->property_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
         }
 
         $units = $query->with(['property', 'charges', 'tenant'])->get();
