@@ -146,9 +146,9 @@
                                         <td class="text-center text-success">{{ $row->verified_attempts }}</td>
                                         <td class="text-center">
                                             @if($row->is_blocked)
-                                                <span class="badge bg-danger">Yes</span>
+                                                <span class="badge badge-danger">Yes</span>
                                             @else
-                                                <span class="badge bg-success">No</span>
+                                                <span class="badge badge-success">No</span>
                                             @endif
                                         </td>
                                         <td>{{ $row->blocked_until ? \Carbon\Carbon::parse($row->blocked_until)->format('M d, Y H:i') : '—' }}</td>
@@ -334,6 +334,7 @@ $(document).ready(function() {
             .done(function(resp) {
                 if (resp.success) {
                     alert(resp.message || 'Reset successful');
+                    location.reload();
                 } else {
                     alert('Failed to reset');
                 }
