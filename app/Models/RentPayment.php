@@ -14,6 +14,7 @@ class RentPayment extends Model
         'tenant_id',
         'unit_id',
         'invoice_id',
+        'amount',
         'amount_due',
         'amount_paid',
         'payment_method',
