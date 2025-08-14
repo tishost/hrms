@@ -336,12 +336,18 @@
             </tr>
           </thead>
           <tbody>
-            @if($invoice->status === 'paid' && ($invoice->paid_amount ?? 0) > 0)
+            @php
+              $txnDate = isset($lastPayment) ? ($lastPayment->payment_date ? $lastPayment->payment_date->format('Y-m-d') : null) : ($invoice->paid_date ?? null);
+              $gateway = isset($lastPayment) ? ($lastPayment->payment_method ?? null) : ($invoice->payment_method ?? null);
+              $txnId = isset($lastPayment) ? ($lastPayment->reference_number ?? null) : ($invoice->transaction_id ?? null);
+              $paidAmt = isset($lastPayment) ? ($lastPayment->amount_paid ?? $lastPayment->amount ?? null) : ($invoice->paid_amount ?? null);
+            @endphp
+            @if(($invoice->status === 'paid') || ($paidAmt && $paidAmt > 0))
               <tr>
-                <td>{{ $invoice->paid_date ?? 'N/A' }}</td>
-                <td>{{ $invoice->payment_method ?? 'N/A' }}</td>
-                <td>{{ $invoice->transaction_id ?? 'N/A' }}</td>
-                <td>{{ number_format($invoice->paid_amount ?? 0, 2) }}BDT</td>
+                <td>{{ $txnDate ?? 'N/A' }}</td>
+                <td>{{ $gateway ?? 'N/A' }}</td>
+                <td>{{ $txnId ?? 'N/A' }}</td>
+                <td>{{ number_format($paidAmt ?? 0, 2) }}BDT</td>
               </tr>
             @else
               <tr>

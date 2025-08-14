@@ -239,8 +239,14 @@ class OwnerController extends Controller
                 }
             }
 
+            // Fetch last payment for this invoice (to populate gateway, txn id, date)
+            $lastPayment = \App\Models\RentPayment::where('invoice_id', $invoice->id)
+                ->orderByDesc('payment_date')
+                ->orderByDesc('id')
+                ->first();
+
             // Optimized PDF generation for mobile
-            $pdf = \PDF::loadView('owner.invoices.pdf', compact('invoice'));
+            $pdf = \PDF::loadView('owner.invoices.pdf', compact('invoice', 'lastPayment'));
 
             // Configure PDF for A4 size
             $pdf->setPaper('A4', 'portrait');
