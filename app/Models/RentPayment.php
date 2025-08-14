@@ -10,14 +10,17 @@ class RentPayment extends Model
     use HasFactory;
 
     protected $fillable = [
+        'owner_id',
         'tenant_id',
-        'amount',
+        'unit_id',
+        'invoice_id',
+        'amount_due',
+        'amount_paid',
+        'payment_method',
+        'reference_number',
         'payment_date',
         'status',
         'notes',
-        'type',
-        'month',
-        'year'
     ];
 
     protected $casts = [

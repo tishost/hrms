@@ -139,7 +139,6 @@ class InvoiceController extends Controller
                 'tenant_id' => $invoice->tenant_id,
                 'unit_id' => $invoice->unit_id,
                 'invoice_id' => $invoice->id,
-                'amount' => $paymentAmount,
                 'amount_due' => $invoiceAmount,
                 'amount_paid' => $paymentAmount,
                 'payment_method' => $paymentMethod,
