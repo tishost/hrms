@@ -69,7 +69,9 @@ class InvoiceController extends Controller
                 return [
                     'id' => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
-                    'invoice_type' => $invoice->invoice_type,
+                    // Support both `invoice_type` and legacy `type`
+                    'invoice_type' => $invoice->invoice_type ?? $invoice->type,
+                    'type' => $invoice->type,
                     'description' => $invoice->description,
                     'amount' => $invoice->amount,
                     'paid_amount' => $invoice->paid_amount ?? 0,
