@@ -39,13 +39,28 @@ class OtpSecurityController extends Controller
             ->distinct()
             ->pluck('phone');
 
+        // Phone attempt summary (last N hours)
+        $phoneAttempts = OtpLog::select('phone')
+            ->whereNotNull('phone')
+            ->where('created_at', '>', now()->subHours($hours))
+            ->selectRaw('COUNT(*) as total_attempts')
+            ->selectRaw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_attempts")
+            ->selectRaw("SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified_attempts")
+            ->selectRaw("MAX(CASE WHEN status = 'blocked' AND blocked_until > NOW() THEN 1 ELSE 0 END) as is_blocked")
+            ->selectRaw('MAX(blocked_until) as blocked_until')
+            ->groupBy('phone')
+            ->orderByDesc('total_attempts')
+            ->limit(200)
+            ->get();
+
         return view('admin.security.otp', compact(
             'statistics',
             'securityReport',
             'recentSuspicious',
             'blockedIps',
             'blockedPhones',
-            'hours'
+            'hours',
+            'phoneAttempts'
         ));
     }
 

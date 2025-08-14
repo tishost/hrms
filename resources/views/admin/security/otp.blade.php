@@ -113,6 +113,71 @@
         </div>
     </div>
 
+    <!-- Phone Attempts Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-table"></i> Phone Attempt Summary (Last {{ $hours }}h)
+                    </h6>
+                    <small class="text-muted">Total: {{ $phoneAttempts->count() }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Phone</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center text-danger">Failed</th>
+                                    <th class="text-center text-success">Verified</th>
+                                    <th class="text-center">Blocked</th>
+                                    <th>Blocked Until</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($phoneAttempts as $row)
+                                    <tr>
+                                        <td>{{ $row->phone }}</td>
+                                        <td class="text-center fw-bold">{{ $row->total_attempts }}</td>
+                                        <td class="text-center text-danger">{{ $row->failed_attempts }}</td>
+                                        <td class="text-center text-success">{{ $row->verified_attempts }}</td>
+                                        <td class="text-center">
+                                            @if($row->is_blocked)
+                                                <span class="badge bg-danger">Yes</span>
+                                            @else
+                                                <span class="badge bg-success">No</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $row->blocked_until ? \Carbon\Carbon::parse($row->blocked_until)->format('M d, Y H:i') : '—' }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button class="btn btn-warning reset-phone" data-phone="{{ $row->phone }}">
+                                                    <i class="fas fa-undo"></i> Reset
+                                                </button>
+                                                @if($row->is_blocked)
+                                                <button class="btn btn-success unblock-phone" data-phone="{{ $row->phone }}">
+                                                    <i class="fas fa-unlock"></i> Unblock
+                                                </button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">No attempts found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Blocked Entities -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -275,6 +340,27 @@ $(document).ready(function() {
             })
             .fail(function(xhr){
                 alert('Request failed: ' + (xhr.responseJSON?.message || 'Server error'));
+            });
+        }
+    });
+
+    // Reset from table
+    $('.reset-phone').click(function() {
+        const phone = $(this).data('phone');
+        if (confirm(`Reset OTP limit for ${phone}?`)) {
+            $.post('{{ route("admin.security.otp.reset-phone") }}', {
+                phone: phone,
+                _token: '{{ csrf_token() }}'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to reset');
+                }
+            })
+            .fail(function() {
+                alert('Server error');
             });
         }
     });
