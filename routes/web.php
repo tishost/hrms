@@ -466,6 +466,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('security/otp/unblock-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'unblockPhone'])->name('security.otp.unblock-phone');
     Route::post('security/otp/block-ip', [App\Http\Controllers\Admin\OtpSecurityController::class, 'blockIp'])->name('security.otp.block-ip');
     Route::post('security/otp/block-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'blockPhone'])->name('security.otp.block-phone');
+    Route::post('security/otp/reset-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'resetPhoneLimit'])->name('security.otp.reset-phone');
     Route::get('security/otp/statistics', [App\Http\Controllers\Admin\OtpSecurityController::class, 'getStatistics'])->name('security.otp.statistics');
     Route::get('security/otp/export', [App\Http\Controllers\Admin\OtpSecurityController::class, 'exportLogs'])->name('security.otp.export');
 

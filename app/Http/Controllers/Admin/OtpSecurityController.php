@@ -252,4 +252,30 @@ class OtpSecurityController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * Reset OTP attempt/limit for a phone number
+     */
+    public function resetPhoneLimit(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+        ]);
+        $phone = $request->phone;
+
+        // Clear blocked status and failed attempts for this phone
+        OtpLog::where('phone', $phone)
+            ->whereIn('status', ['blocked', 'failed'])
+            ->update([
+                'status' => 'sent',
+                'blocked_until' => null,
+                'reason' => null,
+                'abuse_score' => 0,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "OTP limit/attempts for {$phone} have been reset.",
+        ]);
+    }
 } 

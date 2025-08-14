@@ -93,6 +93,26 @@
         </div>
     </div>
 
+    <!-- Reset Phone OTP Limit -->
+    <div class="row mb-4">
+        <div class="col-xl-6 col-md-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-sync-alt"></i> Reset Phone OTP Limit
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" id="reset_phone" class="form-control" placeholder="Enter phone number (e.g., 01XXXXXXXXX)">
+                        <button class="btn btn-warning" id="btn-reset-phone"><i class="fas fa-undo"></i> Reset</button>
+                    </div>
+                    <small class="text-muted">This will clear block and failed-attempt status for the phone so OTP can be tried again.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Blocked Entities -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -234,6 +254,31 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
+    // Reset phone limit
+    $('#btn-reset-phone').click(function() {
+        const phone = $('#reset_phone').val().trim();
+        if (!phone) {
+            alert('Please enter a phone number');
+            return;
+        }
+        if (confirm(`Reset OTP limit for ${phone}?`)) {
+            $.post('{{ route("admin.security.otp.reset-phone") }}', {
+                phone: phone,
+                _token: '{{ csrf_token() }}'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    alert(resp.message || 'Reset successful');
+                } else {
+                    alert('Failed to reset');
+                }
+            })
+            .fail(function(xhr){
+                alert('Request failed: ' + (xhr.responseJSON?.message || 'Server error'));
+            });
+        }
+    });
+
     // Unblock IP
     $('.unblock-ip').click(function() {
         const ip = $(this).data('ip');
