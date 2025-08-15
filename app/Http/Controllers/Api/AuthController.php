@@ -762,11 +762,21 @@ class AuthController extends Controller
             }
             $tenant = $tenantQuery->first();
             if ($tenant) {
-                // Get unit name separately
+                // Get unit and property name separately
                 $unitName = 'N/A';
+                $propertyName = 'N/A';
+                
                 if ($tenant->unit_id) {
                     $unit = DB::table('units')->where('id', $tenant->unit_id)->first();
-                    $unitName = $unit ? $unit->name : 'N/A';
+                    if ($unit) {
+                        $unitName = $unit->name ?? 'N/A';
+                        
+                        // Get property name from unit
+                        if ($unit->property_id) {
+                            $property = DB::table('properties')->where('id', $unit->property_id)->first();
+                            $propertyName = $property ? $property->name : 'N/A';
+                        }
+                    }
                 }
                 
                 return response()->json([
@@ -778,6 +788,7 @@ class AuthController extends Controller
                         'email' => $tenant->email,
                         'mobile' => $tenant->mobile ?? $tenant->phone,
                         'unit_name' => $unitName,
+                        'property_name' => $propertyName,
                     ]
                 ]);
             }
