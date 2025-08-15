@@ -760,8 +760,15 @@ class AuthController extends Controller
             } else {
                 $tenantQuery->whereRaw('1=0'); // no such column
             }
-            $tenant = $tenantQuery->with('unit')->first();
+            $tenant = $tenantQuery->first();
             if ($tenant) {
+                // Get unit name separately
+                $unitName = 'N/A';
+                if ($tenant->unit_id) {
+                    $unit = DB::table('units')->where('id', $tenant->unit_id)->first();
+                    $unitName = $unit ? $unit->name : 'N/A';
+                }
+                
                 return response()->json([
                     'success' => true,
                     'role' => 'tenant',
@@ -770,7 +777,7 @@ class AuthController extends Controller
                         'name' => ($tenant->first_name ?? '') . ' ' . ($tenant->last_name ?? ''),
                         'email' => $tenant->email,
                         'mobile' => $tenant->mobile ?? $tenant->phone,
-                        'unit_name' => $tenant->unit ? $tenant->unit->name : 'N/A',
+                        'unit_name' => $unitName,
                     ]
                 ]);
             }
