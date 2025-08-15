@@ -98,7 +98,7 @@
                             <div class="col-12">
                                 <h5>OTP Requirements</h5>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="require_otp_for_registration"
                                                    name="require_otp_for_registration" value="1"
@@ -108,7 +108,17 @@
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="require_otp_for_tenant_registration"
+                                                   name="require_otp_for_tenant_registration" value="1"
+                                                   {{ $settings->require_otp_for_tenant_registration ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="require_otp_for_tenant_registration">
+                                                Tenant Registration
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="require_otp_for_login"
                                                    name="require_otp_for_login" value="1"
@@ -118,7 +128,7 @@
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="require_otp_for_password_reset"
                                                    name="require_otp_for_password_reset" value="1"
@@ -180,6 +190,11 @@ $(document).ready(function() {
     $('#require_otp_for_registration').change(function() {
         const isChecked = $(this).is(':checked');
         console.log('OTP Registration requirement changed to:', isChecked);
+    });
+
+    $('#require_otp_for_tenant_registration').change(function() {
+        const isChecked = $(this).is(':checked');
+        console.log('OTP Tenant Registration requirement changed to:', isChecked);
     });
 
     $('#require_otp_for_login').change(function() {

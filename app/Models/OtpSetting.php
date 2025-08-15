@@ -16,6 +16,7 @@ class OtpSetting extends Model
         'max_attempts',
         'resend_cooldown_seconds',
         'require_otp_for_registration',
+        'require_otp_for_tenant_registration',
         'require_otp_for_login',
         'require_otp_for_password_reset',
         'otp_message_template',
@@ -24,6 +25,7 @@ class OtpSetting extends Model
     protected $casts = [
         'is_enabled' => 'boolean',
         'require_otp_for_registration' => 'boolean',
+        'require_otp_for_tenant_registration' => 'boolean',
         'require_otp_for_login' => 'boolean',
         'require_otp_for_password_reset' => 'boolean',
     ];
@@ -44,6 +46,7 @@ class OtpSetting extends Model
                 'max_attempts' => 5,
                 'resend_cooldown_seconds' => 30,
                 'require_otp_for_registration' => true,
+                'require_otp_for_tenant_registration' => false,
                 'require_otp_for_login' => false,
                 'require_otp_for_password_reset' => true,
                 'otp_message_template' => 'Your OTP is: {otp}. Valid for {minutes} minutes.',
@@ -65,6 +68,8 @@ class OtpSetting extends Model
         switch ($action) {
             case 'registration':
                 return $this->require_otp_for_registration;
+            case 'tenant_registration':
+                return $this->require_otp_for_tenant_registration;
             case 'login':
                 return $this->require_otp_for_login;
             case 'password_reset':

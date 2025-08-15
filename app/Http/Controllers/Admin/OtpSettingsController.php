@@ -33,6 +33,7 @@ class OtpSettingsController extends Controller
             'max_attempts' => 'integer|min:1|max:10',
             'resend_cooldown_seconds' => 'integer|min:30|max:300',
             'require_otp_for_registration' => 'boolean',
+            'require_otp_for_tenant_registration' => 'boolean',
             'require_otp_for_login' => 'boolean',
             'require_otp_for_password_reset' => 'boolean',
             'otp_message_template' => 'nullable|string|max:500',
@@ -51,6 +52,7 @@ class OtpSettingsController extends Controller
         // Convert checkbox values to boolean
         $data['is_enabled'] = $request->has('is_enabled');
         $data['require_otp_for_registration'] = $request->has('require_otp_for_registration');
+        $data['require_otp_for_tenant_registration'] = $request->has('require_otp_for_tenant_registration');
         $data['require_otp_for_login'] = $request->has('require_otp_for_login');
         $data['require_otp_for_password_reset'] = $request->has('require_otp_for_password_reset');
 

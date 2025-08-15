@@ -27,6 +27,15 @@ class TenantRegistrationController extends Controller
         ]);
 
         try {
+            // Check if OTP is required for tenant registration
+            $otpSettings = \App\Models\OtpSetting::getSettings();
+            if (!$otpSettings->isOtpRequiredFor('tenant_registration')) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'OTP verification is not required for tenant registration'
+                ], 400);
+            }
+
             // Check if tenant exists
             $tenant = Tenant::where('mobile', $request->mobile)->first();
 
@@ -201,17 +210,21 @@ class TenantRegistrationController extends Controller
                 ], 400);
             }
 
-            // Verify OTP was used
-            $otpRecord = TenantOtp::where('mobile', $request->mobile)
-                ->where('is_used', true)
-                ->where('expires_at', '>', now())
-                ->first();
+            // Check if OTP verification is required
+            $otpSettings = \App\Models\OtpSetting::getSettings();
+            if ($otpSettings->isOtpRequiredFor('tenant_registration')) {
+                // Verify OTP was used
+                $otpRecord = TenantOtp::where('mobile', $request->mobile)
+                    ->where('is_used', true)
+                    ->where('expires_at', '>', now())
+                    ->first();
 
-            if (!$otpRecord) {
-                \Log::warning('No valid OTP verification found for registration', ['mobile' => $request->mobile]);
-                return response()->json([
-                    'error' => 'Please verify your OTP first'
-                ], 400);
+                if (!$otpRecord) {
+                    \Log::warning('No valid OTP verification found for registration', ['mobile' => $request->mobile]);
+                    return response()->json([
+                        'error' => 'Please verify your OTP first'
+                    ], 400);
+                }
             }
 
             // Create user
