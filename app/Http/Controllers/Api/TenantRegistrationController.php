@@ -210,22 +210,7 @@ class TenantRegistrationController extends Controller
                 ], 400);
             }
 
-            // Check if OTP verification is required
-            $otpSettings = \App\Models\OtpSetting::getSettings();
-            if ($otpSettings->isOtpRequiredFor('tenant_registration')) {
-                // Verify OTP was used
-                $otpRecord = TenantOtp::where('mobile', $request->mobile)
-                    ->where('is_used', true)
-                    ->where('expires_at', '>', now())
-                    ->first();
-
-                if (!$otpRecord) {
-                    \Log::warning('No valid OTP verification found for registration', ['mobile' => $request->mobile]);
-                    return response()->json([
-                        'error' => 'Please verify your OTP first'
-                    ], 400);
-                }
-            }
+            // OTP verification removed - Tenant registration now works without OTP
 
             // Create user
             $user = User::create([
