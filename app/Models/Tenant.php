@@ -15,6 +15,8 @@ class Tenant extends Model
         'gender',
         'mobile',
         'alt_mobile',
+        'phone_verified',
+        'profile_pic',
         'email',
         'nid_number',
         'address',

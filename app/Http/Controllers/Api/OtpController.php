@@ -229,10 +229,18 @@ class OtpController extends Controller
             if ($isValid) {
                 // Update phone_verified status for profile_update and registration
                 if ($type === 'profile_update' || $type === 'registration') {
+                    // Update Owner phone verification
                     $owner = \App\Models\Owner::where('phone', $phone)->first();
                     if ($owner) {
                         $owner->phone_verified = true;
                         $owner->save();
+                    }
+                    
+                    // Update Tenant phone verification
+                    $tenant = \App\Models\Tenant::where('phone', $phone)->first();
+                    if ($tenant) {
+                        $tenant->phone_verified = true;
+                        $tenant->save();
                     }
                 }
                 // Log verified
