@@ -52,6 +52,7 @@ Route::get('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::c
 
 // Public system status/maintenance endpoint
 Route::get('/system/status', [SystemController::class, 'status']);
+Route::get('/system-settings', [SystemController::class, 'getSettings']);
 
 // Public subscription plans
 Route::get('/subscription/plans', [ApiSubscriptionController::class, 'plans']);

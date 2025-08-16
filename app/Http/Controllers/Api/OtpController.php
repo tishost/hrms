@@ -392,6 +392,7 @@ class OtpController extends Controller
                     'login_required' => $otpSettings->isOtpRequiredFor('login'),
                     'reset_required' => $otpSettings->isOtpRequiredFor('reset'),
                     'profile_update_required' => $otpSettings->isOtpRequiredFor('profile_update'),
+                    'require_otp_for_tenant_registration' => (bool) ($otpSettings->require_otp_for_tenant_registration ?? 0), // Only for tenant profile update
                     'otp_length' => $otpSettings->otp_length,
                     'otp_expiry_minutes' => $otpSettings->otp_expiry_minutes,
                     'resend_cooldown_seconds' => (int) $otpSettings->resend_cooldown_seconds,
