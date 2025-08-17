@@ -354,8 +354,8 @@ $(document).ready(function() {
         }
     });
 
-    // Reset from table
-    $('.reset-phone').click(function() {
+    // Reset from table - Using event delegation for dynamic content
+    $(document).on('click', '.reset-phone', function() {
         const phone = $(this).data('phone');
         console.log('Table reset button clicked for phone:', phone);
         
