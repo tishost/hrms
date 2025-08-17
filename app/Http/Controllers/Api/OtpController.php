@@ -270,7 +270,7 @@ class OtpController extends Controller
                     }
                     
                     // Update Tenant phone verification
-                    $tenant = \App\Models\Tenant::where('phone', $phone)->first();
+                    $tenant = \App\Models\Tenant::where('mobile', $phone)->first();
                     if ($tenant) {
                         $tenant->phone_verified = true;
                         $tenant->save();
