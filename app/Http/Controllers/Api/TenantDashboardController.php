@@ -154,6 +154,7 @@ class TenantDashboardController extends Controller
                 'company_name' => 'nullable|string|max:150',
                 'business_name' => 'nullable|string|max:150',
                 'university' => 'nullable|string|max:150',
+                'college_university' => 'nullable|string|max:150',
             ]);
 
             // Conditional required fields based on occupation
@@ -163,7 +164,10 @@ class TenantDashboardController extends Controller
             $validator->sometimes('business_name', 'required|string|max:150', function ($input) {
                 return isset($input->occupation) && strtolower($input->occupation) === 'business';
             });
-            $validator->sometimes('university', 'required|string|max:150', function ($input) {
+            $validator->sometimes('university', 'required_without:college_university|string|max:150', function ($input) {
+                return isset($input->occupation) && strtolower($input->occupation) === 'student';
+            });
+            $validator->sometimes('college_university', 'required_without:university|string|max:150', function ($input) {
                 return isset($input->occupation) && strtolower($input->occupation) === 'student';
             });
 
@@ -207,8 +211,14 @@ class TenantDashboardController extends Controller
             if ($request->filled('business_name') && Schema::hasColumn('tenants', 'business_name')) {
                 $tenant->business_name = $request->input('business_name');
             }
-            if ($request->filled('university') && Schema::hasColumn('tenants', 'university')) {
-                $tenant->university = $request->input('university');
+            // Map student institution field to correct DB column
+            $institutionName = $request->input('college_university', $request->input('university'));
+            if (!empty($institutionName)) {
+                if (Schema::hasColumn('tenants', 'college_university')) {
+                    $tenant->college_university = $institutionName;
+                } elseif (Schema::hasColumn('tenants', 'university')) {
+                    $tenant->university = $institutionName;
+                }
             }
 
             $tenant->save();
