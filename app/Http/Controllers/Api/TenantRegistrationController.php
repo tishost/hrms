@@ -61,28 +61,19 @@ class TenantRegistrationController extends Controller
                 ], 400);
             }
 
-            // Generate OTP
-            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            // Generate OTP using main OTP system
+            $otp = \App\Models\Otp::generateOtp($request->mobile, 'profile_update');
 
             \Log::info('Generated OTP', [
                 'mobile' => $request->mobile,
-                'otp' => $otp
+                'otp' => $otp->otp,
+                'otp_id' => $otp->id
             ]);
-
-            // Save OTP
-            $otpRecord = TenantOtp::updateOrCreate(
-                ['mobile' => $request->mobile],
-                [
-                    'otp' => $otp,
-                    'expires_at' => now()->addMinutes(10),
-                    'is_used' => false
-                ]
-            );
 
             \Log::info('OTP saved to database', [
                 'mobile' => $request->mobile,
-                'otp_id' => $otpRecord->id,
-                'expires_at' => $otpRecord->expires_at
+                'otp_id' => $otp->id,
+                'expires_at' => $otp->expires_at
             ]);
 
             // Send SMS/Email (you can integrate your SMS/Email service here)
@@ -90,7 +81,8 @@ class TenantRegistrationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'OTP sent successfully',
-                'otp' => $otp, // Remove this in production
+                'otp' => $otp->otp, // Remove this in production
+                'expires_in' => $otp->expires_at->diffInMinutes(now()),
                 'tenant' => [
                     'name' => trim(($tenant->first_name ?? '') . ' ' . ($tenant->last_name ?? '')),
                     'mobile' => $tenant->mobile,
@@ -125,24 +117,27 @@ class TenantRegistrationController extends Controller
         ]);
 
         try {
-            $otpRecord = TenantOtp::where('mobile', $request->mobile)
+            // Use main OTP system for tenant profile update
+            $otpRecord = \App\Models\Otp::where('phone', $request->mobile)
                 ->where('otp', $request->otp)
+                ->where('type', 'profile_update')
+                ->where('is_used', false)
+                ->where('expires_at', '>', now())
                 ->first();
 
             \Log::info('OTP verification lookup', [
                 'mobile' => $request->mobile,
                 'otp_found' => $otpRecord ? true : false,
-                'otp_valid' => $otpRecord ? $otpRecord->isValid() : false,
+                'otp_valid' => $otpRecord ? true : false,
                 'otp_used' => $otpRecord ? $otpRecord->is_used : null,
                 'otp_expires' => $otpRecord ? $otpRecord->expires_at : null
             ]);
 
-            if (!$otpRecord || !$otpRecord->isValid()) {
+            if (!$otpRecord) {
                 \Log::warning('Invalid OTP verification attempt', [
                     'mobile' => $request->mobile,
                     'otp_provided' => $request->otp,
-                    'otp_found' => $otpRecord ? true : false,
-                    'otp_valid' => $otpRecord ? $otpRecord->isValid() : false
+                    'otp_found' => false
                 ]);
                 return response()->json([
                     'error' => 'Invalid or expired OTP'
@@ -151,6 +146,17 @@ class TenantRegistrationController extends Controller
 
             // Mark OTP as used
             $otpRecord->update(['is_used' => true]);
+
+            // Update tenant phone verification status
+            $tenant = Tenant::where('mobile', $request->mobile)->first();
+            if ($tenant) {
+                $tenant->phone_verified = true;
+                $tenant->save();
+                \Log::info('Tenant phone verification updated', [
+                    'tenant_id' => $tenant->id,
+                    'mobile' => $request->mobile
+                ]);
+            }
 
             \Log::info('OTP verified successfully', [
                 'mobile' => $request->mobile,
