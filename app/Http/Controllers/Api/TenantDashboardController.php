@@ -172,6 +172,9 @@ class TenantDashboardController extends Controller
             $tenant->last_name = $request->input('last_name');
             if ($request->filled('email')) {
                 $tenant->email = $request->input('email');
+                // Keep user email in sync with tenant email
+                $user->email = $request->input('email');
+                $user->save();
             }
             if ($request->filled('phone')) {
                 // tenant table uses 'mobile' for phone
