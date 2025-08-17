@@ -17,13 +17,13 @@ class TenantRegistrationController extends Controller
     public function requestOtp(Request $request)
     {
         \Log::info('Tenant OTP request received', [
-            'mobile' => $request->mobile,
+            'phone' => $request->phone,
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent()
         ]);
 
         $request->validate([
-            'mobile' => 'required|string|max:20'
+            'phone' => 'required|string|max:20'
         ]);
 
         try {
@@ -37,35 +37,35 @@ class TenantRegistrationController extends Controller
             }
 
             // Check if tenant exists
-            $tenant = Tenant::where('mobile', $request->mobile)->first();
+            $tenant = Tenant::where('mobile', $request->phone)->first();
 
             \Log::info('Tenant lookup result', [
-                'mobile' => $request->mobile,
+                'phone' => $request->phone,
                 'tenant_found' => $tenant ? true : false,
                 'tenant_id' => $tenant ? $tenant->id : null
             ]);
 
             if (!$tenant) {
-                \Log::warning('Tenant not found for OTP request', ['mobile' => $request->mobile]);
+                \Log::warning('Tenant not found for OTP request', ['phone' => $request->phone]);
                 return response()->json([
                     'error' => 'Tenant not found. Please contact your owner.'
                 ], 404);
             }
 
             // Check if user already exists
-            $existingUser = User::where('phone', $request->mobile)->first();
+            $existingUser = User::where('phone', $request->phone)->first();
             if ($existingUser) {
-                \Log::warning('User already exists for OTP request', ['mobile' => $request->mobile]);
+                \Log::warning('User already exists for OTP request', ['phone' => $request->phone]);
                 return response()->json([
                     'error' => 'Account already registered. Please login.'
                 ], 400);
             }
 
             // Generate OTP using main OTP system
-            $otp = \App\Models\Otp::generateOtp($request->mobile, 'profile_update');
+            $otp = \App\Models\Otp::generateOtp($request->phone, 'profile_update');
 
             \Log::info('Generated OTP', [
-                'mobile' => $request->mobile,
+                'phone' => $request->phone,
                 'otp' => $otp->otp,
                 'otp_id' => $otp->id
             ]);
@@ -73,7 +73,7 @@ class TenantRegistrationController extends Controller
             // Log OTP generation
             try {
                 $otpLogData = [
-                    'phone' => $request->mobile,
+                    'phone' => $request->phone,
                     'otp' => $otp->otp,
                     'type' => 'profile_update',
                     'ip_address' => $request->ip(),
@@ -123,7 +123,7 @@ class TenantRegistrationController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tenant OTP request error: ' . $e->getMessage(), [
-                'mobile' => $request->mobile,
+                'phone' => $request->phone,
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
@@ -143,7 +143,7 @@ class TenantRegistrationController extends Controller
     public function verifyOtp(Request $request)
     {
         \Log::info('Tenant OTP verification request', [
-            'mobile' => $request->mobile,
+            'phone' => $request->phone,
             'otp_length' => strlen($request->otp)
         ]);
 
