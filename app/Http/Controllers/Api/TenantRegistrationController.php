@@ -70,6 +70,22 @@ class TenantRegistrationController extends Controller
                 'otp_id' => $otp->id
             ]);
 
+            // Log OTP generation
+            try {
+                \App\Models\OtpLog::create([
+                    'phone' => $request->mobile,
+                    'otp' => $otp->otp,
+                    'type' => 'profile_update',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'status' => 'sent',
+                    'user_id' => optional($request->user())->id,
+                    'session_id' => session()->getId(),
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to create OTP log: ' . $e->getMessage());
+            }
+
             \Log::info('OTP saved to database', [
                 'mobile' => $request->mobile,
                 'otp_id' => $otp->id,
@@ -134,6 +150,22 @@ class TenantRegistrationController extends Controller
             ]);
 
             if (!$otpRecord) {
+                // Log failed verification attempt
+                try {
+                    \App\Models\OtpLog::create([
+                        'phone' => $request->phone,
+                        'otp' => $request->otp,
+                        'type' => 'profile_update',
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'status' => 'failed',
+                        'user_id' => optional($request->user())->id,
+                        'session_id' => session()->getId(),
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to create OTP log: ' . $e->getMessage());
+                }
+
                 \Log::warning('Invalid OTP verification attempt', [
                     'mobile' => $request->phone,
                     'otp_provided' => $request->otp,
@@ -156,6 +188,22 @@ class TenantRegistrationController extends Controller
                     'tenant_id' => $tenant->id,
                     'mobile' => $request->phone
                 ]);
+            }
+
+            // Log successful verification
+            try {
+                \App\Models\OtpLog::create([
+                    'phone' => $request->phone,
+                    'otp' => $request->otp,
+                    'type' => 'profile_update',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'status' => 'verified',
+                    'user_id' => optional($request->user())->id,
+                    'session_id' => session()->getId(),
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to create OTP log: ' . $e->getMessage());
             }
 
             \Log::info('OTP verified successfully', [
