@@ -112,13 +112,13 @@ class TenantRegistrationController extends Controller
         ]);
 
         $request->validate([
-            'mobile' => 'required|string',
+            'phone' => 'required|string',
             'otp' => 'required|string|size:6'
         ]);
 
         try {
             // Use main OTP system for tenant profile update
-            $otpRecord = \App\Models\Otp::where('phone', $request->mobile)
+            $otpRecord = \App\Models\Otp::where('phone', $request->phone)
                 ->where('otp', $request->otp)
                 ->where('type', 'profile_update')
                 ->where('is_used', false)
@@ -126,7 +126,7 @@ class TenantRegistrationController extends Controller
                 ->first();
 
             \Log::info('OTP verification lookup', [
-                'mobile' => $request->mobile,
+                'mobile' => $request->phone,
                 'otp_found' => $otpRecord ? true : false,
                 'otp_valid' => $otpRecord ? true : false,
                 'otp_used' => $otpRecord ? $otpRecord->is_used : null,
@@ -135,7 +135,7 @@ class TenantRegistrationController extends Controller
 
             if (!$otpRecord) {
                 \Log::warning('Invalid OTP verification attempt', [
-                    'mobile' => $request->mobile,
+                    'mobile' => $request->phone,
                     'otp_provided' => $request->otp,
                     'otp_found' => false
                 ]);
@@ -148,18 +148,18 @@ class TenantRegistrationController extends Controller
             $otpRecord->update(['is_used' => true]);
 
             // Update tenant phone verification status
-            $tenant = Tenant::where('mobile', $request->mobile)->first();
+            $tenant = Tenant::where('mobile', $request->phone)->first();
             if ($tenant) {
                 $tenant->phone_verified = true;
                 $tenant->save();
                 \Log::info('Tenant phone verification updated', [
                     'tenant_id' => $tenant->id,
-                    'mobile' => $request->mobile
+                    'mobile' => $request->phone
                 ]);
             }
 
             \Log::info('OTP verified successfully', [
-                'mobile' => $request->mobile,
+                'mobile' => $request->phone,
                 'otp_id' => $otpRecord->id
             ]);
 
@@ -170,11 +170,11 @@ class TenantRegistrationController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Tenant OTP verification error: ' . $e->getMessage(), [
-                'mobile' => $request->mobile,
+                'mobile' => $request->phone,
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
-                'error' => 'Failed to verify OTP'
+                'error' => 'Failed to verify OTP: ' . $e->getMessage()
             ], 500);
         }
     }
