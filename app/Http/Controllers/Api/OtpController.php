@@ -103,7 +103,14 @@ class OtpController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have reached the daily OTP send limit. Please try again tomorrow.'
+                    'message' => 'Daily OTP limit reached',
+                    'error_type' => 'daily_limit',
+                    'details' => [
+                        'phone' => $phone,
+                        'limit' => $otpLimit,
+                        'reset_time' => 'tomorrow',
+                        'message' => 'You have reached the daily OTP send limit. Please try again tomorrow or contact admin for assistance.'
+                    ]
                 ], 429);
             }
         }
@@ -310,9 +317,41 @@ class OtpController extends Controller
                         'error' => $e->getMessage()
                     ]);
                 }
+                // Get user details for response
+                $userDetails = null;
+                if ($type === 'profile_update' || $type === 'registration') {
+                    // Check if it's a tenant
+                    $tenant = \App\Models\Tenant::where('mobile', $phone)->first();
+                    if ($tenant) {
+                        $userDetails = [
+                            'type' => 'tenant',
+                            'name' => trim(($tenant->first_name ?? '') . ' ' . ($tenant->last_name ?? '')),
+                            'phone' => $tenant->mobile,
+                            'phone_verified' => true
+                        ];
+                    }
+                    
+                    // Check if it's an owner
+                    $owner = \App\Models\Owner::where('phone', $phone)->first();
+                    if ($owner) {
+                        $userDetails = [
+                            'type' => 'owner',
+                            'name' => $owner->name,
+                            'phone' => $owner->phone,
+                            'phone_verified' => true
+                        ];
+                    }
+                }
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'OTP verified successfully'
+                    'message' => '🎉 Mobile number verified successfully!',
+                    'data' => [
+                        'phone' => $phone,
+                        'verification_status' => 'verified',
+                        'user_details' => $userDetails,
+                        'verified_at' => now()->toISOString()
+                    ]
                 ]);
             } else {
                 // Before enforcing limit, compute failed attempts AFTER the latest OTP was created
