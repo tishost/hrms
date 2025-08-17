@@ -67,9 +67,13 @@ class BangladeshGeoSeeder extends Seeder
                 }
 
                 $nameMap[$this->normalize($en)] = $districtId;
+                if (!empty($bn)) {
+                    $nameMap[$this->normalize($bn)] = $districtId; // allow BN match too
+                }
             }
 
             // Seed thanas
+            $unmatched = [];
             foreach ($upazilasList as $item) {
                 if (!is_array($item)) continue;
                 if (isset($item['properties']) && is_array($item['properties'])) {
@@ -85,7 +89,8 @@ class BangladeshGeoSeeder extends Seeder
                 }
                 if (empty($dist) || empty($upazila)) continue;
 
-                $districtId = $nameMap[$this->normalize($dist)] ?? null;
+                $normDist = $this->normalize($dist);
+                $districtId = $nameMap[$normDist] ?? null;
                 if (!$districtId) continue;
 
                 $bn = $this->pickString($item, ['name_bn', 'bn']);
@@ -108,6 +113,20 @@ class BangladeshGeoSeeder extends Seeder
 
             if (app()->runningInConsole()) {
                 $this->command?->info("BangladeshGeoSeeder: districts added: {$districtCount}, thanas processed: {$thanaCount}");
+                if ($thanaCount === 0) {
+                    // Helpful hints
+                    $sample = array_slice($upazilasList, 0, 3);
+                    $this->command?->warn('Sample upazila records (first 3) for debugging:');
+                    foreach ($sample as $s) {
+                        if (!is_array($s)) continue;
+                        $props = isset($s['properties']) && is_array($s['properties']) ? $s['properties'] : $s;
+                        $sd = $this->pickString($props, ['district_en','district','district_name']);
+                        if (empty($sd)) $sd = $this->pickNested($props['district'] ?? null);
+                        $su = $this->pickString($props, ['upazila_en','name_en','name']);
+                        if (empty($su)) $su = $this->pickNested($props['name'] ?? null);
+                        $this->command?->line(' - dist='.$sd.' | upazila='.$su);
+                    }
+                }
             }
         });
     }
