@@ -384,9 +384,11 @@ $(document).ready(function() {
         }
     });
 
-    // Unblock IP
-    $('.unblock-ip').click(function() {
+    // Unblock IP - Using event delegation for dynamic content
+    $(document).on('click', '.unblock-ip', function() {
         const ip = $(this).data('ip');
+        console.log('Unblock IP button clicked for IP:', ip);
+        
         if (confirm(`Are you sure you want to unblock IP ${ip}?`)) {
             $.post('{{ route("admin.security.otp.unblock-ip") }}', {
                 ip: ip,
@@ -405,9 +407,11 @@ $(document).ready(function() {
         }
     });
 
-    // Unblock Phone
-    $('.unblock-phone').click(function() {
+    // Unblock Phone - Using event delegation for dynamic content
+    $(document).on('click', '.unblock-phone', function() {
         const phone = $(this).data('phone');
+        console.log('Unblock phone button clicked for phone:', phone);
+        
         if (confirm(`Are you sure you want to unblock phone ${phone}?`)) {
             $.post('{{ route("admin.security.otp.unblock-phone") }}', {
                 phone: phone,
