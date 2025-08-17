@@ -55,6 +55,7 @@ class OtpController extends Controller
         $phone = $request->phone;
         // Use effective type for OTP generation and templates
         $type = $effectiveType;
+        $userId = $request->user_id;
 
         // Load OTP settings
         $otpSettings = OtpSetting::getSettings();
@@ -95,7 +96,7 @@ class OtpController extends Controller
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'blocked',
                         'reason' => 'daily_limit',
-                        'user_id' => optional($request->user())->id,
+                        'user_id' => $userId ?? optional($request->user())->id,
                         'session_id' => session()->getId(),
                     ]);
                 } catch (\Exception $e) {}
@@ -151,7 +152,7 @@ class OtpController extends Controller
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'sent',
-                        'user_id' => optional($request->user())->id,
+                        'user_id' => $userId ?? optional($request->user())->id,
                         'session_id' => session()->getId(),
                         'reason' => 'reuse_existing',
                     ]);
@@ -179,7 +180,7 @@ class OtpController extends Controller
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->header('User-Agent'),
                     'status' => 'sent',
-                    'user_id' => optional($request->user())->id,
+                    'user_id' => $userId ?? optional($request->user())->id,
                     'session_id' => session()->getId(),
                 ]);
             } catch (\Exception $e) {}
@@ -217,6 +218,7 @@ class OtpController extends Controller
             'phone' => 'required|string|max:20',
             'otp' => 'required|string|size:6',
             'type' => 'required|in:registration,login,reset,profile_update',
+            'user_id' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -230,6 +232,7 @@ class OtpController extends Controller
         $phone = $request->phone;
         $otp = $request->otp;
         $type = $request->type;
+        $userId = $request->user_id;
 
         try {
             // Verify first; if correct, succeed regardless of prior failed attempts
@@ -268,7 +271,7 @@ class OtpController extends Controller
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'verified',
-                        'user_id' => optional($request->user())->id,
+                        'user_id' => $userId ?? optional($request->user())->id,
                         'session_id' => session()->getId(),
                     ]);
                 } catch (\Exception $e) {}
@@ -296,7 +299,7 @@ class OtpController extends Controller
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'failed',
-                        'user_id' => optional($request->user())->id,
+                        'user_id' => $userId ?? optional($request->user())->id,
                         'session_id' => session()->getId(),
                     ]);
                 } catch (\Exception $e) {}

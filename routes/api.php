@@ -19,8 +19,6 @@ use App\Http\Controllers\Api\SubscriptionController as ApiSubscriptionController
 
 
 // Tenant Registration Routes
-Route::post('/tenant/request-otp', [TenantRegistrationController::class, 'requestOtp']);
-Route::post('/tenant/verify-otp', [TenantRegistrationController::class, 'verifyOtp']);
 Route::post('/tenant/register', [TenantRegistrationController::class, 'register']);
 
 // Role-based login
