@@ -33,7 +33,7 @@ Route::post('/check-google-role', [AuthController::class, 'checkGoogleRole']);
 // Public geo endpoints
 Route::get('/districts', function () {
     return response()->json(
-        District::orderBy('namer')->select(['id','name'])->get()
+        District::orderBy('name')->select(['id','name'])->get()
     );
 });
 Route::get('/districts/{id}/upazilas', function ($id) {
