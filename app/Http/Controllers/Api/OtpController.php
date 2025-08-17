@@ -448,9 +448,11 @@ class OtpController extends Controller
      */
     public function resendOtp(Request $request)
     {
+        // Validate request
         $validator = Validator::make($request->all(), [
             'phone' => 'required|string|max:20',
             'type' => 'required|in:registration,login,reset,profile_update',
+            'user_id' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -462,17 +464,89 @@ class OtpController extends Controller
         }
 
         $phone = $request->phone;
-        $type = $request->type;
+        $requestedType = $request->type;
+        $isProfileUpdate = ($requestedType === 'profile_update');
+        $effectiveType = $isProfileUpdate ? 'registration' : $requestedType; // for settings/templates only
+        $otpRecordType = $requestedType; // keep original type for persistence/logs
+        $userId = $request->user_id;
 
         try {
+            // Load settings and basic guards
             $settings = OtpSetting::getSettings();
+            if (!$settings->is_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP verification system is currently disabled'
+                ], 503);
+            }
+
+            if (!$settings->isOtpRequiredFor($effectiveType)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP verification is not required for this action'
+                ], 400);
+            }
+
+            // Enforce daily send limit using logs (same as sendOtp)
+            $otpLimitSetting = SystemSetting::where('key', 'otp_send_limit')->first();
+            $otpLimit = $otpLimitSetting ? intval($otpLimitSetting->value) : 5;
+            if ($otpLimit > 0) {
+                // Admin reset bypass window
+                $recentReset = \App\Models\OtpLog::where('phone', $phone)
+                    ->where('status', 'sent')
+                    ->where('reason', 'admin_reset')
+                    ->where('created_at', '>', now()->subMinutes(5))
+                    ->exists();
+
+                if ($recentReset) {
+                    $todaySendCount = 0;
+                } else {
+                    $todaySendCount = \App\Models\OtpLog::where('phone', $phone)
+                        ->where('type', $otpRecordType)
+                        ->where('status', 'sent')
+                        ->whereDate('created_at', now()->toDateString())
+                        ->where('reason', '!=', 'admin_reset')
+                        ->count();
+                }
+
+                if ($todaySendCount >= $otpLimit) {
+                    // Log blocked attempt
+                    try {
+                        \App\Models\OtpLog::create([
+                            'phone' => $phone,
+                            'otp' => null,
+                            'type' => $otpRecordType,
+                            'ip_address' => $request->ip(),
+                            'user_agent' => $request->header('User-Agent'),
+                            'status' => 'blocked',
+                            'reason' => 'daily_limit',
+                            'user_id' => $userId ?? optional($request->user())->id,
+                            'session_id' => session()->getId(),
+                        ]);
+                    } catch (\Exception $e) {}
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Daily OTP limit reached',
+                        'error_type' => 'daily_limit',
+                        'details' => [
+                            'phone' => $phone,
+                            'limit' => $otpLimit,
+                            'reset_time' => 'tomorrow',
+                            'message' => 'You have reached the daily OTP send limit. Please try again tomorrow or contact admin for assistance.'
+                        ]
+                    ], 429);
+                }
+            }
+
+            // Enforce cooldown
             $cooldownSeconds = (int) $settings->resend_cooldown_seconds;
-            if ($type === 'profile_update') {
+            if ($requestedType === 'profile_update') {
                 $cooldownSeconds = 30; // 30 seconds for profile update (more user-friendly)
             }
             // Check if there's a recent OTP within cooldown window
             $recentOtp = Otp::where('phone', $phone)
-                ->where('type', $type)
+                ->where('type', $otpRecordType)
                 ->orderBy('created_at', 'desc')
                 ->first();
 
@@ -486,15 +560,30 @@ class OtpController extends Controller
             }
 
             // Generate new OTP
-            $otp = Otp::generateOtp($phone, $type);
+            $otp = Otp::generateOtp($phone, $otpRecordType);
+
+            // Log sent OTP for daily limit accounting
+            try {
+                \App\Models\OtpLog::create([
+                    'phone' => $phone,
+                    'otp' => $otp->otp,
+                    'type' => $otpRecordType,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'status' => 'sent',
+                    'user_id' => $userId ?? optional($request->user())->id,
+                    'session_id' => session()->getId(),
+                    'reason' => 'resend',
+                ]);
+            } catch (\Exception $e) {}
 
             // TODO: Integrate with SMS service
             return response()->json([
                 'success' => true,
                 'message' => 'OTP resent successfully',
                 'otp' => $otp->otp, // Remove this in production
-                'expires_in' => OtpSetting::getSettings()->otp_expiry_minutes, // minutes
-                'expires_in_seconds' => OtpSetting::getSettings()->otp_expiry_minutes * 60,
+                'expires_in' => $settings->otp_expiry_minutes, // minutes
+                'expires_in_seconds' => $settings->otp_expiry_minutes * 60,
                 'resend_in_seconds' => $cooldownSeconds,
             ]);
 
