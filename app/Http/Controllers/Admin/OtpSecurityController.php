@@ -279,19 +279,40 @@ class OtpSecurityController extends Controller
         ]);
         $phone = $request->phone;
 
-        // Clear blocked status and failed attempts for this phone
-        OtpLog::where('phone', $phone)
-            ->whereIn('status', ['blocked', 'failed'])
-            ->update([
-                'status' => 'sent',
-                'blocked_until' => null,
-                'reason' => null,
-                'abuse_score' => 0,
+        \Log::info('Resetting OTP limit for phone: ' . $phone);
+
+        try {
+            // Clear blocked status and failed attempts for this phone
+            $updatedLogs = OtpLog::where('phone', $phone)
+                ->whereIn('status', ['blocked', 'failed'])
+                ->update([
+                    'status' => 'sent',
+                    'blocked_until' => null,
+                    'reason' => null,
+                    'abuse_score' => 0,
+                ]);
+
+            \Log::info("Updated {$updatedLogs} OTP log records for phone: {$phone}");
+
+            // Also clear any existing OTP records for this phone to allow new OTP generation
+            $deletedOtps = \App\Models\Otp::where('phone', $phone)
+                ->where('is_used', false)
+                ->delete();
+
+            \Log::info("Deleted {$deletedOtps} existing OTP records for phone: {$phone}");
+
+            return response()->json([
+                'success' => true,
+                'message' => "OTP limit/attempts for {$phone} have been reset. {$updatedLogs} log records updated, {$deletedOtps} OTP records cleared.",
             ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => "OTP limit/attempts for {$phone} have been reset.",
-        ]);
+        } catch (\Exception $e) {
+            \Log::error('Error resetting OTP limit for phone ' . $phone . ': ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reset OTP limit: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 } 
