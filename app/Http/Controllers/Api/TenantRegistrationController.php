@@ -184,7 +184,8 @@ class TenantRegistrationController extends Controller
         $request->validate([
             'mobile' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
-            'password_confirmation' => 'required'
+            'password_confirmation' => 'required',
+            'email' => 'nullable|email|max:191',
         ]);
 
         try {
@@ -211,6 +212,16 @@ class TenantRegistrationController extends Controller
             }
 
             // OTP verification removed - Tenant registration now works without OTP
+
+            // If email provided in registration form, update tenant email first
+            if ($request->filled('email')) {
+                $tenant->email = $request->email;
+                $tenant->save();
+                \Log::info('Tenant email updated during registration', [
+                    'tenant_id' => $tenant->id,
+                    'email' => $tenant->email,
+                ]);
+            }
 
             // Create user
             $user = User::create([

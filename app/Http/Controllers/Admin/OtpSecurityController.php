@@ -43,7 +43,7 @@ class OtpSecurityController extends Controller
         $phoneAttempts = OtpLog::select('phone')
             ->whereNotNull('phone')
             ->where('created_at', '>', now()->subHours($hours))
-            ->where('type', 'verify-otp')
+            ->where('status', '!=', 'blocked') // Exclude blocked logs from total count
             ->selectRaw('COUNT(*) as total_attempts')
             ->selectRaw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_attempts")
             ->selectRaw("SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified_attempts")

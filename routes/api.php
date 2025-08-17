@@ -47,9 +47,6 @@ Route::post('/verify-otp', [OtpController::class, 'verifyOtp']);
 Route::post('/resend-otp', [OtpController::class, 'resendOtp']);
 Route::get('/otp-settings', [OtpController::class, 'getOtpSettings']);
 
-// OTP Settings API Route (Public)
-Route::get('/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'getSettings']);
-
 // Public system status/maintenance endpoint
 Route::get('/system/status', [SystemController::class, 'status']);
 Route::get('/system-settings', [SystemController::class, 'getSettings']);
