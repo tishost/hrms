@@ -239,4 +239,80 @@ class TenantDashboardController extends Controller
             ], 500);
         }
     }
+
+    // Update address
+    public function updateAddress(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user || !$user->hasRole('tenant')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $validator = \Validator::make($request->all(), [
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:191', // upazila (frontend sends as city)
+                'district' => 'nullable|string|max:191',
+                'zip' => 'nullable|string|max:20',
+                'country' => 'nullable|string|max:100',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $tenant = Tenant::where('id', $user->tenant_id)->first();
+            if (!$tenant) {
+                return response()->json(['success' => false, 'message' => 'Tenant not found'], 404);
+            }
+
+            if ($request->filled('address')) {
+                $tenant->address = $request->input('address');
+            }
+            // Map city -> upazila
+            if ($request->filled('city')) {
+                if (Schema::hasColumn('tenants', 'upazila')) {
+                    $tenant->upazila = $request->input('city');
+                } else {
+                    $tenant->city = $request->input('city');
+                }
+            }
+            if ($request->filled('district')) {
+                if (Schema::hasColumn('tenants', 'district')) {
+                    $tenant->district = $request->input('district');
+                } else {
+                    $tenant->state = $request->input('district');
+                }
+            }
+            if ($request->filled('zip')) {
+                $tenant->zip = $request->input('zip');
+            }
+            if ($request->filled('country')) {
+                if (Schema::hasColumn('tenants', 'country')) {
+                    $tenant->country = $request->input('country');
+                }
+            }
+
+            $tenant->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Address updated successfully',
+                'tenant' => $tenant,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Tenant address update error', [
+                'user_id' => optional($request->user())->id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update address',
+            ], 500);
+        }
+    }
 }

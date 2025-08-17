@@ -33,7 +33,7 @@ Route::post('/check-google-role', [AuthController::class, 'checkGoogleRole']);
 // Public geo endpoints
 Route::get('/districts', function () {
     return response()->json(
-        District::orderBy('name')->select(['id','name'])->get()
+        District::orderBy('namer')->select(['id','name'])->get()
     );
 });
 Route::get('/districts/{id}/upazilas', function ($id) {
@@ -162,6 +162,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tenant/profile', [TenantDashboardController::class, 'getProfile']);
         Route::put('/tenant/profile/update-personal-info', [TenantDashboardController::class, 'updatePersonalInfo']);
+        Route::put('/tenant/profile/update-address', [TenantDashboardController::class, 'updateAddress']);
         Route::get('/tenant/invoices', [TenantDashboardController::class, 'getInvoices']);
         Route::get('/tenant/dashboard', [TenantDashboardController::class, 'getDashboard']);
 
