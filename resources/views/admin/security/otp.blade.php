@@ -318,8 +318,13 @@
 
 @section('scripts')
 <script>
+console.log('OTP Security script loaded');
+console.log('jQuery version:', typeof $, $().jquery);
+
 $(document).ready(function() {
+    console.log('Document ready, binding events...');
     // Reset phone limit
+    console.log('Binding reset button event...');
     $('#btn-reset-phone').click(function() {
         const phone = $('#reset_phone').val().trim();
         console.log('Reset button clicked for phone:', phone);
@@ -355,6 +360,7 @@ $(document).ready(function() {
     });
 
     // Reset from table - Using event delegation for dynamic content
+    console.log('Binding table reset button event delegation...');
     $(document).on('click', '.reset-phone', function() {
         const phone = $(this).data('phone');
         console.log('Table reset button clicked for phone:', phone);
@@ -429,6 +435,11 @@ $(document).ready(function() {
             });
         }
     });
+    
+    console.log('All events bound successfully');
+    console.log('Reset buttons found:', $('.reset-phone').length);
+    console.log('Unblock buttons found:', $('.unblock-phone').length);
+    console.log('Unblock IP buttons found:', $('.unblock-ip').length);
 });
 </script>
 @endsection 
