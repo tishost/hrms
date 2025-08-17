@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 class BangladeshGeoSeeder extends Seeder
 {
@@ -72,7 +73,7 @@ class BangladeshGeoSeeder extends Seeder
                 }
             }
 
-            // Seed thanas
+            // Seed upazilas/thanas
             $unmatched = [];
             foreach ($upazilasList as $item) {
                 if (!is_array($item)) continue;
@@ -97,7 +98,9 @@ class BangladeshGeoSeeder extends Seeder
                 $lat = $this->pickString($item, ['latitude', 'lat']);
                 $lng = $this->pickString($item, ['longitude', 'lng', 'lon']);
 
-                $updated = DB::table('thanas')->updateOrInsert(
+                // Determine target table: prefer 'upazilas' if exists, else 'thanas'
+                $targetTable = Schema::hasTable('upazilas') ? 'upazilas' : 'thanas';
+                $updated = DB::table($targetTable)->updateOrInsert(
                     ['district_id' => $districtId, 'name_en' => $upazila],
                     [
                         'name_bn' => $bn ?: null,

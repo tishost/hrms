@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\TenantRegistrationController;
 use App\Http\Controllers\Api\TenantDashboardController;
 use App\Http\Controllers\Api\SystemController;
 use App\Models\District;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\SubscriptionController as ApiSubscriptionController;
 
@@ -29,9 +30,19 @@ Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 // Smart registration routes
 Route::post('/check-mobile-role', [AuthController::class, 'checkMobileRole']);
 Route::post('/check-google-role', [AuthController::class, 'checkGoogleRole']);
-// Public districts list
+// Public geo endpoints
 Route::get('/districts', function () {
-    return response()->json(District::orderBy('name')->pluck('name'));
+    return response()->json(
+        District::orderBy('name_en')->select(['id','name_en as name'])->get()
+    );
+});
+Route::get('/districts/{id}/upazilas', function ($id) {
+    $rows = DB::table('upazilas')
+        ->where('district_id', $id)
+        ->orderBy('name_en')
+        ->select(['id','name_en as name'])
+        ->get();
+    return response()->json($rows);
 });
 
 // Password reset routes
