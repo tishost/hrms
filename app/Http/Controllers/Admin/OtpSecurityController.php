@@ -301,9 +301,51 @@ class OtpSecurityController extends Controller
 
             \Log::info("Deleted {$deletedOtps} existing OTP records for phone: {$phone}");
 
+            // Reset daily OTP send limit counter for this phone
+            // Clear all OTP logs from today for this phone to reset daily limit
+            $todayLogs = OtpLog::where('phone', $phone)
+                ->whereDate('created_at', now()->toDateString())
+                ->where('status', 'sent')
+                ->delete();
+
+            \Log::info("Deleted {$todayLogs} today's OTP send logs for phone: {$phone} to reset daily limit");
+
+            // Also clear any blocked status from today that might be due to daily limit
+            $todayBlockedLogs = OtpLog::where('phone', $phone)
+                ->whereDate('created_at', now()->toDateString())
+                ->where('status', 'blocked')
+                ->where('reason', 'like', '%daily_limit%')
+                ->update([
+                    'status' => 'sent',
+                    'blocked_until' => null,
+                    'reason' => null,
+                    'abuse_score' => 0,
+                ]);
+
+            \Log::info("Updated {$todayBlockedLogs} today's blocked logs for phone: {$phone}");
+
+            // Create admin reset log to indicate this phone was reset by admin
+            // This will allow the phone to bypass daily limit for next 5 minutes
+            try {
+                \App\Models\OtpLog::create([
+                    'phone' => $phone,
+                    'otp' => null,
+                    'type' => 'admin_reset',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'status' => 'sent',
+                    'reason' => 'admin_reset',
+                    'user_id' => auth()->id(),
+                    'session_id' => session()->getId(),
+                ]);
+                \Log::info("Created admin reset log for phone: {$phone}");
+            } catch (\Exception $e) {
+                \Log::error("Failed to create admin reset log for phone {$phone}: " . $e->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => "OTP limit/attempts for {$phone} have been reset. {$updatedLogs} log records updated, {$deletedOtps} OTP records cleared.",
+                'message' => "OTP limit/attempts for {$phone} have been reset. {$updatedLogs} log records updated, {$deletedOtps} OTP records cleared, daily limit reset.",
             ]);
 
         } catch (\Exception $e) {

@@ -63,11 +63,27 @@ class OtpController extends Controller
         $otpLimitSetting = SystemSetting::where('key', 'otp_send_limit')->first();
         $otpLimit = $otpLimitSetting ? intval($otpLimitSetting->value) : 5;
         if ($otpLimit > 0) {
-            $todaySendCount = \App\Models\OtpLog::where('phone', $phone)
-                ->where('type', $otpRecordType)
+            // Check if this phone was recently reset by admin (within last 5 minutes)
+            $recentReset = \App\Models\OtpLog::where('phone', $phone)
                 ->where('status', 'sent')
-                ->whereDate('created_at', now()->toDateString())
-                ->count();
+                ->where('reason', 'admin_reset')
+                ->where('created_at', '>', now()->subMinutes(5))
+                ->exists();
+            
+            if ($recentReset) {
+                // If recently reset by admin, start fresh count
+                $todaySendCount = 0;
+                \Log::info("Phone {$phone} was recently reset by admin, starting fresh daily limit count");
+            } else {
+                // Normal daily limit check
+                $todaySendCount = \App\Models\OtpLog::where('phone', $phone)
+                    ->where('type', $otpRecordType)
+                    ->where('status', 'sent')
+                    ->whereDate('created_at', now()->toDateString())
+                    ->where('reason', '!=', 'admin_reset') // Exclude admin reset logs
+                    ->count();
+            }
+            
             if ($todaySendCount >= $otpLimit) {
                 // Log blocked attempt
                 try {
