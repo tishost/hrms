@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 
 class TenantDashboardController extends Controller
 {
@@ -155,6 +156,17 @@ class TenantDashboardController extends Controller
                 'university' => 'nullable|string|max:150',
             ]);
 
+            // Conditional required fields based on occupation
+            $validator->sometimes('company_name', 'required|string|max:150', function ($input) {
+                return isset($input->occupation) && strtolower($input->occupation) === 'service';
+            });
+            $validator->sometimes('business_name', 'required|string|max:150', function ($input) {
+                return isset($input->occupation) && strtolower($input->occupation) === 'business';
+            });
+            $validator->sometimes('university', 'required|string|max:150', function ($input) {
+                return isset($input->occupation) && strtolower($input->occupation) === 'student';
+            });
+
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
@@ -186,15 +198,16 @@ class TenantDashboardController extends Controller
 
             // Occupation mapping
             if ($request->filled('occupation')) {
-                $tenant->occupation = $request->input('occupation');
+                $tenant->occupation = strtolower($request->input('occupation'));
             }
-            if ($request->filled('company_name')) {
+            // Assign only if columns exist to avoid SQL errors
+            if ($request->filled('company_name') && Schema::hasColumn('tenants', 'company_name')) {
                 $tenant->company_name = $request->input('company_name');
             }
-            if ($request->filled('business_name')) {
+            if ($request->filled('business_name') && Schema::hasColumn('tenants', 'business_name')) {
                 $tenant->business_name = $request->input('business_name');
             }
-            if ($request->filled('university')) {
+            if ($request->filled('university') && Schema::hasColumn('tenants', 'university')) {
                 $tenant->university = $request->input('university');
             }
 
