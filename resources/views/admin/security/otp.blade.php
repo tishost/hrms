@@ -316,7 +316,7 @@
 
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 console.log('OTP Security script loaded');
 console.log('jQuery version:', typeof $, $().jquery);
@@ -442,4 +442,4 @@ $(document).ready(function() {
     console.log('Unblock IP buttons found:', $('.unblock-ip').length);
 });
 </script>
-@endsection 
+@endpush 
