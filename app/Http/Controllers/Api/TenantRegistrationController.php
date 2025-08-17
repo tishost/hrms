@@ -72,18 +72,31 @@ class TenantRegistrationController extends Controller
 
             // Log OTP generation
             try {
-                \App\Models\OtpLog::create([
+                $otpLogData = [
                     'phone' => $request->mobile,
                     'otp' => $otp->otp,
                     'type' => 'profile_update',
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->header('User-Agent'),
                     'status' => 'sent',
-                    'user_id' => optional($request->user())->id,
-                    'session_id' => session()->getId(),
-                ]);
+                ];
+
+                // Add user_id if available
+                if ($request->user()) {
+                    $otpLogData['user_id'] = $request->user()->id;
+                }
+
+                // Add session_id if available
+                if (session()->isStarted()) {
+                    $otpLogData['session_id'] = session()->getId();
+                }
+
+                \App\Models\OtpLog::create($otpLogData);
             } catch (\Exception $e) {
-                \Log::error('Failed to create OTP log: ' . $e->getMessage());
+                \Log::error('Failed to create OTP log: ' . $e->getMessage(), [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
 
             \Log::info('OTP saved to database', [
@@ -111,10 +124,17 @@ class TenantRegistrationController extends Controller
         } catch (\Exception $e) {
             \Log::error('Tenant OTP request error: ' . $e->getMessage(), [
                 'mobile' => $request->mobile,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
             return response()->json([
-                'error' => 'Failed to send OTP'
+                'error' => 'Failed to send OTP: ' . $e->getMessage(),
+                'debug_info' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'message' => $e->getMessage()
+                ]
             ], 500);
         }
     }
@@ -152,18 +172,31 @@ class TenantRegistrationController extends Controller
             if (!$otpRecord) {
                 // Log failed verification attempt
                 try {
-                    \App\Models\OtpLog::create([
+                    $otpLogData = [
                         'phone' => $request->phone,
                         'otp' => $request->otp,
                         'type' => 'profile_update',
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'failed',
-                        'user_id' => optional($request->user())->id,
-                        'session_id' => session()->getId(),
-                    ]);
+                    ];
+
+                    // Add user_id if available
+                    if ($request->user()) {
+                        $otpLogData['user_id'] = $request->user()->id;
+                    }
+
+                    // Add session_id if available
+                    if (session()->isStarted()) {
+                        $otpLogData['session_id'] = session()->getId();
+                    }
+
+                    \App\Models\OtpLog::create($otpLogData);
                 } catch (\Exception $e) {
-                    \Log::error('Failed to create OTP log: ' . $e->getMessage());
+                    \Log::error('Failed to create OTP log: ' . $e->getMessage(), [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
                 }
 
                 \Log::warning('Invalid OTP verification attempt', [
@@ -192,18 +225,31 @@ class TenantRegistrationController extends Controller
 
             // Log successful verification
             try {
-                \App\Models\OtpLog::create([
+                $otpLogData = [
                     'phone' => $request->phone,
                     'otp' => $request->otp,
                     'type' => 'profile_update',
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->header('User-Agent'),
                     'status' => 'verified',
-                    'user_id' => optional($request->user())->id,
-                    'session_id' => session()->getId(),
-                ]);
+                ];
+
+                // Add user_id if available
+                if ($request->user()) {
+                    $otpLogData['user_id'] = $request->user()->id;
+                }
+
+                // Add session_id if available
+                if (session()->isStarted()) {
+                    $otpLogData['session_id'] = session()->getId();
+                }
+
+                \App\Models\OtpLog::create($otpLogData);
             } catch (\Exception $e) {
-                \Log::error('Failed to create OTP log: ' . $e->getMessage());
+                \Log::error('Failed to create OTP log: ' . $e->getMessage(), [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
 
             \Log::info('OTP verified successfully', [
@@ -219,10 +265,19 @@ class TenantRegistrationController extends Controller
         } catch (\Exception $e) {
             \Log::error('Tenant OTP verification error: ' . $e->getMessage(), [
                 'mobile' => $request->phone,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
+            
+            // Return detailed error for debugging
             return response()->json([
-                'error' => 'Failed to verify OTP: ' . $e->getMessage()
+                'error' => 'Failed to verify OTP: ' . $e->getMessage(),
+                'debug_info' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'message' => $e->getMessage()
+                ]
             ], 500);
         }
     }
