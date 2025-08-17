@@ -322,25 +322,34 @@ $(document).ready(function() {
     // Reset phone limit
     $('#btn-reset-phone').click(function() {
         const phone = $('#reset_phone').val().trim();
+        console.log('Reset button clicked for phone:', phone);
+        
         if (!phone) {
             alert('Please enter a phone number');
             return;
         }
+        
         if (confirm(`Reset OTP limit for ${phone}?`)) {
+            console.log('Sending reset request for phone:', phone);
+            
             $.post('{{ route("admin.security.otp.reset-phone") }}', {
                 phone: phone,
                 _token: '{{ csrf_token() }}'
             })
             .done(function(resp) {
+                console.log('Reset response received:', resp);
                 if (resp.success) {
                     alert(resp.message || 'Reset successful');
                     location.reload();
                 } else {
-                    alert('Failed to reset');
+                    alert('Failed to reset: ' + (resp.message || 'Unknown error'));
                 }
             })
             .fail(function(xhr){
-                alert('Request failed: ' + (xhr.responseJSON?.message || 'Server error'));
+                console.error('Reset request failed:', xhr);
+                console.error('Response text:', xhr.responseText);
+                console.error('Status:', xhr.status);
+                alert('Request failed: ' + (xhr.responseJSON?.message || 'Server error') + ' (Status: ' + xhr.status + ')');
             });
         }
     });
@@ -348,20 +357,29 @@ $(document).ready(function() {
     // Reset from table
     $('.reset-phone').click(function() {
         const phone = $(this).data('phone');
+        console.log('Table reset button clicked for phone:', phone);
+        
         if (confirm(`Reset OTP limit for ${phone}?`)) {
+            console.log('Sending table reset request for phone:', phone);
+            
             $.post('{{ route("admin.security.otp.reset-phone") }}', {
                 phone: phone,
                 _token: '{{ csrf_token() }}'
             })
             .done(function(resp) {
+                console.log('Table reset response received:', resp);
                 if (resp.success) {
+                    alert(resp.message || 'Reset successful');
                     location.reload();
                 } else {
-                    alert('Failed to reset');
+                    alert('Failed to reset: ' + (resp.message || 'Unknown error'));
                 }
             })
-            .fail(function() {
-                alert('Server error');
+            .fail(function(xhr) {
+                console.error('Table reset request failed:', xhr);
+                console.error('Response text:', xhr.responseText);
+                console.error('Status:', xhr.status);
+                alert('Server error: ' + (xhr.responseJSON?.message || 'Unknown error') + ' (Status: ' + xhr.status + ')');
             });
         }
     });
