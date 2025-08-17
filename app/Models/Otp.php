@@ -53,19 +53,55 @@ class Otp extends Model
      */
     public static function verifyOtp(string $phone, string $otp, string $type = 'registration'): bool
     {
-        $otpRecord = self::where('phone', $phone)
-            ->where('otp', $otp)
-            ->where('type', $type)
-            ->where('is_used', false)
-            ->where('expires_at', '>', now())
-            ->first();
+        try {
+            \Log::info('Otp::verifyOtp called', [
+                'phone' => $phone,
+                'otp' => $otp,
+                'type' => $type
+            ]);
 
-        if ($otpRecord) {
-            $otpRecord->update(['is_used' => true]);
-            return true;
+            $otpRecord = self::where('phone', $phone)
+                ->where('otp', $otp)
+                ->where('type', $type)
+                ->where('is_used', false)
+                ->where('expires_at', '>', now())
+                ->first();
+
+            \Log::info('OTP record lookup result', [
+                'phone' => $phone,
+                'type' => $type,
+                'otp_found' => $otpRecord ? true : false,
+                'otp_id' => $otpRecord ? $otpRecord->id : null,
+                'otp_used' => $otpRecord ? $otpRecord->is_used : null,
+                'otp_expires' => $otpRecord ? $otpRecord->expires_at : null
+            ]);
+
+            if ($otpRecord) {
+                $otpRecord->update(['is_used' => true]);
+                \Log::info('OTP marked as used', [
+                    'otp_id' => $otpRecord->id,
+                    'phone' => $phone
+                ]);
+                return true;
+            }
+
+            \Log::info('OTP verification failed - no valid record found', [
+                'phone' => $phone,
+                'type' => $type
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            \Log::error('Error in Otp::verifyOtp', [
+                'phone' => $phone,
+                'otp' => $otp,
+                'type' => $type,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
-
-        return false;
     }
 
     /**

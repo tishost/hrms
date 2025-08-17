@@ -235,6 +235,13 @@ class OtpController extends Controller
         $userId = $request->user_id;
 
         try {
+            \Log::info('OTP verification attempt', [
+                'phone' => $phone,
+                'otp_length' => strlen($otp),
+                'type' => $type,
+                'user_id' => $userId
+            ]);
+
             // Verify first; if correct, succeed regardless of prior failed attempts
             $settings = OtpSetting::getSettings();
             $maxAttempts = (int) $settings->max_attempts;
@@ -242,6 +249,13 @@ class OtpController extends Controller
                 ->where('type', $type)
                 ->orderBy('created_at', 'desc')
                 ->first();
+
+            \Log::info('OTP lookup result', [
+                'phone' => $phone,
+                'type' => $type,
+                'latest_otp_found' => $latestOtp ? true : false,
+                'latest_otp_id' => $latestOtp ? $latestOtp->id : null
+            ]);
 
             $isValid = Otp::verifyOtp($phone, $otp, $type);
 
@@ -264,17 +278,38 @@ class OtpController extends Controller
                 }
                 // Log verified
                 try {
-                    \App\Models\OtpLog::create([
+                    $logData = [
                         'phone' => $phone,
                         'otp' => $otp,
                         'type' => $type,
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'verified',
-                        'user_id' => $userId ?? optional($request->user())->id,
-                        'session_id' => session()->getId(),
+                    ];
+
+                    if ($userId) {
+                        $logData['user_id'] = $userId;
+                    } elseif ($request->user()) {
+                        $logData['user_id'] = $request->user()->id;
+                    }
+
+                    if (session()->isStarted()) {
+                        $logData['session_id'] = session()->getId();
+                    }
+
+                    \App\Models\OtpLog::create($logData);
+                    \Log::info('OTP verification logged successfully', [
+                        'phone' => $phone,
+                        'type' => $type,
+                        'status' => 'verified'
                     ]);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                    \Log::error('Failed to log OTP verification', [
+                        'phone' => $phone,
+                        'type' => $type,
+                        'error' => $e->getMessage()
+                    ]);
+                }
                 return response()->json([
                     'success' => true,
                     'message' => 'OTP verified successfully'
@@ -292,17 +327,38 @@ class OtpController extends Controller
 
                 // Log failed verification
                 try {
-                    \App\Models\OtpLog::create([
+                    $logData = [
                         'phone' => $phone,
                         'otp' => $otp,
                         'type' => $type,
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->header('User-Agent'),
                         'status' => 'failed',
-                        'user_id' => $userId ?? optional($request->user())->id,
-                        'session_id' => session()->getId(),
+                    ];
+
+                    if ($userId) {
+                        $logData['user_id'] = $userId;
+                    } elseif ($request->user()) {
+                        $logData['user_id'] = $request->user()->id;
+                    }
+
+                    if (session()->isStarted()) {
+                        $logData['session_id'] = session()->getId();
+                    }
+
+                    \App\Models\OtpLog::create($logData);
+                    \Log::info('OTP failed verification logged successfully', [
+                        'phone' => $phone,
+                        'type' => $type,
+                        'status' => 'failed'
                     ]);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                    \Log::error('Failed to log OTP failed verification', [
+                        'phone' => $phone,
+                        'type' => $type,
+                        'error' => $e->getMessage()
+                    ]);
+                }
 
                 // After logging this failed attempt, check if limit is exceeded
                 $failedAttemptsPlusOne = $failedAttempts + 1;
@@ -325,9 +381,25 @@ class OtpController extends Controller
             }
 
         } catch (\Exception $e) {
+            \Log::error('OTP verification error', [
+                'phone' => $phone,
+                'otp' => $otp,
+                'type' => $type,
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to verify OTP: ' . $e->getMessage()
+                'message' => 'Failed to verify OTP: ' . $e->getMessage(),
+                'debug_info' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'message' => $e->getMessage()
+                ]
             ], 500);
         }
     }
