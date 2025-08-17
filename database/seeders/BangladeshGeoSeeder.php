@@ -21,12 +21,22 @@ class BangladeshGeoSeeder extends Seeder
         $districtsJson = json_decode(File::get($districtsPath), true);
         $upazilasJson = json_decode(File::get($upazilasPath), true);
 
-        DB::transaction(function () use ($districtsJson, $upazilasJson) {
+        // Normalize json roots to plain lists
+        $districtsList = $this->extractList($districtsJson, ['districts','data','records','items','features']);
+        $upazilasList = $this->extractList($upazilasJson, ['upazilas','data','records','items','features']);
+
+        DB::transaction(function () use ($districtsList, $upazilasList) {
             $nameMap = [];
+            $districtCount = 0;
+            $thanaCount = 0;
 
             // Seed districts
-            foreach ($districtsJson as $item) {
+            foreach ($districtsList as $item) {
                 if (!is_array($item)) continue;
+                // If geojson-like, unwrap properties
+                if (isset($item['properties']) && is_array($item['properties'])) {
+                    $item = $item['properties'];
+                }
                 $en = $this->pickString($item, ['name_en', 'en', 'english_name', 'english', 'district_en', 'district', 'district_name']);
                 if (empty($en)) {
                     $en = $this->pickNested($item['name'] ?? null);
@@ -39,23 +49,32 @@ class BangladeshGeoSeeder extends Seeder
                 $lat = $this->pickString($item, ['latitude', 'lat']);
                 $lng = $this->pickString($item, ['longitude', 'lng', 'lon']);
 
-                $districtId = DB::table('districts')->insertGetId([
-                    'name_en' => $en,
-                    'name_bn' => $bn ?: null,
-                    'division_en' => $divisionEn ?: null,
-                    'division_bn' => $divisionBn ?: null,
-                    'latitude' => is_numeric($lat) ? $lat : null,
-                    'longitude' => is_numeric($lng) ? $lng : null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                $existing = DB::table('districts')->where('name_en', $en)->first();
+                if ($existing) {
+                    $districtId = $existing->id;
+                } else {
+                    $districtId = DB::table('districts')->insertGetId([
+                        'name_en' => $en,
+                        'name_bn' => $bn ?: null,
+                        'division_en' => $divisionEn ?: null,
+                        'division_bn' => $divisionBn ?: null,
+                        'latitude' => is_numeric($lat) ? $lat : null,
+                        'longitude' => is_numeric($lng) ? $lng : null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $districtCount++;
+                }
 
                 $nameMap[$this->normalize($en)] = $districtId;
             }
 
             // Seed thanas
-            foreach ($upazilasJson as $item) {
+            foreach ($upazilasList as $item) {
                 if (!is_array($item)) continue;
+                if (isset($item['properties']) && is_array($item['properties'])) {
+                    $item = $item['properties'];
+                }
                 $dist = $this->pickString($item, ['district_en', 'districtEnglish', 'district_name_en', 'district_name', 'district']);
                 if (empty($dist)) {
                     $dist = $this->pickNested($item['district'] ?? null);
@@ -73,7 +92,7 @@ class BangladeshGeoSeeder extends Seeder
                 $lat = $this->pickString($item, ['latitude', 'lat']);
                 $lng = $this->pickString($item, ['longitude', 'lng', 'lon']);
 
-                DB::table('thanas')->updateOrInsert(
+                $updated = DB::table('thanas')->updateOrInsert(
                     ['district_id' => $districtId, 'name_en' => $upazila],
                     [
                         'name_bn' => $bn ?: null,
@@ -83,8 +102,36 @@ class BangladeshGeoSeeder extends Seeder
                         'created_at' => now(),
                     ]
                 );
+                // updateOrInsert returns void in query builder; increment optimistically
+                $thanaCount++;
+            }
+
+            if (app()->runningInConsole()) {
+                $this->command?->info("BangladeshGeoSeeder: districts added: {$districtCount}, thanas processed: {$thanaCount}");
             }
         });
+    }
+
+    private function extractList($json, array $preferredKeys): array
+    {
+        if (is_array($json)) {
+            // Already a simple list (numeric keys)
+            $isList = array_keys($json) === range(0, count($json) - 1);
+            if ($isList) return $json;
+            // Try preferred keys
+            foreach ($preferredKeys as $k) {
+                if (isset($json[$k]) && is_array($json[$k])) {
+                    $v = $json[$k];
+                    $isList2 = array_keys($v) === range(0, count($v) - 1);
+                    if ($isList2) return $v;
+                }
+            }
+            // GeoJSON features
+            if (isset($json['features']) && is_array($json['features'])) {
+                return $json['features'];
+            }
+        }
+        return [];
     }
 
     private function pickString(array $item, array $keys): string
