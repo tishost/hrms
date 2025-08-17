@@ -150,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tenant Dashboard Routes (Protected)
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tenant/profile', [TenantDashboardController::class, 'getProfile']);
+        Route::put('/tenant/profile/update-personal-info', [TenantDashboardController::class, 'updatePersonalInfo']);
         Route::get('/tenant/invoices', [TenantDashboardController::class, 'getInvoices']);
         Route::get('/tenant/dashboard', [TenantDashboardController::class, 'getDashboard']);
 
