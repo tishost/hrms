@@ -24,8 +24,16 @@ class MediaController extends Controller
             $normalizedPath = substr($normalizedPath, strlen('storage/'));
         }
 
-        // Only allow 'profiles' folder for safety
-        if (!Str::startsWith($normalizedPath, 'profiles/')) {
+        // Only allow whitelisted folders for safety
+        $allowedRoots = ['profiles/', 'tenants/'];
+        $isAllowed = false;
+        foreach ($allowedRoots as $root) {
+            if (Str::startsWith($normalizedPath, $root)) {
+                $isAllowed = true;
+                break;
+            }
+        }
+        if (!$isAllowed) {
             abort(404);
         }
 
