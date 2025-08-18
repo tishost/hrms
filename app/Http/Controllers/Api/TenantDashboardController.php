@@ -22,7 +22,7 @@ class TenantDashboardController extends Controller
             }
 
             $tenant = Tenant::where('id', $user->tenant_id)
-                ->with(['property', 'unit'])
+                ->with(['property', 'unit', 'unit.charges'])
                 ->first();
 
             if (!$tenant) {
@@ -108,6 +108,23 @@ class TenantDashboardController extends Controller
 
             if (!$tenant) {
                 return response()->json(['error' => 'Tenant not found'], 404);
+            }
+
+            // Load unit charges separately if unit exists
+            if ($tenant && $tenant->unit) {
+                $tenant->unit->load('charges');
+            }
+
+            // Debug logging for unit charges
+            if ($tenant->unit) {
+                \Log::info('Unit loaded:', [
+                    'unit_id' => $tenant->unit->id,
+                    'unit_name' => $tenant->unit->name,
+                    'charges_count' => $tenant->unit->charges ? $tenant->unit->charges->count() : 0,
+                    'charges' => $tenant->unit->charges ? $tenant->unit->charges->toArray() : []
+                ]);
+            } else {
+                \Log::info('No unit found for tenant');
             }
 
             // Get recent invoices
