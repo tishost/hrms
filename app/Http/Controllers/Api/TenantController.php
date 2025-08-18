@@ -1077,6 +1077,16 @@ class TenantController extends Controller
 
             $monthlyTotal = $monthlyRent + $totalCharges;
 
+            // Debug logging for unit fields
+            \Log::info('Unit fields available:', [
+                'unit_id' => $tenant->unit->id ?? 'N/A',
+                'rent' => $tenant->unit->rent ?? 'N/A',
+                'security_deposit' => $tenant->unit->security_deposit ?? 'N/A',
+                'advance_rent' => $tenant->unit->advance_rent ?? 'N/A',
+                'rent_due_date' => $tenant->unit->rent_due_date ?? 'N/A',
+                'late_fee' => $tenant->unit->late_fee ?? 'N/A',
+            ]);
+
             // Get payment history
             $paymentHistory = \App\Models\Invoice::where('tenant_id', $tenant->id)
                 ->orderBy('created_at', 'desc')
@@ -1091,7 +1101,26 @@ class TenantController extends Controller
                     ];
                 });
 
-            // Prepare rent details
+            // Get fees from unit charges
+            $fees = [];
+            $totalFees = 0;
+            
+            if ($tenant->unit && $tenant->unit->charges) {
+                foreach ($tenant->unit->charges as $charge) {
+                    $feeAmount = $charge->amount ?? 0;
+                    $fees[] = [
+                        'name' => $charge->name ?? 'Additional Charge',
+                        'amount' => number_format($feeAmount, 2),
+                        'type' => $charge->type ?? 'monthly'
+                    ];
+                    $totalFees += $feeAmount;
+                }
+            }
+
+            // Calculate total monthly amount (rent + fees)
+            $totalMonthlyAmount = $monthlyRent + $totalFees;
+
+            // Prepare rent details with fallback values
             $rentDetails = [
                 'monthly_rent' => number_format($monthlyRent, 2),
                 'security_deposit' => number_format($tenant->unit->security_deposit ?? 0, 2),
@@ -1099,8 +1128,14 @@ class TenantController extends Controller
                 'rent_due_date' => $tenant->unit->rent_due_date ?? '5th of each month',
                 'late_fee' => number_format($tenant->unit->late_fee ?? 0, 2),
                 'payment_method' => 'Bank Transfer / Cash',
-                'payment_history' => $paymentHistory
+                'payment_history' => $paymentHistory,
+                'fees' => $fees,
+                'total_fees' => number_format($totalFees, 2),
+                'total_monthly_amount' => number_format($totalMonthlyAmount, 2)
             ];
+
+            // Debug logging for rent details
+            \Log::info('Rent details prepared:', $rentDetails);
 
             // Prepare agreement details
             $agreementDetails = [
