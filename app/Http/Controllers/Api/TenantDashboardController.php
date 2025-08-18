@@ -47,18 +47,28 @@ class TenantDashboardController extends Controller
         try {
             $user = $request->user();
 
-            if (!$user->hasRole('tenant')) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+            // Resolve tenant id robustly
+            $tenantId = $user->tenant_id;
+            if (empty($tenantId)) {
+                $tenantId = Tenant::where('user_id', $user->id)->value('id');
             }
 
-            $invoices = Invoice::where('tenant_id', $user->tenant_id)
+            if (empty($tenantId)) {
+                return response()->json([
+                    'success' => true,
+                    'invoices' => [],
+                    'message' => 'No tenant linked to this user'
+                ]);
+            }
+
+            $invoices = Invoice::where('tenant_id', $tenantId)
                 ->orderBy('created_at', 'desc')
                 ->select(['id', 'invoice_number', 'amount', 'status', 'created_at', 'issue_date', 'due_date'])
                 ->get();
 
             // Log for debugging
             \Log::info('Tenant invoices query', [
-                'tenant_id' => $user->tenant_id,
+                'tenant_id' => $tenantId,
                 'user_id' => $user->id,
                 'invoices_count' => $invoices->count(),
                 'invoices' => $invoices->toArray(),
