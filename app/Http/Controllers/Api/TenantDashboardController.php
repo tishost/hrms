@@ -155,6 +155,7 @@ class TenantDashboardController extends Controller
                 'business_name' => 'nullable|string|max:150',
                 'university' => 'nullable|string|max:150',
                 'college_university' => 'nullable|string|max:150',
+                'profile_pic' => 'nullable|string|max:255',
                 // Family info
                 'total_family_member' => 'nullable|integer|min:0',
                 'family_types' => 'nullable|string|max:255',
@@ -207,6 +208,9 @@ class TenantDashboardController extends Controller
             }
             if ($request->filled('gender')) {
                 $tenant->gender = $request->input('gender');
+            }
+            if ($request->filled('profile_pic') && Schema::hasColumn('tenants', 'profile_pic')) {
+                $tenant->profile_pic = $request->input('profile_pic');
             }
 
             // Occupation mapping
