@@ -137,8 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/upgrade/cancel/{upgradeRequestId}', [ApiSubscriptionController::class, 'cancelUpgrade']);
     Route::get('/subscription/upgrade/status', [ApiSubscriptionController::class, 'getUpgradeStatus']);
 
-    // File Upload (common)
-    Route::post('/common/upload', [\App\Http\Controllers\Api\UploadController::class, 'store']);
+    // File Upload (common) - defined publicly above; avoid duplicate route here
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
