@@ -271,11 +271,7 @@
           <p>{{ $invoice->tenant->district ?? 'N/A' }}, {{ $invoice->tenant->zip ?? 'N/A' }}</p>
           <p>{{ $invoice->tenant->country ?? 'N/A' }}</p>
         </div>
-        <div>
-          <h3>Property Details</h3>
-          <p> {{ $invoice->unit->property->name ?? 'N/A' }}</p>
-          <p>{{ $invoice->unit->name ?? 'N/A' }}</p>
-        </div>
+       
       </div>
     </div>
 
