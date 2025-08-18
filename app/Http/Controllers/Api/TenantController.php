@@ -912,4 +912,119 @@ class TenantController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Download invoice PDF file for tenant (API version for mobile)
+     */
+    public function downloadInvoicePDF(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            // Check if user is tenant
+            if (!$user || !$user->tenant) {
+                \Log::error("Authentication failed - User: " . ($user ? $user->name : 'No user') . ", Has tenant: " . ($user && $user->tenant ? 'Yes' : 'No'));
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is not a tenant'
+                ], 403);
+            }
+
+            $tenantId = $user->tenant->id;
+
+            // Get invoice for this tenant
+            $invoice = \App\Models\Invoice::where('id', $id)
+                ->where('tenant_id', $tenantId)
+                ->with(['tenant:id,first_name,last_name,mobile,email', 'unit:id,name', 'property:id,name,address,email,mobile'])
+                ->first();
+
+            if (!$invoice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice not found'
+                ], 404);
+            }
+
+            // Process breakdown data for PDF
+            if ($invoice->breakdown) {
+                try {
+                    $breakdown = json_decode($invoice->breakdown, true) ?? [];
+
+                    // Add descriptions for common fee types
+                    foreach ($breakdown as &$fee) {
+                        if (!isset($fee['description']) || empty($fee['description'])) {
+                            $feeName = strtolower($fee['name'] ?? '');
+
+                            // Add descriptions based on fee name
+                            if (strpos($feeName, 'base rent') !== false || strpos($feeName, 'monthly rent') !== false) {
+                                $fee['description'] = 'Base monthly rent payment for the rental unit';
+                            } elseif (strpos($feeName, 'rent') !== false) {
+                                $fee['description'] = 'Monthly rent payment for the unit';
+                            } elseif (strpos($feeName, 'electricity') !== false || strpos($feeName, 'power') !== false || strpos($feeName, 'electric') !== false) {
+                                $fee['description'] = 'Electricity bill charges for the month';
+                            } elseif (strpos($feeName, 'gas') !== false || strpos($feeName, 'gas bill') !== false) {
+                                $fee['description'] = 'Gas bill charges for the month';
+                            } elseif (strpos($feeName, 'water') !== false || strpos($feeName, 'water bill') !== false) {
+                                $fee['description'] = 'Water bill charges for the month';
+                            } elseif (strpos($feeName, 'cleaning') !== false) {
+                                $fee['description'] = 'Cleaning and maintenance charges';
+                            } elseif (strpos($feeName, 'maintenance') !== false) {
+                                $fee['description'] = 'Building maintenance and repair charges';
+                            } elseif (strpos($feeName, 'late') !== false || strpos($feeName, 'penalty') !== false) {
+                                $fee['description'] = 'Late payment penalty charges';
+                            } elseif (strpos($feeName, 'security') !== false || strpos($feeName, 'deposit') !== false) {
+                                $fee['description'] = 'Security deposit or related charges';
+                            } elseif (strpos($feeName, 'utility') !== false) {
+                                $fee['description'] = 'Utility service charges (electricity, water, gas)';
+                            } elseif (strpos($feeName, 'service') !== false) {
+                                $fee['description'] = 'Additional service charges';
+                            } else {
+                                $fee['description'] = 'Additional service or charge';
+                            }
+                        }
+                    }
+
+                    // Update invoice with processed breakdown
+                    $invoice->breakdown = json_encode($breakdown);
+                } catch (\Exception $e) {
+                    // Keep original breakdown if processing fails
+                }
+            }
+
+            // Fetch last payment for this invoice (to populate gateway, txn id, date)
+            $lastPayment = \App\Models\RentPayment::where('invoice_id', $invoice->id)
+                ->orderByDesc('payment_date')
+                ->orderByDesc('id')
+                ->first();
+
+            // Generate PDF using tenant invoice view
+            $pdf = \PDF::loadView('tenant.invoices.pdf', compact('invoice', 'lastPayment'));
+
+            // Configure PDF for A4 size
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOption('dpi', 72);
+            $pdf->setOption('image-dpi', 72);
+            $pdf->setOption('image-quality', 60);
+            $pdf->setOption('enable-local-file-access', false);
+            $pdf->setOption('isRemoteEnabled', false);
+            $pdf->setOption('isHtml5ParserEnabled', true);
+            $pdf->setOption('isFontSubsettingEnabled', true);
+
+            // Set proper headers for PDF download (mobile compatible)
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="invoice-' . $invoice->invoice_number . '.pdf"',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Tenant invoice PDF error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to generate PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
