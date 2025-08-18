@@ -1038,4 +1038,96 @@ class TenantController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get rent agreement details for the authenticated tenant
+     */
+    public function getRentAgreement()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->tenant_id) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Unauthorized access'
+                ], 401);
+            }
+
+            $tenant = Tenant::with(['property', 'unit', 'unit.charges'])
+                ->where('id', $user->tenant_id)
+                ->first();
+
+            if (!$tenant) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Tenant not found'
+                ], 404);
+            }
+
+            // Calculate total monthly charges
+            $monthlyRent = $tenant->unit->rent ?? 0;
+            $totalCharges = 0;
+            
+            if ($tenant->unit && $tenant->unit->charges) {
+                foreach ($tenant->unit->charges as $charge) {
+                    $totalCharges += $charge->amount ?? 0;
+                }
+            }
+
+            $monthlyTotal = $monthlyRent + $totalCharges;
+
+            // Get payment history
+            $paymentHistory = \App\Models\Invoice::where('tenant_id', $tenant->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(6)
+                ->get()
+                ->map(function ($invoice) {
+                    return [
+                        'month' => date('M Y', strtotime($invoice->rent_month)),
+                        'date' => date('d M Y', strtotime($invoice->created_at)),
+                        'amount' => number_format($invoice->total_amount, 2),
+                        'status' => $invoice->status ?? 'unpaid'
+                    ];
+                });
+
+            // Prepare rent details
+            $rentDetails = [
+                'monthly_rent' => number_format($monthlyRent, 2),
+                'security_deposit' => number_format($tenant->unit->security_deposit ?? 0, 2),
+                'advance_rent' => number_format($tenant->unit->advance_rent ?? 0, 2),
+                'rent_due_date' => $tenant->unit->rent_due_date ?? '5th of each month',
+                'late_fee' => number_format($tenant->unit->late_fee ?? 0, 2),
+                'payment_method' => 'Bank Transfer / Cash',
+                'payment_history' => $paymentHistory
+            ];
+
+            // Prepare agreement details
+            $agreementDetails = [
+                'agreement_number' => 'AG-' . str_pad($tenant->id, 6, '0', STR_PAD_LEFT),
+                'start_date' => $tenant->created_at ? date('d M Y', strtotime($tenant->created_at)) : 'N/A',
+                'end_date' => $tenant->created_at ? date('d M Y', strtotime('+1 year', strtotime($tenant->created_at))) : 'N/A',
+                'duration' => '1 Year',
+                'status' => 'Active',
+                'property_name' => $tenant->property->name ?? 'N/A',
+                'unit_name' => $tenant->unit->name ?? 'N/A',
+                'terms_conditions' => 'This is a standard rental agreement. The tenant agrees to pay rent on time, maintain the property, and follow all building rules. Late payments may incur additional fees. The agreement is renewable annually upon mutual consent.'
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'rent_details' => $rentDetails,
+                    'agreement_details' => $agreementDetails
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching rent agreement: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch rent agreement data'
+            ], 500);
+        }
+    }
 }

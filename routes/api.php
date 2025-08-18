@@ -163,7 +163,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/tenant/profile/update-personal-info', [TenantDashboardController::class, 'updatePersonalInfo']);
         Route::put('/tenant/profile/update-address', [TenantDashboardController::class, 'updateAddress']);
         Route::get('/tenant/invoices', [TenantDashboardController::class, 'getInvoices']);
-        Route::get('/tenant/dashboard', [TenantDashboardController::class, 'getDashboard']);
+Route::get('/tenant/dashboard', [TenantDashboardController::class, 'getDashboard']);
+Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement']);
 
         // Tenant Invoice PDF Routes
         Route::get('/tenant/invoices/{id}/pdf', [TenantController::class, 'getInvoicePDF']);
