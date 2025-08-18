@@ -143,6 +143,9 @@ class TenantDashboardController extends Controller
                 ->where('status', 'unpaid')
                 ->count();
 
+            // Get system settings via helper for consistency
+            $systemSettings = \App\Helpers\SystemHelper::getCurrencySettings();
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -153,6 +156,7 @@ class TenantDashboardController extends Controller
                         'pending_invoices' => $pendingInvoices,
                     ],
                     'recent_invoices' => $recentInvoices,
+                    'system_settings' => $systemSettings,
                 ]
             ]);
 

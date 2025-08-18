@@ -159,4 +159,18 @@ class SystemHelper
     {
         return self::getSetting('system_week_start', 'monday');
     }
+
+    /**
+     * Get currency-related settings as an associative array
+     */
+    public static function getCurrencySettings(): array
+    {
+        return [
+            'system_currency' => self::getSetting('system_currency', 'BDT'),
+            'system_currency_symbol' => self::getSetting('system_currency_symbol', '৳'),
+            'system_currency_position' => self::getSetting('system_currency_position', 'left'),
+            'system_decimal_places' => self::getSetting('system_decimal_places', '2'),
+            'system_thousand_separator' => self::getSetting('system_thousand_separator', ',')
+        ];
+    }
 } 
