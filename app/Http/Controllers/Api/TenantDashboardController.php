@@ -155,6 +155,15 @@ class TenantDashboardController extends Controller
                 'business_name' => 'nullable|string|max:150',
                 'university' => 'nullable|string|max:150',
                 'college_university' => 'nullable|string|max:150',
+                // Family info
+                'total_family_member' => 'nullable|integer|min:0',
+                'family_types' => 'nullable|string|max:255',
+                'child_qty' => 'nullable|integer|min:0',
+                'spouse_name' => 'nullable|string|max:150',
+                'father_name' => 'nullable|string|max:150',
+                'mother_name' => 'nullable|string|max:150',
+                'sister_name' => 'nullable|string|max:150',
+                'brother_name' => 'nullable|string|max:150',
             ]);
 
             // Conditional required fields based on occupation
@@ -219,6 +228,48 @@ class TenantDashboardController extends Controller
                 } elseif (Schema::hasColumn('tenants', 'university')) {
                     $tenant->university = $institutionName;
                 }
+            }
+
+            // Family information mapping (only if columns exist)
+            if ($request->filled('total_family_member') && Schema::hasColumn('tenants', 'total_family_member')) {
+                $tenant->total_family_member = (int) $request->input('total_family_member');
+            }
+            if ($request->filled('family_types') && Schema::hasColumn('tenants', 'family_types')) {
+                $tenant->family_types = $request->input('family_types');
+            }
+            if ($request->filled('child_qty')) {
+                if (Schema::hasColumn('tenants', 'child_qty')) {
+                    $tenant->child_qty = (int) $request->input('child_qty');
+                } elseif (Schema::hasColumn('tenants', 'children')) {
+                    $tenant->children = (int) $request->input('child_qty');
+                } elseif (Schema::hasColumn('tenants', 'num_children')) {
+                    $tenant->num_children = (int) $request->input('child_qty');
+                }
+            }
+            if ($request->filled('spouse_name') && Schema::hasColumn('tenants', 'spouse_name')) {
+                $tenant->spouse_name = $request->input('spouse_name');
+            }
+            if ($request->filled('father_name')) {
+                if (Schema::hasColumn('tenants', 'father_name')) {
+                    $tenant->father_name = $request->input('father_name');
+                } elseif (Schema::hasColumn('tenants', 'fathers_name')) {
+                    $tenant->fathers_name = $request->input('father_name');
+                } elseif (Schema::hasColumn('tenants', 'guardian_name')) {
+                    $tenant->guardian_name = $request->input('father_name');
+                }
+            }
+            if ($request->filled('mother_name')) {
+                if (Schema::hasColumn('tenants', 'mother_name')) {
+                    $tenant->mother_name = $request->input('mother_name');
+                } elseif (Schema::hasColumn('tenants', 'mothers_name')) {
+                    $tenant->mothers_name = $request->input('mother_name');
+                }
+            }
+            if ($request->filled('sister_name') && Schema::hasColumn('tenants', 'sister_name')) {
+                $tenant->sister_name = $request->input('sister_name');
+            }
+            if ($request->filled('brother_name') && Schema::hasColumn('tenants', 'brother_name')) {
+                $tenant->brother_name = $request->input('brother_name');
             }
 
             $tenant->save();
