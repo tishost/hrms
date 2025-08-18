@@ -935,7 +935,7 @@ class TenantController extends Controller
             // Get invoice for this tenant
             $invoice = \App\Models\Invoice::where('id', $id)
                 ->where('tenant_id', $tenantId)
-                ->with(['tenant:id,first_name,last_name,mobile,email,address,upazila,district,zip,country', 'unit:id,name,property:id,name,address,email,mobile'])
+                ->with(['tenant:id,first_name,last_name,mobile,email,address,upazila,district,zip,country', 'unit:id,name,property_id', 'unit.property:id,name,address,email,mobile'])
                 ->first();
 
             // Debug logging to see what fields are loaded
