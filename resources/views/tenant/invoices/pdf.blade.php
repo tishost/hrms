@@ -270,7 +270,6 @@
           <p> {{ $invoice->tenant->upazila ?? 'N/A' }}</p>
           <p>{{ $invoice->tenant->district ?? 'N/A' }}, {{ $invoice->tenant->zip ?? 'N/A' }}</p>
           <p>{{ $invoice->tenant->country ?? 'N/A' }}</p>
-          <p style="font-size: 8px; color: #999;">Debug: address={{ $invoice->tenant->address ?? 'NULL' }}, upazila={{ $invoice->tenant->upazila ?? 'NULL' }}, district={{ $invoice->tenant->district ?? 'NULL' }}, zip={{ $invoice->tenant->zip ?? 'NULL' }}, country={{ $invoice->tenant->country ?? 'NULL' }}</p>
         </div>
         <div>
           <h3>Property Details</h3>
