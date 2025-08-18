@@ -246,10 +246,10 @@
                 </span>
             </div>
             <div class="company-contact">
-                <p><strong>{{ $invoice->property->name ?? 'N/A' }}</strong></p>
-                <p>{{ $invoice->property->address ?? 'N/A' }}</p>
-                <p>Email: {{ $invoice->property->email ?? 'sales@samitpark.com' }}</p>
-                <p>Mobile: {{ $invoice->property->mobile ?? '9611 677170' }}</p>
+                <p><strong>{{ $invoice->unit->property->name ?? 'N/A' }}</strong></p>
+                <p>{{ $invoice->unit->property->address ?? 'N/A' }}</p>
+                <p>Email: {{ $invoice->unit->property->email ?? 'sales@samitpark.com' }}</p>
+                <p>Mobile: {{ $invoice->unit->property->mobile ?? '9611 677170' }}</p>
             </div>
     </div>
     </div>
@@ -273,7 +273,7 @@
         </div>
         <div>
           <h3>Property Details</h3>
-          <p> {{ $invoice->property->name ?? 'N/A' }}</p>
+          <p> {{ $invoice->unit->property->name ?? 'N/A' }}</p>
           <p>{{ $invoice->unit->name ?? 'N/A' }}</p>
         </div>
       </div>

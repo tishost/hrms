@@ -54,6 +54,6 @@ class Invoice extends Model
 
     public function property()
     {
-        return $this->belongsTo(Property::class, 'unit_id', 'id');
+        return $this->hasOneThrough(Property::class, Unit::class, 'id', 'id', 'unit_id', 'property_id');
     }
 }
