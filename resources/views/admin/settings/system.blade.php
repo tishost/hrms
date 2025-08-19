@@ -241,6 +241,29 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Ads Settings -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-ad"></i> Ads Settings
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            <label for="system_ads_enabled">Ads System</label>
+                                            <select class="form-control" id="system_ads_enabled" name="system_ads_enabled">
+                                                <option value="1" {{ \App\Models\SystemSetting::getValue('system_ads_enabled', '1') == '1' ? 'selected' : '' }}>Enabled</option>
+                                                <option value="0" {{ \App\Models\SystemSetting::getValue('system_ads_enabled', '1') == '0' ? 'selected' : '' }}>Disabled</option>
+                                            </select>
+                                            <small class="form-text text-muted">
+                                                When disabled, ads will not be displayed on tenant and owner dashboards.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row mt-4">

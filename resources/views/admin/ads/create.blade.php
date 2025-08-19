@@ -74,13 +74,37 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                             <div class="form-text">
-                                                Supported formats: JPEG, PNG, JPG, GIF, WebP. Max size: 2MB.
+                                                <strong>Recommended size:</strong> 1200×400 pixels (3:1 ratio)<br>
+                                                <strong>Minimum size:</strong> 800×300 pixels<br>
+                                                <strong>Supported formats:</strong> JPEG, PNG, JPG, GIF, WebP<br>
+                                                <strong>Max file size:</strong> 2MB
                                             </div>
                                         </div>
 
                                         <div id="imagePreview" class="d-none">
                                             <img id="previewImg" src="" alt="Preview" 
                                                  class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
+                                        </div>
+                                        
+                                        <!-- Image Size Guide -->
+                                        <div class="alert alert-info">
+                                            <h6 class="alert-heading">
+                                                <i class="fas fa-info-circle"></i> Image Size Guide
+                                            </h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong>Banner Display:</strong><br>
+                                                    • <strong>Width:</strong> Full width of dashboard<br>
+                                                    • <strong>Height:</strong> 160px (mobile app)<br>
+                                                    • <strong>Aspect Ratio:</strong> 3:1 recommended
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>Best Practices:</strong><br>
+                                                    • Use high-quality images (1200×400)<br>
+                                                    • Keep text minimal (ads show as image-only)<br>
+                                                    • Ensure good contrast for mobile viewing
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

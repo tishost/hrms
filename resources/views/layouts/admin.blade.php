@@ -652,6 +652,26 @@
         <i class="fas fa-database me-2"></i>Backups
       </a>
       
+      <!-- Ads Management -->
+      <div class="list-group-item bg-transparent border-0 p-0">
+        <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#adsSubmenu" role="button" aria-expanded="false" aria-controls="adsSubmenu">
+          <i class="fas fa-ad me-2"></i>Ads Management <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="adsSubmenu">
+          <div class="list-group list-group-flush ms-3">
+            <a href="{{ route('admin.ads.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-list me-2"></i>All Ads
+            </a>
+            <a href="{{ route('admin.ads.create') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-plus me-2"></i>Create New Ad
+            </a>
+            <a href="{{ route('admin.ads.stats') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-chart-bar me-2"></i>Ads Statistics
+            </a>
+          </div>
+        </div>
+      </div>
+      
       <!-- Settings -->
       <div class="list-group-item bg-transparent border-0 p-0">
         <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#settingsSubmenu" role="button" aria-expanded="false" aria-controls="settingsSubmenu">
@@ -816,6 +836,34 @@
                        href="{{ route('admin.backups.index') }}">
                         <i class="fas fa-database me-2"></i>Backup Management
                     </a>
+                </li>
+
+                <!-- Ads Management -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.ads.*') ? 'active' : '' }}"
+                       href="#" id="adsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ad me-2"></i>Ads Management
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="adsDropdown">
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.ads.index') ? 'active' : '' }}"
+                               href="{{ route('admin.ads.index') }}">
+                                <i class="fas fa-list me-2"></i>All Ads
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.ads.create') ? 'active' : '' }}"
+                               href="{{ route('admin.ads.create') }}">
+                                <i class="fas fa-plus me-2"></i>Create New Ad
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.ads.stats') ? 'active' : '' }}"
+                               href="{{ route('admin.ads.stats') }}">
+                                <i class="fas fa-chart-bar me-2"></i>Ads Statistics
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 <!-- Settings -->

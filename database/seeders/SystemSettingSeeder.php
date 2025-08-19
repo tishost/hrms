@@ -68,5 +68,8 @@ class SystemSettingSeeder extends Seeder
         SystemSetting::updateOrCreate(['key' => 'password_require_special'], ['value' => '1']);
         SystemSetting::updateOrCreate(['key' => 'session_timeout_minutes'], ['value' => '120']);
         SystemSetting::updateOrCreate(['key' => 'max_login_attempts'], ['value' => '5']);
+        
+        // Ads settings
+        SystemSetting::updateOrCreate(['key' => 'system_ads_enabled'], ['value' => '1']);
     }
 }

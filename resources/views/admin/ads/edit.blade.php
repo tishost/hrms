@@ -79,7 +79,11 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                             <div class="form-text">
-                                                Leave empty to keep current image. Supported formats: JPEG, PNG, JPG, GIF, WebP. Max size: 2MB.
+                                                <strong>Recommended size:</strong> 1200×400 pixels (3:1 ratio)<br>
+                                                <strong>Minimum size:</strong> 800×300 pixels<br>
+                                                <strong>Supported formats:</strong> JPEG, PNG, JPG, GIF, WebP<br>
+                                                <strong>Max file size:</strong> 2MB<br>
+                                                <em>Leave empty to keep current image.</em>
                                             </div>
                                         </div>
 

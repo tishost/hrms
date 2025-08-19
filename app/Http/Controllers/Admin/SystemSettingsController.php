@@ -36,6 +36,7 @@ class SystemSettingsController extends Controller
                 'system_sms_notifications' => 'required|in:0,1',
                 'system_push_notifications' => 'required|in:0,1',
                 'system_notification_sound' => 'required|in:0,1',
+                'system_ads_enabled' => 'required|in:0,1',
             ]);
 
             // Save all system settings
@@ -44,7 +45,7 @@ class SystemSettingsController extends Controller
                 'system_thousand_separator', 'system_timezone', 'system_date_format', 'system_time_format',
                 'system_datetime_format', 'system_week_start', 'system_language', 'system_pagination',
                 'system_maintenance_mode', 'system_debug_mode', 'system_email_notifications', 'system_sms_notifications',
-                'system_push_notifications', 'system_notification_sound'
+                'system_push_notifications', 'system_notification_sound', 'system_ads_enabled'
             ];
 
             foreach ($settings as $setting) {

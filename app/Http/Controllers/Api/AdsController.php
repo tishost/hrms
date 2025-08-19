@@ -15,6 +15,21 @@ class AdsController extends Controller
     public function getDashboardAds(Request $request)
     {
         try {
+            // Check if ads system is enabled
+            $adsEnabled = \App\Models\SystemSetting::getValue('system_ads_enabled', '1');
+            if ($adsEnabled !== '1') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Ads system is disabled',
+                    'data' => [
+                        'ads' => [],
+                        'total_count' => 0,
+                        'ads_enabled' => false,
+                        'timestamp' => Carbon::now()->toISOString(),
+                    ]
+                ]);
+            }
+
             $type = $request->get('type', 'tenant'); // 'tenant' or 'owner'
             
             $ads = Ad::when($type === 'owner', function($query) {
@@ -48,6 +63,7 @@ class AdsController extends Controller
                         ];
                     }),
                     'total_count' => $ads->count(),
+                    'ads_enabled' => true,
                     'timestamp' => Carbon::now()->toISOString(),
                 ]
             ]);
@@ -137,6 +153,22 @@ class AdsController extends Controller
     public function getAdsByLocation(Request $request)
     {
         try {
+            // Check if ads system is enabled
+            $adsEnabled = \App\Models\SystemSetting::getValue('system_ads_enabled', '1');
+            if ($adsEnabled !== '1') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Ads system is disabled',
+                    'data' => [
+                        'ads' => [],
+                        'location' => $request->get('location', 'tenant'),
+                        'total_count' => 0,
+                        'ads_enabled' => false,
+                        'timestamp' => Carbon::now()->toISOString(),
+                    ]
+                ]);
+            }
+
             $location = $request->get('location', 'tenant'); // 'tenant' or 'owner'
             $limit = $request->get('limit', 10);
             
@@ -175,6 +207,7 @@ class AdsController extends Controller
                     }),
                     'location' => $location,
                     'total_count' => $ads->count(),
+                    'ads_enabled' => true,
                     'timestamp' => Carbon::now()->toISOString(),
                 ]
             ]);
