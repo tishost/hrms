@@ -33,6 +33,10 @@
                 <i class="fas fa-ticket-alt fa-sm text-white-50"></i> <span class="d-none d-sm-inline">View Tickets</span>
                 <span class="d-sm-none">Tickets</span>
             </a>
+            <a href="{{ route('admin.ads.index') }}" class="btn btn-sm btn-success shadow-sm">
+                <i class="fas fa-ad fa-sm text-white-50"></i> <span class="d-none d-sm-inline">Manage Ads</span>
+                <span class="d-sm-none">Ads</span>
+            </a>
         </div>
     </div>
 

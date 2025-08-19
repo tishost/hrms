@@ -467,6 +467,12 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('security/otp/block-ip', [App\Http\Controllers\Admin\OtpSecurityController::class, 'blockIp'])->name('security.otp.block-ip');
     Route::post('security/otp/block-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'blockPhone'])->name('security.otp.block-phone');
     Route::post('security/otp/reset-phone', [App\Http\Controllers\Admin\OtpSecurityController::class, 'resetPhoneLimit'])->name('security.otp.reset-phone');
+
+    // Ads Management
+    Route::resource('ads', App\Http\Controllers\Admin\AdsController::class);
+    Route::post('ads/{ad}/toggle-status', [App\Http\Controllers\Admin\AdsController::class, 'toggleStatus'])->name('ads.toggle-status');
+    Route::post('ads/update-order', [App\Http\Controllers\Admin\AdsController::class, 'updateOrder'])->name('ads.update-order');
+    Route::get('ads/stats', [App\Http\Controllers\Admin\AdsController::class, 'stats'])->name('ads.stats');
     Route::get('security/otp/statistics', [App\Http\Controllers\Admin\OtpSecurityController::class, 'getStatistics'])->name('security.otp.statistics');
     Route::get('security/otp/export', [App\Http\Controllers\Admin\OtpSecurityController::class, 'exportLogs'])->name('security.otp.export');
 

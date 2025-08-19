@@ -63,6 +63,12 @@ Route::get('/system-settings', [SystemController::class, 'getSettings']);
 // Public subscription plans
 Route::get('/subscription/plans', [ApiSubscriptionController::class, 'plans']);
 
+// Public ads endpoints
+Route::get('/ads/dashboard', [App\Http\Controllers\Api\AdsController::class, 'getDashboardAds']);
+Route::post('/ads/{ad}/click', [App\Http\Controllers\Api\AdsController::class, 'recordClick']);
+Route::get('/ads/stats', [App\Http\Controllers\Api\AdsController::class, 'getStats']);
+Route::get('/ads/location', [App\Http\Controllers\Api\AdsController::class, 'getAdsByLocation']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/kill-session', [AuthController::class, 'killSession']);

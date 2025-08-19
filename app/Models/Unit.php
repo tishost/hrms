@@ -14,10 +14,6 @@ class Unit extends Model
         'name',
         'floor',
         'rent',
-        'advance_rent',
-        'security_deposit',
-        'rent_due_date',
-        'late_fee',
         'status',
         'tenant_id',
         'owner_id',
@@ -25,9 +21,6 @@ class Unit extends Model
 
     protected $casts = [
         'rent' => 'decimal:2',
-        'advance_rent' => 'decimal:2',
-        'security_deposit' => 'decimal:2',
-        'late_fee' => 'decimal:2',
     ];
 
     public function charges()
