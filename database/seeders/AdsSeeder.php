@@ -18,7 +18,7 @@ class AdsSeeder extends Seeder
             [
                 'title' => 'Welcome to HRMS',
                 'description' => 'Discover the power of our comprehensive property management system',
-                'image_path' => 'ads/sample/welcome-hrms.jpg',
+                'image_path' => 'https://via.placeholder.com/400x200/007bff/ffffff?text=Welcome+to+HRMS',
                 'url' => 'https://barimanager.com',
                 'is_active' => true,
                 'show_on_owner_dashboard' => true,
@@ -32,7 +32,7 @@ class AdsSeeder extends Seeder
             [
                 'title' => 'Premium Features Available',
                 'description' => 'Upgrade your plan to unlock advanced features and analytics',
-                'image_path' => 'ads/sample/premium-features.jpg',
+                'image_path' => 'https://via.placeholder.com/400x200/28a745/ffffff?text=Premium+Features',
                 'url' => 'https://barimanager.com/plans',
                 'is_active' => true,
                 'show_on_owner_dashboard' => true,
@@ -46,7 +46,7 @@ class AdsSeeder extends Seeder
             [
                 'title' => '24/7 Support',
                 'description' => 'Get help anytime with our round-the-clock customer support',
-                'image_path' => 'ads/sample/support-24-7.jpg',
+                'image_path' => 'https://via.placeholder.com/400x200/17a2b8/ffffff?text=24%2F7+Support',
                 'url' => 'https://barimanager.com/support',
                 'is_active' => true,
                 'show_on_owner_dashboard' => true,
@@ -60,7 +60,7 @@ class AdsSeeder extends Seeder
             [
                 'title' => 'Mobile App Update',
                 'description' => 'New features and improvements in our latest mobile app version',
-                'image_path' => 'ads/sample/mobile-update.jpg',
+                'image_path' => 'https://via.placeholder.com/400x200/ffc107/000000?text=Mobile+App+Update',
                 'url' => null,
                 'is_active' => true,
                 'show_on_owner_dashboard' => false,
@@ -74,7 +74,7 @@ class AdsSeeder extends Seeder
             [
                 'title' => 'Holiday Special Offer',
                 'description' => 'Limited time discount on premium plans - 20% off!',
-                'image_path' => 'ads/sample/holiday-offer.jpg',
+                'image_path' => 'https://via.placeholder.com/400x200/dc3545/ffffff?text=Holiday+Special+Offer',
                 'url' => 'https://barimanager.com/holiday-offer',
                 'is_active' => true,
                 'show_on_owner_dashboard' => true,

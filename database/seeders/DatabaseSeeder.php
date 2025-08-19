@@ -13,6 +13,7 @@ use Database\Seeders\AdminUserSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\PaymentMethodSeeder;
 use Database\Seeders\BkashPaymentMethodSeeder;
+use Database\Seeders\AdsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -31,6 +32,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             PaymentMethodSeeder::class,
             BkashPaymentMethodSeeder::class,
+            AdsSeeder::class,
         ]);
     }
 }
