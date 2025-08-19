@@ -38,7 +38,7 @@ class AdsController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'url' => 'nullable|url|max:500',
@@ -102,7 +102,7 @@ class AdsController extends Controller
     public function update(Request $request, Ad $ad)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'url' => 'nullable|url|max:500',
