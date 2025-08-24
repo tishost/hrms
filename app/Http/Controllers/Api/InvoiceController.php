@@ -41,18 +41,12 @@ class InvoiceController extends Controller
             }
 
             if (!$ownerId) {
-                // If the user is a tenant, guide them to tenant invoices endpoint
-                if ($user && $user->tenant) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Access denied. Use /tenant/invoices for tenant invoices.'
-                    ], 403);
-                }
-
+                // Gracefully return empty list instead of 403 to avoid app logout flows
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Owner account not found for this user.'
-                ], 403);
+                    'success' => true,
+                    'invoices' => [],
+                    'message' => 'No owner found for this user; returning empty list.'
+                ]);
             }
 
             $invoices = Invoice::where('owner_id', $ownerId)

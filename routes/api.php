@@ -120,6 +120,8 @@ Route::post('/common/delete-profile-pic', [App\Http\Controllers\Api\UploadContro
 Route::middleware('auth:sanctum')->group(function () {
     // Invoices
     Route::get('/invoices', [InvoiceController::class, 'index']);
+    // Owner-specific alias for invoices (explicit endpoint for mobile app)
+    Route::get('/owner/invoices', [InvoiceController::class, 'index']);
     Route::post('/invoices/{invoiceId}/pay', [InvoiceController::class, 'pay']);
     Route::get('/invoices/{invoiceId}/pdf', [InvoiceController::class, 'generatePdf']);
 
