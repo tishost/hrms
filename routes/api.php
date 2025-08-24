@@ -137,8 +137,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/invoices', [ApiSubscriptionController::class, 'invoices']);
     Route::post('/subscription/checkout', [ApiSubscriptionController::class, 'checkout']);
     
-    
-    
     // Subscription Upgrade Routes
     Route::post('/subscription/upgrade', [ApiSubscriptionController::class, 'upgradePlan']);
     Route::post('/subscription/upgrade/complete/{invoiceId}', [ApiSubscriptionController::class, 'completeUpgrade']);

@@ -169,16 +169,38 @@ class OwnerController extends Controller
                 }
             }
 
-            // Check if user is owner
-            if (!$user || !$user->owner) {
-                \Log::error("Authentication failed - User: " . ($user ? $user->name : 'No user') . ", Has owner: " . ($user && $user->owner ? 'Yes' : 'No'));
+            // Resolve owner id robustly (support legacy users missing relation)
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            $ownerId = null;
+            if ($user->owner) {
+                $ownerId = $user->owner->id;
+            } elseif (!empty($user->owner_id)) {
+                $ownerId = $user->owner_id;
+            } else {
+                $owner = \App\Models\Owner::where('user_id', $user->id)->first();
+                if ($owner) {
+                    $ownerId = $owner->id;
+                    try {
+                        if (empty($user->owner_id)) {
+                            $user->update(['owner_id' => $ownerId]);
+                        }
+                    } catch (\Exception $e) {}
+                }
+            }
+
+            if (!$ownerId) {
+                \Log::error("Owner resolve failed for user ID: " . ($user->id ?? 'n/a'));
                 return response()->json([
                     'success' => false,
                     'message' => 'User is not an owner'
                 ], 403);
             }
-
-            $ownerId = $user->owner->id;
 
             // Get invoice for this owner (same as web version but with owner permission)
             $invoice = \App\Models\Invoice::where('id', $id)

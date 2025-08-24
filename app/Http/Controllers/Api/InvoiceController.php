@@ -15,9 +15,47 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $ownerId = $request->user()->owner->id;
+        try {
+            $user = $request->user();
 
-        $invoices = Invoice::where('owner_id', $ownerId)
+            // Resolve owner id robustly to avoid null errors for legacy users
+            $ownerId = null;
+            if ($user && $user->owner) {
+                $ownerId = $user->owner->id;
+            } elseif ($user && !empty($user->owner_id)) {
+                $ownerId = $user->owner_id;
+            } else {
+                // Fallback: try to locate owner by user_id (legacy accounts)
+                $ownerRecord = \App\Models\Owner::where('user_id', $user->id ?? null)->first();
+                if ($ownerRecord) {
+                    $ownerId = $ownerRecord->id;
+                    // Optionally persist owner_id on user for future requests (best-effort, ignore errors)
+                    try {
+                        if (empty($user->owner_id)) {
+                            $user->update(['owner_id' => $ownerId]);
+                        }
+                    } catch (\Exception $e) {
+                        // swallow
+                    }
+                }
+            }
+
+            if (!$ownerId) {
+                // If the user is a tenant, guide them to tenant invoices endpoint
+                if ($user && $user->tenant) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Access denied. Use /tenant/invoices for tenant invoices.'
+                    ], 403);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner account not found for this user.'
+                ], 403);
+            }
+
+            $invoices = Invoice::where('owner_id', $ownerId)
             ->with(['tenant:id,first_name,last_name', 'unit:id,name', 'property:id,name'])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -85,9 +123,17 @@ class InvoiceController extends Controller
                 ];
             });
 
-        return response()->json([
-            'invoices' => $invoices
-        ]);
+            return response()->json([
+                'success' => true,
+                'invoices' => $invoices
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Invoice index error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load invoices'
+            ], 500);
+        }
     }
 
     public function pay(Request $request, $invoiceId)
@@ -105,7 +151,32 @@ class InvoiceController extends Controller
         try {
             DB::beginTransaction();
 
-            $ownerId = $request->user()->owner->id;
+            // Resolve owner id robustly for payment permission
+            $user = $request->user();
+            $ownerId = null;
+            if ($user && $user->owner) {
+                $ownerId = $user->owner->id;
+            } elseif ($user && !empty($user->owner_id)) {
+                $ownerId = $user->owner_id;
+            } else {
+                $ownerRecord = \App\Models\Owner::where('user_id', $user->id ?? null)->first();
+                if ($ownerRecord) {
+                    $ownerId = $ownerRecord->id;
+                    try {
+                        if (empty($user->owner_id)) {
+                            $user->update(['owner_id' => $ownerId]);
+                        }
+                    } catch (\Exception $e) {}
+                }
+            }
+
+            if (!$ownerId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner account not found for this user.'
+                ], 403);
+            }
+
             $invoice = Invoice::where('id', $invoiceId)
                 ->where('owner_id', $ownerId)
                 ->with(['tenant', 'unit'])
@@ -217,9 +288,21 @@ class InvoiceController extends Controller
             $invoice = null;
 
             // Check if user is owner or tenant
-            if ($user->owner) {
-                // Owner accessing invoice
-                $ownerId = $user->owner->id;
+            if ($user->owner || !empty($user->owner_id)) {
+                // Owner accessing invoice (robust resolve)
+                $ownerId = $user->owner->id ?? $user->owner_id;
+                if (!$ownerId) {
+                    $ownerRecord = \App\Models\Owner::where('user_id', $user->id ?? null)->first();
+                    $ownerId = $ownerRecord?->id;
+                }
+
+                if (!$ownerId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Owner account not found for this user.'
+                    ], 403);
+                }
+
                 $invoice = Invoice::where('id', $invoiceId)
                     ->where('owner_id', $ownerId)
                     ->with(['tenant:id,first_name,last_name,mobile,email', 'unit:id,name', 'property:id,name,address'])
