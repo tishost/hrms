@@ -16,7 +16,14 @@ class InvoiceController extends Controller
     public function index(Request $request)
     {
         try {
+            \Log::info('API[Invoices@index] called');
             $user = $request->user();
+            \Log::info('API[Invoices@index] user', [
+                'id' => optional($user)->id,
+                'has_owner' => (bool) optional($user)->owner,
+                'owner_id' => optional($user)->owner_id,
+                'has_tenant' => (bool) optional($user)->tenant,
+            ]);
 
             // Resolve owner id robustly to avoid null errors for legacy users
             $ownerId = null;
@@ -41,6 +48,7 @@ class InvoiceController extends Controller
             }
 
             if (!$ownerId) {
+                \Log::warning('API[Invoices@index] ownerId resolve failed, returning empty list');
                 // Gracefully return empty list instead of 403 to avoid app logout flows
                 return response()->json([
                     'success' => true,
@@ -49,6 +57,7 @@ class InvoiceController extends Controller
                 ]);
             }
 
+            \Log::info('API[Invoices@index] querying invoices', ['owner_id' => $ownerId]);
             $invoices = Invoice::where('owner_id', $ownerId)
             ->with(['tenant:id,first_name,last_name', 'unit:id,name', 'property:id,name'])
             ->orderBy('created_at', 'desc')
@@ -117,6 +126,7 @@ class InvoiceController extends Controller
                 ];
             });
 
+            \Log::info('API[Invoices@index] returning', ['count' => $invoices->count()]);
             return response()->json([
                 'success' => true,
                 'invoices' => $invoices
