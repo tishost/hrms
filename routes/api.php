@@ -137,6 +137,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/invoices', [ApiSubscriptionController::class, 'invoices']);
     Route::post('/subscription/checkout', [ApiSubscriptionController::class, 'checkout']);
     
+    // Owner Billing
+    Route::get('/owner/billing-overview', [App\Http\Controllers\Owner\OwnerBillingController::class, 'getBillingOverview']);
+    Route::get('/owner/payment-history', [App\Http\Controllers\Owner\OwnerBillingController::class, 'getPaymentHistory']);
+    Route::get('/owner/subscription-invoices', [App\Http\Controllers\Owner\OwnerBillingController::class, 'getSubscriptionInvoices']);
+    
+    // Test route for debugging
+    Route::get('/owner/test', function() {
+        return response()->json(['message' => 'Owner routes are working!']);
+    });
+    
     // Subscription Upgrade Routes
     Route::post('/subscription/upgrade', [ApiSubscriptionController::class, 'upgradePlan']);
     Route::post('/subscription/upgrade/complete/{invoiceId}', [ApiSubscriptionController::class, 'completeUpgrade']);
