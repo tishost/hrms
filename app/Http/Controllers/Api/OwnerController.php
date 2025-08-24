@@ -205,7 +205,13 @@ class OwnerController extends Controller
             // Get invoice for this owner (same as web version but with owner permission)
             $invoice = \App\Models\Invoice::where('id', $id)
                 ->where('owner_id', $ownerId)
-                ->with(['tenant:id,first_name,last_name,mobile,email', 'unit:id,name', 'property:id,name,address,email,mobile'])
+                ->with([
+                    'tenant:id,first_name,last_name,mobile,email',
+                    'unit:id,name,property_id',
+                    'property' => function($q) {
+                        $q->select('properties.id','properties.name','properties.address','properties.email','properties.mobile');
+                    },
+                ])
                 ->first();
 
             if (!$invoice) {
