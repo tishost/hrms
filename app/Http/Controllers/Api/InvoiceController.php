@@ -102,7 +102,7 @@ class InvoiceController extends Controller
                                 }
                             }
                         }
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         $breakdown = [];
                     }
                 }
@@ -366,7 +366,7 @@ class InvoiceController extends Controller
                             }
                         }
                     }
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $breakdown = [];
                 }
             }
