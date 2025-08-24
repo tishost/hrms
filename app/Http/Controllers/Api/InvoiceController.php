@@ -59,7 +59,12 @@ class InvoiceController extends Controller
 
             \Log::info('API[Invoices@index] querying invoices', ['owner_id' => $ownerId]);
             $invoices = Invoice::where('owner_id', $ownerId)
-            ->with(['tenant:id,first_name,last_name', 'unit:id,name', 'property:id,name'])
+            ->with([
+                'tenant:id,first_name,last_name',
+                // eager-load unit along with its property to avoid hasOneThrough issues
+                'unit:id,name,property_id',
+                'unit.property:id,name'
+            ])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($invoice) {
@@ -122,7 +127,9 @@ class InvoiceController extends Controller
                     'breakdown' => $breakdown,
                     'tenant_name' => $invoice->tenant ? trim(($invoice->tenant->first_name ?? '') . ' ' . ($invoice->tenant->last_name ?? '')) : 'N/A',
                     'unit_name' => $invoice->unit ? $invoice->unit->name : 'N/A',
-                    'property_name' => $invoice->property ? $invoice->property->name : 'N/A',
+                    'property_name' => ($invoice->unit && $invoice->unit->property)
+                        ? $invoice->unit->property->name
+                        : 'N/A',
                 ];
             });
 
