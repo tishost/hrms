@@ -143,6 +143,14 @@ class TenantDashboardController extends Controller
                 ->where('status', 'unpaid')
                 ->count();
 
+            // Get real amount data
+            $paidAmount = Invoice::where('tenant_id', $user->tenant_id)
+                ->where('status', 'paid')
+                ->sum('amount');
+            $unpaidAmount = Invoice::where('tenant_id', $user->tenant_id)
+                ->where('status', 'unpaid')
+                ->sum('amount');
+
             // Get system settings via helper for consistency
             $systemSettings = \App\Helpers\SystemHelper::getCurrencySettings();
 
@@ -154,6 +162,8 @@ class TenantDashboardController extends Controller
                         'total_invoices' => $totalInvoices,
                         'paid_invoices' => $paidInvoices,
                         'pending_invoices' => $pendingInvoices,
+                        'paid_amount' => $paidAmount,
+                        'unpaid_amount' => $unpaidAmount,
                     ],
                     'recent_invoices' => $recentInvoices,
                     'system_settings' => $systemSettings,
