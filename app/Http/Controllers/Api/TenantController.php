@@ -209,6 +209,18 @@ class TenantController extends Controller
             }
 
             $tenants = $query->get()->map(function($tenant) {
+                // Calculate total rent (base rent + charges)
+                $baseRent = $tenant->unit->rent ?? 0;
+                $totalCharges = 0;
+                
+                if ($tenant->unit && $tenant->unit->charges) {
+                    foreach ($tenant->unit->charges as $charge) {
+                        $totalCharges += $charge->amount ?? 0;
+                    }
+                }
+                
+                $totalRent = $baseRent + $totalCharges;
+                
                 return [
                     'id' => $tenant->id,
                     'name' => $tenant->first_name . ' ' . $tenant->last_name,
@@ -216,7 +228,8 @@ class TenantController extends Controller
                     'email' => $tenant->email,
                     'property_name' => $tenant->unit->property->name ?? 'No Property',
                     'unit_name' => $tenant->unit->name ?? 'No Unit',
-                    'rent' => $tenant->unit->rent ?? 0,
+                    'rent' => $baseRent,
+                    'total_rent' => $totalRent,
                     'status' => $tenant->status ?? 'active',
                     'created_at' => $tenant->created_at,
                 ];
