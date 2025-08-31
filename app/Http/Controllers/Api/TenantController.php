@@ -299,10 +299,21 @@ class TenantController extends Controller
             // Calculate rent information
             $baseRent = $tenant->unit->rent ?? 0;
             $totalCharges = 0;
+            $cleaningCharges = 0;
+            $otherCharges = 0;
             
             if ($tenant->unit && $tenant->unit->charges) {
                 foreach ($tenant->unit->charges as $charge) {
-                    $totalCharges += $charge->amount ?? 0;
+                    $chargeAmount = $charge->amount ?? 0;
+                    $totalCharges += $chargeAmount;
+                    
+                    // Categorize charges based on label
+                    $label = strtolower($charge->label ?? '');
+                    if (strpos($label, 'cleaning') !== false) {
+                        $cleaningCharges += $chargeAmount;
+                    } else {
+                        $otherCharges += $chargeAmount;
+                    }
                 }
             }
             
@@ -351,6 +362,8 @@ class TenantController extends Controller
                     'rent' => $baseRent,
                     'total_rent' => $totalRent,
                     'due_balance' => $dueBalance,
+                    'cleaning_charges' => $cleaningCharges,
+                    'other_charges' => $otherCharges,
                     'property_name' => $tenant->unit->property->name ?? 'No Property',
                     'unit_name' => $tenant->unit->name ?? 'No Unit',
                     'unit' => [
