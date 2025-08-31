@@ -921,16 +921,21 @@ class TenantController extends Controller
         try {
             $user = $request->user();
 
-            // Check if user is tenant
-            if (!$user || !$user->tenant) {
-                \Log::error("Authentication failed - User: " . ($user ? $user->name : 'No user') . ", Has tenant: " . ($user && $user->tenant ? 'Yes' : 'No'));
+            // Check if user is tenant (support both tenant relation and tenant_id field)
+            $tenantId = null;
+            if ($user && $user->tenant) {
+                $tenantId = $user->tenant->id;
+            } elseif ($user && $user->tenant_id) {
+                $tenantId = $user->tenant_id;
+            }
+            
+            if (!$tenantId) {
+                \Log::error("Authentication failed - User: " . ($user ? $user->name : 'No user') . ", Tenant ID: " . ($user ? $user->tenant_id : 'No tenant_id') . ", Has tenant relation: " . ($user && $user->tenant ? 'Yes' : 'No'));
                 return response()->json([
                     'success' => false,
                     'message' => 'User is not a tenant'
                 ], 403);
             }
-
-            $tenantId = $user->tenant->id;
 
             // Get invoice for this tenant
             $invoice = \App\Models\Invoice::where('id', $id)

@@ -37,7 +37,31 @@ class PropertyController extends Controller
                 $query->where('status', $request->get('status'));
             }
 
-            $properties = $query->orderBy('created_at', 'desc')->get();
+            $properties = $query->with('units')->orderBy('created_at', 'desc')->get();
+            
+            // Add dynamic unit counts to each property
+            $properties = $properties->map(function ($property) {
+                return [
+                    'id' => $property->id,
+                    'name' => $property->name,
+                    'property_type' => $property->property_type,
+                    'address' => $property->address,
+                    'city' => $property->city,
+                    'state' => $property->state,
+                    'zip_code' => $property->zip_code,
+                    'country' => $property->country,
+                    'total_units' => $property->total_units,
+                    'actual_units_count' => $property->units->count(),
+                    'occupied_units_count' => $property->occupied_units_count,
+                    'vacant_units_count' => $property->vacant_units_count,
+                    'description' => $property->description,
+                    'email' => $property->email,
+                    'mobile' => $property->mobile,
+                    'status' => $property->status,
+                    'created_at' => $property->created_at,
+                    'updated_at' => $property->updated_at,
+                ];
+            });
 
             return response()->json([
                 'success' => true,

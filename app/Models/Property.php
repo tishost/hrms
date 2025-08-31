@@ -49,12 +49,12 @@ class Property extends Model
 
     public function getOccupiedUnitsCountAttribute()
     {
-        return $this->units()->where('status', 'occupied')->count();
+        return $this->units()->where('status', 'rent')->count();
     }
 
     public function getVacantUnitsCountAttribute()
     {
-        return $this->units()->where('status', 'vacant')->count();
+        return $this->units()->where('status', 'free')->count();
     }
 
     public function getOccupancyRateAttribute()
