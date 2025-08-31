@@ -301,11 +301,18 @@ class TenantController extends Controller
             $totalCharges = 0;
             $cleaningCharges = 0;
             $otherCharges = 0;
+            $unitCharges = [];
             
             if ($tenant->unit && $tenant->unit->charges) {
                 foreach ($tenant->unit->charges as $charge) {
                     $chargeAmount = $charge->amount ?? 0;
                     $totalCharges += $chargeAmount;
+                    
+                    // Add individual charge details
+                    $unitCharges[] = [
+                        'label' => $charge->label ?? 'Unknown',
+                        'amount' => $chargeAmount,
+                    ];
                     
                     // Categorize charges based on label
                     $label = strtolower($charge->label ?? '');
@@ -364,6 +371,7 @@ class TenantController extends Controller
                     'due_balance' => $dueBalance,
                     'cleaning_charges' => $cleaningCharges,
                     'other_charges' => $otherCharges,
+                    'unit_charges' => $unitCharges,
                     'property_name' => $tenant->unit->property->name ?? 'No Property',
                     'unit_name' => $tenant->unit->name ?? 'No Unit',
                     'unit' => [
