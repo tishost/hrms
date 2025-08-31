@@ -296,6 +296,28 @@ class TenantController extends Controller
                 ], 404);
             }
 
+            // Calculate rent information
+            $baseRent = $tenant->unit->rent ?? 0;
+            $totalCharges = 0;
+            
+            if ($tenant->unit && $tenant->unit->charges) {
+                foreach ($tenant->unit->charges as $charge) {
+                    $totalCharges += $charge->amount ?? 0;
+                }
+            }
+            
+            $totalRent = $baseRent + $totalCharges;
+            
+            // Calculate due balance
+            $dueBalance = 0;
+            $invoices = \App\Models\Invoice::where('tenant_id', $tenant->id)
+                ->where('status', 'unpaid')
+                ->get();
+            
+            foreach ($invoices as $invoice) {
+                $dueBalance += $invoice->total_amount ?? 0;
+            }
+
             $responseData = [
                 'tenant' => [
                     'id' => $tenant->id,
@@ -326,6 +348,11 @@ class TenantController extends Controller
                     'remarks' => $tenant->remarks,
                     'nid_front_picture' => $tenant->nid_front_picture,
                     'nid_back_picture' => $tenant->nid_back_picture,
+                    'rent' => $baseRent,
+                    'total_rent' => $totalRent,
+                    'due_balance' => $dueBalance,
+                    'property_name' => $tenant->unit->property->name ?? 'No Property',
+                    'unit_name' => $tenant->unit->name ?? 'No Unit',
                     'unit' => [
                         'id' => $tenant->unit->id,
                         'name' => $tenant->unit->name,
