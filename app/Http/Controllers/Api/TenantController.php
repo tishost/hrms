@@ -221,6 +221,16 @@ class TenantController extends Controller
                 
                 $totalRent = $baseRent + $totalCharges;
                 
+                // Calculate due balance
+                $dueBalance = 0;
+                $invoices = \App\Models\Invoice::where('tenant_id', $tenant->id)
+                    ->where('status', 'unpaid')
+                    ->get();
+                
+                foreach ($invoices as $invoice) {
+                    $dueBalance += $invoice->total_amount ?? 0;
+                }
+                
                 return [
                     'id' => $tenant->id,
                     'name' => $tenant->first_name . ' ' . $tenant->last_name,
@@ -230,6 +240,7 @@ class TenantController extends Controller
                     'unit_name' => $tenant->unit->name ?? 'No Unit',
                     'rent' => $baseRent,
                     'total_rent' => $totalRent,
+                    'due_balance' => $dueBalance,
                     'status' => $tenant->status ?? 'active',
                     'created_at' => $tenant->created_at,
                 ];

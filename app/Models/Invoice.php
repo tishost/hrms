@@ -56,4 +56,10 @@ class Invoice extends Model
     {
         return $this->hasOneThrough(Property::class, Unit::class, 'id', 'id', 'unit_id', 'property_id');
     }
+
+    // Accessor for total amount (amount - paid_amount)
+    public function getTotalAmountAttribute()
+    {
+        return $this->amount - ($this->paid_amount ?? 0);
+    }
 }
