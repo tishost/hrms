@@ -774,6 +774,22 @@
                     </ul>
                 </li>
 
+                <!-- Tenants Management -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.tenants.*') ? 'active' : '' }}"
+                       href="#" id="tenantsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-friends me-2"></i>Tenants
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="tenantsDropdown">
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.tenants.index') ? 'active' : '' }}"
+                               href="{{ route('admin.tenants.index') }}">
+                                <i class="fas fa-list me-2"></i>Tenant List
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- Subscription Management -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.subscriptions') || request()->routeIs('admin.plans.*') || request()->routeIs('admin.billing.*') ? 'active' : '' }}"

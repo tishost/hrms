@@ -396,6 +396,11 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('owners', [App\Http\Controllers\Admin\AdminDashboardController::class, 'storeOwner'])->name('owners.store');
     Route::delete('owners/{id}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'destroyOwner'])->name('owners.destroy');
 
+    // Tenants
+    Route::get('tenants', [App\Http\Controllers\Admin\TenantController::class, 'index'])->name('tenants.index');
+    Route::get('tenants/{id}', [App\Http\Controllers\Admin\TenantController::class, 'show'])->name('tenants.show');
+    Route::get('tenants/export', [App\Http\Controllers\Admin\TenantController::class, 'export'])->name('tenants.export');
+
     // Settings
     Route::get('settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [App\Http\Controllers\Admin\AdminSettingController::class, 'update'])->name('settings.update');
