@@ -627,6 +627,16 @@ class AnalyticsController extends Controller
     public function receiveDeviceAnalytics(Request $request)
     {
         try {
+            // Debug logging
+            \Log::info('Analytics request received', [
+                'method' => $request->method(),
+                'url' => $request->url(),
+                'headers' => $request->headers->all(),
+                'body' => $request->all(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
             $data = $request->validate([
                 'device_type' => 'required|string',
                 'os_version' => 'required|string',
@@ -636,15 +646,21 @@ class AnalyticsController extends Controller
                 'screen_resolution' => 'nullable|string',
                 'event_type' => 'required|string', // 'app_install', 'screen_view', 'feature_usage', etc.
                 'user_id' => 'nullable|integer',
-                'timestamp' => 'required|date',
-                'additional_data' => 'nullable|array'
+                'timestamp' => 'required|string', // Changed from 'date' to 'string' for ISO8601 format
+                'additional_data' => 'nullable|array',
+                'session_id' => 'nullable|string' // Added session_id validation
             ]);
 
             // Log the analytics data
             \Log::info('Device Analytics Received', $data);
+            \Log::info('Analytics data validation passed', [
+                'validated_data' => $data,
+                'request_has_session_id' => isset($data['session_id']),
+                'session_id_value' => $data['session_id'] ?? 'not_provided'
+            ]);
 
             // Store in database
-            $analytics = AppAnalytics::create([
+            $analyticsData = [
                 'event_type' => $data['event_type'],
                 'device_type' => $data['device_type'],
                 'os_version' => $data['os_version'],
@@ -654,18 +670,29 @@ class AnalyticsController extends Controller
                 'screen_resolution' => $data['screen_resolution'],
                 'user_id' => $data['user_id'],
                 'additional_data' => $data['additional_data'],
-                'session_id' => $request->header('X-Session-ID') ?? uniqid(),
+                'session_id' => $data['session_id'] ?? uniqid(),
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'event_timestamp' => $data['timestamp'],
-            ]);
+            ];
+            
+            \Log::info('Creating analytics record with data', $analyticsData);
+            
+            $analytics = AppAnalytics::create($analyticsData);
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'message' => 'Analytics data received and stored successfully',
                 'analytics_id' => $analytics->id,
                 'timestamp' => now()->toISOString()
+            ];
+            
+            \Log::info('Analytics record created successfully', [
+                'analytics_id' => $analytics->id,
+                'response' => $response
             ]);
+            
+            return response()->json($response);
 
         } catch (\Exception $e) {
             \Log::error('Error receiving device analytics: ' . $e->getMessage());

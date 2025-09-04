@@ -61,6 +61,12 @@ Route::get('/otp-settings', [OtpController::class, 'getOtpSettings']);
 Route::get('/system/status', [SystemController::class, 'status']);
 Route::get('/system-settings', [SystemController::class, 'getSettings']);
 
+// Analytics routes for mobile app
+Route::post('/admin/analytics/receive-data', [App\Http\Controllers\Admin\AnalyticsController::class, 'receiveDeviceAnalytics']);
+Route::get('/admin/analytics/summary', [App\Http\Controllers\Admin\AnalyticsController::class, 'getAnalyticsSummary']);
+Route::post('/admin/analytics/device-stats', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeDeviceStats']);
+Route::post('/admin/analytics/device-trends', [App\Http\Controllers\Admin\AnalyticsController::class, 'getDeviceInstallationTrends']);
+
 // Public subscription plans
 Route::get('/subscription/plans', [ApiSubscriptionController::class, 'plans']);
 
