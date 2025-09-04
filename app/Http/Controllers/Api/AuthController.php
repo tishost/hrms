@@ -839,6 +839,79 @@ class AuthController extends Controller
     }
 
     /**
+     * Check if tenant has password set (exists in users table)
+     */
+    public function checkTenantPasswordStatus(Request $request)
+    {
+        $request->validate([
+            'email' => 'nullable|string|email|max:255',
+            'mobile' => 'nullable|string|max:20',
+        ]);
+
+        $email = $request->email;
+        $mobile = $request->mobile;
+        
+        \Log::info('DEBUG: checkTenantPasswordStatus called with email: ' . $email . ', mobile: ' . $mobile);
+
+        try {
+            $user = null;
+            
+            // Check if user exists in users table with email or mobile
+            if ($email) {
+                $user = User::where('email', $email)->first();
+                \Log::info('DEBUG: Searching by email: ' . $email);
+            } elseif ($mobile) {
+                $user = User::where('phone', $mobile)->first();
+                \Log::info('DEBUG: Searching by mobile: ' . $mobile);
+            }
+            
+            \Log::info('DEBUG: User query result: ' . ($user ? 'User found' : 'User not found'));
+            
+            if ($user) {
+                // User exists, check if they have a password set
+                $hasPassword = !empty($user->password);
+                
+                \Log::info('DEBUG: User password field: ' . ($user->password ? 'Has password' : 'No password'));
+                \Log::info('DEBUG: User password length: ' . strlen($user->password ?? ''));
+                \Log::info('DEBUG: User password is null: ' . (is_null($user->password) ? 'Yes' : 'No'));
+                \Log::info('DEBUG: User password is empty: ' . (empty($user->password) ? 'Yes' : 'No'));
+                
+                return response()->json([
+                    'success' => true,
+                    'has_password' => $hasPassword,
+                    'message' => $hasPassword ? 'User has password set' : 'User exists but no password set',
+                    'debug_info' => [
+                        'user_id' => $user->id,
+                        'user_email' => $user->email,
+                        'user_phone' => $user->phone,
+                        'password_field_exists' => isset($user->password),
+                        'password_field_type' => gettype($user->password),
+                        'password_is_null' => is_null($user->password),
+                        'password_is_empty' => empty($user->password),
+                        'password_length' => strlen($user->password ?? ''),
+                        'password_starts_with_hash' => $user->password ? str_starts_with($user->password, '$2y$') : false
+                    ]
+                ]);
+            } else {
+                // No user found
+                \Log::info('DEBUG: No user found with email: ' . $email . ' or mobile: ' . $mobile);
+                return response()->json([
+                    'success' => true,
+                    'has_password' => false,
+                    'message' => 'No user found with this email or mobile'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('DEBUG: Error in checkTenantPasswordStatus: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking tenant password status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Check Google email in database and return role
      */
     public function checkGoogleRole(Request $request)

@@ -30,6 +30,7 @@ Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 // Smart registration routes
 Route::post('/check-mobile-role', [AuthController::class, 'checkMobileRole']);
 Route::post('/check-google-role', [AuthController::class, 'checkGoogleRole']);
+Route::post('/check-tenant-password-status', [AuthController::class, 'checkTenantPasswordStatus']);
 // Public geo endpoints
 Route::get('/districts', function () {
     return response()->json(
