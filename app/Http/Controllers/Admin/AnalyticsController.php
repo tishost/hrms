@@ -637,6 +637,18 @@ class AnalyticsController extends Controller
                 'user_agent' => $request->userAgent()
             ]);
             
+            // Log raw request data for debugging
+            \Log::info('Raw request data', [
+                'raw_input' => $request->getContent(),
+                'all_input' => $request->all(),
+                'has_session_id' => $request->has('session_id'),
+                'session_id_value' => $request->input('session_id'),
+                'has_device_id' => $request->has('device_id'),
+                'device_id_value' => $request->input('device_id'),
+                'has_additional_data' => $request->has('additional_data'),
+                'additional_data_value' => $request->input('additional_data')
+            ]);
+            
             $data = $request->validate([
                 'device_type' => 'required|string',
                 'os_version' => 'required|string',
@@ -644,6 +656,7 @@ class AnalyticsController extends Controller
                 'device_model' => 'nullable|string',
                 'manufacturer' => 'nullable|string',
                 'screen_resolution' => 'nullable|string',
+                'device_id' => 'nullable|string', // Added device_id validation
                 'event_type' => 'required|string', // 'app_install', 'screen_view', 'feature_usage', etc.
                 'user_id' => 'nullable|integer',
                 'timestamp' => 'required|string', // Changed from 'date' to 'string' for ISO8601 format
@@ -668,6 +681,7 @@ class AnalyticsController extends Controller
                 'device_model' => $data['device_model'],
                 'manufacturer' => $data['manufacturer'],
                 'screen_resolution' => $data['screen_resolution'],
+                'device_id' => $data['device_id'] ?? null, // Added device_id storage
                 'user_id' => $data['user_id'],
                 'additional_data' => $data['additional_data'],
                 'session_id' => $data['session_id'] ?? uniqid(),
@@ -689,7 +703,16 @@ class AnalyticsController extends Controller
             
             \Log::info('Analytics record created successfully', [
                 'analytics_id' => $analytics->id,
-                'response' => $response
+                'response' => $response,
+                'stored_data' => [
+                    'event_type' => $analytics->event_type,
+                    'device_type' => $analytics->device_type,
+                    'session_id' => $analytics->session_id,
+                    'user_id' => $analytics->user_id,
+                    'additional_data' => $analytics->additional_data,
+                    'event_timestamp' => $analytics->event_timestamp,
+                    'created_at' => $analytics->created_at
+                ]
             ]);
             
             return response()->json($response);

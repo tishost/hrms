@@ -20,6 +20,7 @@ class AppAnalytics extends Model
         'device_model',
         'manufacturer',
         'screen_resolution',
+        'device_id',
         'user_id',
         'additional_data',
         'session_id',
