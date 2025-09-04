@@ -226,16 +226,14 @@ class AnalyticsController extends Controller
             ->limit(10)
             ->get();
         
-        $ownerLocations = Owner::with('user')
+        $ownerLocations = Owner::select('city', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('city')
+            ->groupBy('city')
+            ->orderBy('count', 'desc')
+            ->limit(10)
             ->get()
-            ->groupBy(function($owner) {
-                return $owner->user->city ?? 'Unknown';
-            })
-            ->map(function($group) {
-                return $group->count();
-            })
-            ->sortDesc()
-            ->take(10);
+            ->pluck('count', 'city')
+            ->toArray();
         
         return [
             'property_locations' => $propertyLocations,
@@ -398,9 +396,9 @@ class AnalyticsController extends Controller
             ];
         }
         
-        // App usage statistics
-        $activeUsersThisMonth = User::whereYear('last_login_at', $currentYear)
-            ->whereMonth('last_login_at', $currentMonth)
+        // App usage statistics - using created_at as fallback since last_login_at doesn't exist
+        $activeUsersThisMonth = User::whereYear('created_at', $currentYear)
+            ->whereMonth('created_at', $currentMonth)
             ->count();
         
         $totalUsers = User::count();
@@ -692,7 +690,7 @@ class AnalyticsController extends Controller
                 'total_tenants' => Tenant::count(),
                 'total_revenue' => Billing::where('status', 'paid')->sum('amount'),
                 'monthly_installations' => User::whereMonth('created_at', Carbon::now()->month)->count(),
-                'active_users_this_month' => User::whereMonth('last_login_at', Carbon::now()->month)->count(),
+                'active_users_this_month' => User::whereMonth('created_at', Carbon::now()->month)->count(),
                 'system_uptime' => 99.9,
                 'last_updated' => now()->toISOString()
             ];
