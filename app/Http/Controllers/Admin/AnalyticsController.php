@@ -226,13 +226,13 @@ class AnalyticsController extends Controller
             ->limit(10)
             ->get();
         
-        $ownerLocations = Owner::select('city', DB::raw('COUNT(*) as count'))
-            ->whereNotNull('city')
-            ->groupBy('city')
+        $ownerLocations = Owner::select('district', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('district')
+            ->groupBy('district')
             ->orderBy('count', 'desc')
             ->limit(10)
             ->get()
-            ->pluck('count', 'city')
+            ->pluck('count', 'district')
             ->toArray();
         
         return [
