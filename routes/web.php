@@ -491,9 +491,13 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
         Route::post('reports/financial/export-excel', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportExcel'])->name('reports.financial.export-excel');
 
         // Analytics
-        Route::get('analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics');
-        Route::post('analytics/real-time', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeAnalytics'])->name('analytics.real-time');
-        Route::post('analytics/custom', [App\Http\Controllers\Admin\AnalyticsController::class, 'getCustomAnalytics'])->name('analytics.custom');
+Route::get('analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics');
+Route::post('analytics/real-time', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeAnalytics'])->name('analytics.real-time');
+Route::post('analytics/custom', [App\Http\Controllers\Admin\AnalyticsController::class, 'getCustomAnalytics'])->name('analytics.custom');
+Route::post('analytics/device-stats', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeDeviceStats'])->name('analytics.device-stats');
+Route::post('analytics/device-trends', [App\Http\Controllers\Admin\AnalyticsController::class, 'getDeviceInstallationTrends'])->name('analytics.device-trends');
+Route::post('analytics/receive-data', [App\Http\Controllers\Admin\AnalyticsController::class, 'receiveDeviceAnalytics'])->name('analytics.receive-data');
+Route::get('analytics/summary', [App\Http\Controllers\Admin\AnalyticsController::class, 'getAnalyticsSummary'])->name('analytics.summary');
 
         // Login Logs
         Route::get('login-logs', [App\Http\Controllers\Admin\LoginLogController::class, 'index'])->name('login-logs.index');

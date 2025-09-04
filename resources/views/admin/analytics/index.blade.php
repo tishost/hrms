@@ -288,6 +288,131 @@
             </div>
         </div>
     </div>
+
+    <!-- Mobile App Analytics -->
+    <div class="row mb-4">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-mobile-alt"></i> Mobile App Analytics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-primary">{{ number_format($mobileAppAnalytics['total_installations']) }}</div>
+                                <div class="text-muted">Total Installations</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-success">{{ number_format($mobileAppAnalytics['active_users_this_month']) }}</div>
+                                <div class="text-muted">Active Users (This Month)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-info">{{ $mobileAppAnalytics['active_rate'] }}%</div>
+                                <div class="text-muted">Active Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-warning">{{ number_format($mobileAppAnalytics['current_month_installations']) }}</div>
+                                <div class="text-muted">This Month Installations</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Platform Distribution</h6>
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="platformDistributionChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Monthly Installations</h6>
+                            <div class="chart-bar pt-4 pb-2">
+                                <canvas id="monthlyInstallationsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Analytics -->
+    <div class="row mb-4">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-laptop"></i> Device Analytics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="font-weight-bold">Device Types</h6>
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="deviceTypesChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="font-weight-bold">OS Versions</h6>
+                            <div class="chart-bar pt-4 pb-2">
+                                <canvas id="osVersionsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="font-weight-bold">App Versions</h6>
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="appVersionsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Device Manufacturers</h6>
+                            <div class="chart-bar pt-4 pb-2">
+                                <canvas id="manufacturersChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Performance Metrics</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Average Load Time</strong></td>
+                                            <td>{{ $deviceAnalytics['performance_metrics']['avg_load_time'] }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Crash Rate</strong></td>
+                                            <td>{{ $deviceAnalytics['performance_metrics']['crash_rate'] }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Memory Usage</strong></td>
+                                            <td>{{ $deviceAnalytics['performance_metrics']['memory_usage'] }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Battery Impact</strong></td>
+                                            <td>{{ $deviceAnalytics['performance_metrics']['battery_impact'] }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Custom Date Range Modal -->
@@ -456,6 +581,192 @@ const notificationsChart = new Chart(notificationsCtx, {
     }
 });
 
+// Platform Distribution Chart
+const platformCtx = document.getElementById('platformDistributionChart').getContext('2d');
+const platformChart = new Chart(platformCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Android', 'iOS', 'Web'],
+        datasets: [{
+            data: [
+                {{ $mobileAppAnalytics['platform_distribution']['android'] }},
+                {{ $mobileAppAnalytics['platform_distribution']['ios'] }},
+                {{ $mobileAppAnalytics['platform_distribution']['web'] }}
+            ],
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(255, 205, 86, 0.8)'
+            ],
+            borderColor: [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(255, 205, 86, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// Monthly Installations Chart
+const monthlyInstallCtx = document.getElementById('monthlyInstallationsChart').getContext('2d');
+const monthlyInstallChart = new Chart(monthlyInstallCtx, {
+    type: 'bar',
+    data: {
+        labels: @json($mobileAppAnalytics['monthly_installations']->pluck('month')),
+        datasets: [{
+            label: 'Installations',
+            data: @json($mobileAppAnalytics['monthly_installations']->pluck('installations')),
+            backgroundColor: 'rgba(75, 192, 192, 0.8)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Device Types Chart
+const deviceTypesCtx = document.getElementById('deviceTypesChart').getContext('2d');
+const deviceTypesChart = new Chart(deviceTypesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Smartphone', 'Tablet', 'Desktop'],
+        datasets: [{
+            data: [75, 20, 5],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 205, 86, 0.8)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 205, 86, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// OS Versions Chart
+const osVersionsCtx = document.getElementById('osVersionsChart').getContext('2d');
+const osVersionsChart = new Chart(osVersionsCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Android 13', 'Android 12', 'Android 11', 'iOS 17', 'iOS 16'],
+        datasets: [{
+            label: 'Users',
+            data: [35, 25, 20, 15, 5],
+            backgroundColor: 'rgba(153, 102, 255, 0.8)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// App Versions Chart
+const appVersionsCtx = document.getElementById('appVersionsChart').getContext('2d');
+const appVersionsChart = new Chart(appVersionsCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['1.0.0', '0.9.0', '0.8.0', 'Other'],
+        datasets: [{
+            data: [60, 25, 10, 5],
+            backgroundColor: [
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(255, 159, 64, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(201, 203, 207, 0.8)'
+            ],
+            borderColor: [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(201, 203, 207, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// Manufacturers Chart
+const manufacturersCtx = document.getElementById('manufacturersChart').getContext('2d');
+const manufacturersChart = new Chart(manufacturersCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Samsung', 'Xiaomi', 'Apple', 'OnePlus', 'Other'],
+        datasets: [{
+            label: 'Users',
+            data: [30, 20, 15, 10, 25],
+            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
 // Functions
 function refreshAnalytics() {
     location.reload();
@@ -509,5 +820,48 @@ setInterval(function() {
             console.error('Error updating real-time data:', error);
         });
 }, 30000);
+
+// Real-time device statistics updates (every 60 seconds)
+setInterval(function() {
+    fetch('/admin/analytics/device-stats', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Device stats updated:', data.current_device_status);
+                // You can update UI elements here with real-time device data
+            }
+        })
+        .catch(error => {
+            console.error('Error updating device stats:', error);
+        });
+}, 60000);
+
+// Function to get device installation trends
+function getDeviceInstallationTrends(days = 30) {
+    fetch('/admin/analytics/device-trends', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ days: days })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Device trends:', data);
+                // You can update charts or display data here
+            }
+        })
+        .catch(error => {
+            console.error('Error getting device trends:', error);
+        });
+}
 </script>
 @endsection 
