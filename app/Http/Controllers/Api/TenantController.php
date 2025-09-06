@@ -399,6 +399,7 @@ class TenantController extends Controller
 
             \Log::info('Tenant show response data:', $responseData);
             \Log::info('Driver info - is_driver: ' . ($tenant->is_driver ? 'true' : 'false') . ', driver_name: ' . ($tenant->driver_name ?? 'null'));
+            \Log::info('NID Images - Front: ' . ($tenant->nid_front_picture ?? 'null') . ', Back: ' . ($tenant->nid_back_picture ?? 'null'));
 
             return response()->json($responseData);
 

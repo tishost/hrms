@@ -42,8 +42,15 @@ class MediaController extends Controller
             storage_path('app/public/' . $normalizedPath),
         ];
 
-        foreach ($candidates as $absPath) {
+        \Log::info("MediaController: Looking for file with normalized path: $normalizedPath");
+        \Log::info("MediaController: Checking candidates:");
+        foreach ($candidates as $index => $absPath) {
+            \Log::info("MediaController: Candidate $index: $absPath");
+            \Log::info("MediaController: File exists: " . (is_file($absPath) ? 'YES' : 'NO'));
+            \Log::info("MediaController: File readable: " . (is_readable($absPath) ? 'YES' : 'NO'));
+            
             if (is_file($absPath) && is_readable($absPath)) {
+                \Log::info("MediaController: Serving file from: $absPath");
                 // No cache - always serve fresh content
                 return response()->file($absPath, [
                     'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
