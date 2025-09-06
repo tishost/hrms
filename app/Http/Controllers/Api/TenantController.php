@@ -351,6 +351,8 @@ class TenantController extends Controller
                     'state' => $tenant->state,
                     'zip' => $tenant->zip,
                     'country' => $tenant->country,
+                    'district' => $tenant->district,
+                    'upazila' => $tenant->upazila,
                     'occupation' => $tenant->occupation,
                     'company_name' => $tenant->company_name,
                     'college_university' => $tenant->college_university,
