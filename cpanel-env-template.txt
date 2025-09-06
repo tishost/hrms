@@ -142,7 +142,7 @@ DB_BACKUP_RETENTION=7
 # File Storage Settings
 STORAGE_DRIVER=local
 STORAGE_PATH=storage/app/public/
-STORAGE_URL=storage/
+STORAGE_URL=https://barimanager.com/storage/
 
 # Email Templates
 EMAIL_TEMPLATE_PATH=resources/views/emails/

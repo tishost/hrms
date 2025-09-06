@@ -592,7 +592,7 @@ class TenantController extends Controller
                     $file = $request->file('nid_front_picture');
                     $fileName = 'nid_front_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidFrontPicturePath = str_replace('public/', 'storage/', $filePath);
+                    $nidFrontPicturePath = 'tenants/nid/' . $fileName;
                     \Log::info('NID front image uploaded: ' . $nidFrontPicturePath, []);
                 } catch (\Exception $e) {
                     \Log::error('Error uploading NID front image: ' . $e->getMessage());
@@ -606,7 +606,7 @@ class TenantController extends Controller
                     $file = $request->file('nid_back_picture');
                     $fileName = 'nid_back_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidBackPicturePath = str_replace('public/', 'storage/', $filePath);
+                    $nidBackPicturePath = 'tenants/nid/' . $fileName;
                     \Log::info('NID back image uploaded: ' . $nidBackPicturePath, []);
                 } catch (\Exception $e) {
                     \Log::error('Error uploading NID back image: ' . $e->getMessage());
@@ -917,7 +917,7 @@ class TenantController extends Controller
                     $file = $request->file('nid_front_picture');
                     $fileName = 'nid_front_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidFrontPicturePath = str_replace('public/', 'storage/', $filePath);
+                    $nidFrontPicturePath = 'tenants/nid/' . $fileName;
                     \Log::info('NID front image uploaded: ' . $nidFrontPicturePath);
                 } catch (\Exception $e) {
                     \Log::error('Error uploading NID front image: ' . $e->getMessage());
@@ -931,7 +931,7 @@ class TenantController extends Controller
                     $file = $request->file('nid_back_picture');
                     $fileName = 'nid_back_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidBackPicturePath = str_replace('public/', 'storage/', $filePath);
+                    $nidBackPicturePath = 'tenants/nid/' . $fileName;
                     \Log::info('NID back image uploaded: ' . $nidBackPicturePath);
                 } catch (\Exception $e) {
                     \Log::error('Error uploading NID back image: ' . $e->getMessage());

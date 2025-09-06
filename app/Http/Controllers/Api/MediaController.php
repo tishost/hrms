@@ -40,6 +40,8 @@ class MediaController extends Controller
         $candidates = [
             public_path($normalizedPath),
             storage_path('app/public/' . $normalizedPath),
+            // For cPanel: check if files are directly in public directory
+            public_path('tenants/' . $normalizedPath),
         ];
 
         \Log::info("MediaController: Looking for file with normalized path: $normalizedPath");
