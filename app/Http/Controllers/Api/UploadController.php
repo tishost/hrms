@@ -56,8 +56,10 @@ class UploadController extends Controller
             if ($compressedPath) {
                 $compressedFile = new \Illuminate\Http\File($compressedPath);
                 $compressedFile->move($publicDir, $safeName);
-                // Clean up temporary compressed file
-                unlink($compressedPath);
+                // Clean up temporary compressed file safely
+                if (file_exists($compressedPath)) {
+                    @unlink($compressedPath);
+                }
             } else {
                 $file->move($publicDir, $safeName);
             }
