@@ -43,8 +43,8 @@ class UploadController extends Controller
                 }
             }
             
-            // Save directly under public folder to avoid storage symlink issues
-            $publicDir = public_path($folder);
+            // Save directly under public_html for cPanel access
+            $publicDir = base_path('../public_html/' . $folder);
             if (!is_dir($publicDir)) {
                 @mkdir($publicDir, 0755, true);
             }
@@ -137,7 +137,7 @@ class UploadController extends Controller
 
             // Extract filename from path
             $filename = basename($oldPath);
-            $nidDir = public_path('tenants/nid');
+            $nidDir = base_path('../public_html/tenants/nid');
             
             // Only allow deletion from tenants/nid folder for security
             if (is_file($nidDir . '/' . $filename)) {
