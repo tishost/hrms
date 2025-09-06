@@ -123,6 +123,7 @@ Route::get('/media/{path}', [MediaController::class, 'show'])->where('path', '.*
 // File upload routes
 Route::post('/common/upload', [App\Http\Controllers\Api\UploadController::class, 'store']);
 Route::post('/common/delete-profile-pic', [App\Http\Controllers\Api\UploadController::class, 'deleteOldProfilePic']);
+Route::post('/common/delete-nid-image', [App\Http\Controllers\Api\UploadController::class, 'deleteOldNidImage']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Invoices

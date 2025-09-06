@@ -1,0 +1,30 @@
+; PHP Configuration for cPanel Server
+; Copy this to your server's php.ini or .htaccess
+
+; File Upload Settings
+upload_max_filesize = 50M
+post_max_size = 50M
+max_file_uploads = 20
+max_execution_time = 300
+max_input_time = 300
+memory_limit = 512M
+
+; Session Settings
+session.gc_maxlifetime = 7200
+session.cookie_lifetime = 0
+
+; Error Reporting
+display_errors = Off
+log_errors = On
+error_log = /home/barimanager/hrms/storage/logs/php_errors.log
+
+; Security
+expose_php = Off
+allow_url_fopen = On
+allow_url_include = Off
+
+; Performance
+opcache.enable = 1
+opcache.memory_consumption = 128
+opcache.max_accelerated_files = 4000
+opcache.revalidate_freq = 2

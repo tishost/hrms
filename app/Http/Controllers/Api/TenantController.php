@@ -567,8 +567,8 @@ class TenantController extends Controller
                 'start_month' => 'nullable|date_format:m-Y',
                 'frequency' => 'nullable|string|max:50',
                 'remarks' => 'nullable|string|max:1000',
-                'nid_front_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'nid_back_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'nid_front_picture' => 'nullable|string|max:255',
+                'nid_back_picture' => 'nullable|string|max:255',
             ], [
                 'mobile.unique' => 'This mobile number is already registered under your account.',
             ]);
@@ -585,33 +585,11 @@ class TenantController extends Controller
                 ], 400);
             }
 
-            // Handle NID front image upload
-            $nidFrontPicturePath = null;
-            if ($request->hasFile('nid_front_picture')) {
-                try {
-                    $file = $request->file('nid_front_picture');
-                    $fileName = 'nid_front_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidFrontPicturePath = 'tenants/nid/' . $fileName;
-                    \Log::info('NID front image uploaded: ' . $nidFrontPicturePath, []);
-                } catch (\Exception $e) {
-                    \Log::error('Error uploading NID front image: ' . $e->getMessage());
-                }
-            }
+            // Handle NID front image path (from upload)
+            $nidFrontPicturePath = $request->input('nid_front_picture');
 
-            // Handle NID back image upload
-            $nidBackPicturePath = null;
-            if ($request->hasFile('nid_back_picture')) {
-                try {
-                    $file = $request->file('nid_back_picture');
-                    $fileName = 'nid_back_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidBackPicturePath = 'tenants/nid/' . $fileName;
-                    \Log::info('NID back image uploaded: ' . $nidBackPicturePath, []);
-                } catch (\Exception $e) {
-                    \Log::error('Error uploading NID back image: ' . $e->getMessage());
-                }
-            }
+            // Handle NID back image path (from upload)
+            $nidBackPicturePath = $request->input('nid_back_picture');
 
             // Create tenant
             $tenant = Tenant::create([
@@ -906,37 +884,15 @@ class TenantController extends Controller
                 'check_in_date' => 'required|date',
                 'frequency' => 'nullable|string|max:50',
                 'remarks' => 'nullable|string|max:1000',
-                'nid_front_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'nid_back_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'nid_front_picture' => 'nullable|string|max:255',
+                'nid_back_picture' => 'nullable|string|max:255',
             ]);
 
-            // Handle NID front image upload
-            $nidFrontPicturePath = $tenant->nid_front_picture;
-            if ($request->hasFile('nid_front_picture')) {
-                try {
-                    $file = $request->file('nid_front_picture');
-                    $fileName = 'nid_front_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidFrontPicturePath = 'tenants/nid/' . $fileName;
-                    \Log::info('NID front image uploaded: ' . $nidFrontPicturePath);
-                } catch (\Exception $e) {
-                    \Log::error('Error uploading NID front image: ' . $e->getMessage());
-                }
-            }
+            // Handle NID front image path (from upload)
+            $nidFrontPicturePath = $request->input('nid_front_picture') ?? $tenant->nid_front_picture;
 
-            // Handle NID back image upload
-            $nidBackPicturePath = $tenant->nid_back_picture;
-            if ($request->hasFile('nid_back_picture')) {
-                try {
-                    $file = $request->file('nid_back_picture');
-                    $fileName = 'nid_back_' . time() . '_' . $user->owner_id . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('public/tenants/nid', $fileName);
-                    $nidBackPicturePath = 'tenants/nid/' . $fileName;
-                    \Log::info('NID back image uploaded: ' . $nidBackPicturePath);
-                } catch (\Exception $e) {
-                    \Log::error('Error uploading NID back image: ' . $e->getMessage());
-                }
-            }
+            // Handle NID back image path (from upload)
+            $nidBackPicturePath = $request->input('nid_back_picture') ?? $tenant->nid_back_picture;
 
             // Update tenant
             $tenant->update([
