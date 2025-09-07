@@ -697,6 +697,9 @@
             <a href="{{ route('admin.settings.notifications') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-bell me-2"></i>Notification Settings
             </a>
+            <a href="{{ route('admin.notifications.send') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-paper-plane me-2"></i>Send Push Notifications
+            </a>
             <a href="{{ route('admin.settings.email-configuration') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-envelope me-2"></i>Email Config
             </a>
@@ -941,6 +944,12 @@
                             <a class="dropdown-item {{ request()->routeIs('admin.settings.notification-logs.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.notification-logs') }}">
                                 <i class="fas fa-history me-2"></i>Notification Logs
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"
+                               href="{{ route('admin.notifications.send') }}">
+                                <i class="fas fa-paper-plane me-2"></i>Send Push Notifications
                             </a>
                         </li>
                         <li>

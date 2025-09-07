@@ -37,6 +37,10 @@
                 <i class="fas fa-ad fa-sm text-white-50"></i> <span class="d-none d-sm-inline">Manage Ads</span>
                 <span class="d-sm-none">Ads</span>
             </a>
+            <a href="{{ route('admin.notifications.send') }}" class="btn btn-sm btn-warning shadow-sm">
+                <i class="fas fa-paper-plane fa-sm text-white-50"></i> <span class="d-none d-sm-inline">Send Notifications</span>
+                <span class="d-sm-none">Notifications</span>
+            </a>
         </div>
     </div>
 
