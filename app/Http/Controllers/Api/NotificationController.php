@@ -605,4 +605,61 @@ class NotificationController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Update FCM token for user
+     */
+    public function updateFCMToken(Request $request)
+    {
+        try {
+            $request->validate([
+                'fcm_token' => 'required|string|max:255',
+            ]);
+            
+            $user = $request->user();
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'FCM token updated successfully',
+                'data' => [
+                    'user_id' => $user->id,
+                    'fcm_token' => $user->fcm_token,
+                    'updated_at' => $user->updated_at
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update FCM token: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get FCM token for user
+     */
+    public function getFCMToken(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'user_id' => $user->id,
+                    'fcm_token' => $user->fcm_token,
+                    'has_token' => !empty($user->fcm_token)
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get FCM token: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

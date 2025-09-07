@@ -208,6 +208,10 @@ Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::delete('/delete', [NotificationController::class, 'deleteNotification']);
         Route::get('/stats', [NotificationController::class, 'getNotificationStats']);
+        
+        // FCM Token management
+        Route::post('/fcm-token', [NotificationController::class, 'updateFCMToken']);
+        Route::get('/fcm-token', [NotificationController::class, 'getFCMToken']);
     });
 });
 
