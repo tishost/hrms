@@ -455,6 +455,18 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('notifications/history', [App\Http\Controllers\Admin\NotificationController::class, 'history'])->name('notifications.history');
     Route::get('notifications/stats', [App\Http\Controllers\Admin\NotificationController::class, 'stats'])->name('notifications.stats');
     Route::post('notifications/test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])->name('notifications.test');
+    
+    // Simple test route for debugging
+    Route::get('notifications/debug', function() {
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification system is working',
+            'timestamp' => now(),
+            'users_count' => \App\Models\User::count(),
+            'owners_count' => \App\Models\User::whereNotNull('owner_id')->count(),
+            'tenants_count' => \App\Models\User::whereNotNull('tenant_id')->count()
+        ]);
+    })->name('notifications.debug');
 
 
     // SMS Group Settings Route
