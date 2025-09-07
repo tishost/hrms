@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Send Push Notifications')
 
@@ -33,9 +33,13 @@
                                 <label class="form-label">Select Role</label>
                                 <select class="form-select" id="roleId" name="role_id">
                                     <option value="">Select Role</option>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                    @endforeach
+                                    @if($roles && $roles->count() > 0)
+                                        @foreach($roles as $role)
+                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>No roles available</option>
+                                    @endif
                                 </select>
                             </div>
                         </div>

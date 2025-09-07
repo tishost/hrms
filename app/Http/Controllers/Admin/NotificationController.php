@@ -20,25 +20,32 @@ class NotificationController extends Controller
         try {
             // Get all owners and tenants
             $owners = User::where('user_type', 'owner')
-                         ->select('id', 'name', 'mobile', 'email')
+                         ->select('id', 'name', 'phone as mobile', 'email')
                          ->orderBy('name')
                          ->get();
             
             $tenants = User::where('user_type', 'tenant')
-                          ->select('id', 'name', 'mobile', 'email')
+                          ->select('id', 'name', 'phone as mobile', 'email')
                           ->orderBy('name')
                           ->get();
             
-            // Get all roles
-            $roles = Role::select('id', 'name')
-                        ->orderBy('name')
-                        ->get();
+            // Get all roles - if Role model doesn't exist, create empty collection
+            $roles = collect();
+            if (class_exists('App\Models\Role')) {
+                $roles = Role::select('id', 'name')
+                            ->orderBy('name')
+                            ->get();
+            }
             
             return view('admin.notifications.send', compact('owners', 'tenants', 'roles'));
             
         } catch (\Exception $e) {
             Log::error('Error loading notification form: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to load notification form');
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Return with error message
+            return redirect()->route('admin.dashboard')
+                           ->with('error', 'Failed to load notification form: ' . $e->getMessage());
         }
     }
     
