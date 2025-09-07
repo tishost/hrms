@@ -18,13 +18,13 @@ class NotificationController extends Controller
     public function index()
     {
         try {
-            // Get all owners and tenants
-            $owners = User::where('user_type', 'owner')
+            // Get all owners and tenants based on owner_id and tenant_id
+            $owners = User::whereNotNull('owner_id')
                          ->select('id', 'name', 'phone as mobile', 'email')
                          ->orderBy('name')
                          ->get();
             
-            $tenants = User::where('user_type', 'tenant')
+            $tenants = User::whereNotNull('tenant_id')
                           ->select('id', 'name', 'phone as mobile', 'email')
                           ->orderBy('name')
                           ->get();
@@ -135,8 +135,18 @@ class NotificationController extends Controller
     private function sendToAllUsers($data)
     {
         try {
-            return NotificationHelper::sendTopicNotification(
-                'all_users',
+            // Get all user IDs (both owners and tenants)
+            $allUserIds = User::where(function($query) {
+                $query->whereNotNull('owner_id')
+                      ->orWhereNotNull('tenant_id');
+            })->pluck('id')->toArray();
+            
+            if (empty($allUserIds)) {
+                return ['success' => false, 'message' => 'No users found'];
+            }
+            
+            return NotificationHelper::sendBulkPushNotification(
+                $allUserIds,
                 $data['title'],
                 $data['body'],
                 $data['notification_type'],
@@ -158,8 +168,15 @@ class NotificationController extends Controller
     private function sendToAllOwners($data)
     {
         try {
-            return NotificationHelper::sendTopicNotification(
-                'all_owners',
+            // Get all owner user IDs
+            $ownerIds = User::whereNotNull('owner_id')->pluck('id')->toArray();
+            
+            if (empty($ownerIds)) {
+                return ['success' => false, 'message' => 'No owners found'];
+            }
+            
+            return NotificationHelper::sendBulkPushNotification(
+                $ownerIds,
                 $data['title'],
                 $data['body'],
                 $data['notification_type'],
@@ -181,8 +198,15 @@ class NotificationController extends Controller
     private function sendToAllTenants($data)
     {
         try {
-            return NotificationHelper::sendTopicNotification(
-                'all_tenants',
+            // Get all tenant user IDs
+            $tenantIds = User::whereNotNull('tenant_id')->pluck('id')->toArray();
+            
+            if (empty($tenantIds)) {
+                return ['success' => false, 'message' => 'No tenants found'];
+            }
+            
+            return NotificationHelper::sendBulkPushNotification(
+                $tenantIds,
                 $data['title'],
                 $data['body'],
                 $data['notification_type'],
@@ -309,8 +333,8 @@ class NotificationController extends Controller
         try {
             // Get user counts for statistics
             $totalUsers = User::count();
-            $totalOwners = User::where('user_type', 'owner')->count();
-            $totalTenants = User::where('user_type', 'tenant')->count();
+            $totalOwners = User::whereNotNull('owner_id')->count();
+            $totalTenants = User::whereNotNull('tenant_id')->count();
             
             // Get users with FCM tokens (assuming you have a fcm_tokens table)
             $usersWithTokens = User::whereNotNull('fcm_token')->count();

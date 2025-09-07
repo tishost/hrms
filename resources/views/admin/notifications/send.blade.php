@@ -267,7 +267,14 @@ $(document).ready(function() {
         
         // Show relevant sections
         if (targetType === 'role_based') {
-            $('#roleSelection').show();
+            // Check if roles are available
+            const roleOptions = $('#roleId option').length;
+            if (roleOptions > 1) {
+                $('#roleSelection').show();
+            } else {
+                alert('No roles available. Please select a different target type.');
+                $(this).val('');
+            }
         } else if (targetType === 'specific_users') {
             $('#specificUsers').show();
         }
