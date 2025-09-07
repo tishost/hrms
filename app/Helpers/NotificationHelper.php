@@ -619,4 +619,316 @@ class NotificationHelper
         
         return '';
     }
+
+    /**
+     * Send push notification
+     */
+    public static function sendPushNotification($user, $title, $body, $type, $data = [], $imageUrl = null, $actionUrl = null)
+    {
+        try {
+            // Check if user has FCM token
+            if (!$user->fcm_token) {
+                return [
+                    'success' => false,
+                    'message' => 'User does not have FCM token'
+                ];
+            }
+
+            // Prepare notification data
+            $notificationData = [
+                'title' => $title,
+                'body' => $body,
+                'type' => $type,
+                'data' => $data,
+                'image_url' => $imageUrl,
+                'action_url' => $actionUrl,
+                'user_id' => $user->id,
+                'created_at' => now()->toISOString(),
+            ];
+
+            // Send via FCM
+            $result = self::sendFCMNotification($user->fcm_token, $title, $body, $notificationData);
+
+            if ($result['success']) {
+                // Save to database
+                $user->notifications()->create([
+                    'title' => $title,
+                    'body' => $body,
+                    'type' => $type,
+                    'data' => json_encode($data),
+                    'image_url' => $imageUrl,
+                    'action_url' => $actionUrl,
+                    'fcm_message_id' => $result['message_id'] ?? null,
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Push notification sent successfully',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => $result['message']
+                ];
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Error sending push notification: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to send push notification'
+            ];
+        }
+    }
+
+    /**
+     * Send FCM notification
+     */
+    private static function sendFCMNotification($fcmToken, $title, $body, $data)
+    {
+        try {
+            $credentialsPath = config('services.firebase.credentials');
+            
+            if (!$credentialsPath || !file_exists($credentialsPath)) {
+                return [
+                    'success' => false,
+                    'message' => 'Firebase credentials not configured'
+                ];
+            }
+
+            // Use Firebase Admin SDK
+            $firebase = \Kreait\Firebase\Factory::withServiceAccount($credentialsPath);
+            $messaging = $firebase->createMessaging();
+
+            $message = \Kreait\Firebase\Messaging\CloudMessage::withTarget('token', $fcmToken)
+                ->withNotification(\Kreait\Firebase\Messaging\Notification::create($title, $body))
+                ->withData($data);
+
+            if (isset($data['image_url']) && $data['image_url']) {
+                $message = $message->withAndroidConfig(
+                    \Kreait\Firebase\Messaging\AndroidConfig::fromArray([
+                        'notification' => [
+                            'image' => $data['image_url']
+                        ]
+                    ])
+                );
+            }
+
+            $result = $messaging->send($message);
+
+            return [
+                'success' => true,
+                'message' => 'FCM notification sent successfully',
+                'message_id' => $result
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Error sending FCM notification: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to send FCM notification'
+            ];
+        }
+    }
+
+    /**
+     * Send rent reminder notification
+     */
+    public static function sendRentReminderNotification($tenant, $amount, $dueDate, $propertyName)
+    {
+        $title = 'Rent Reminder';
+        $body = "Your rent of ৳{$amount} for {$propertyName} is due on {$dueDate}";
+        
+        $data = [
+            'amount' => $amount,
+            'due_date' => $dueDate,
+            'property_name' => $propertyName,
+            'tenant_id' => $tenant->id,
+        ];
+
+        return self::sendPushNotification(
+            $tenant->user,
+            $title,
+            $body,
+            'rent_reminder',
+            $data
+        );
+    }
+
+    /**
+     * Send payment confirmation notification
+     */
+    public static function sendPaymentConfirmationNotification($user, $amount, $transactionId, $paymentMethod)
+    {
+        $title = 'Payment Confirmed';
+        $body = "Your payment of ৳{$amount} via {$paymentMethod} has been confirmed";
+        
+        $data = [
+            'amount' => $amount,
+            'transaction_id' => $transactionId,
+            'payment_method' => $paymentMethod,
+            'user_id' => $user->id,
+        ];
+
+        return self::sendPushNotification(
+            $user,
+            $title,
+            $body,
+            'payment_confirmation',
+            $data
+        );
+    }
+
+    /**
+     * Send maintenance request notification
+     */
+    public static function sendMaintenanceRequestNotification($owner, $tenant, $propertyName, $issueDescription, $priority)
+    {
+        $title = 'New Maintenance Request';
+        $body = "New maintenance request from {$tenant->user->name} for {$propertyName}";
+        
+        $data = [
+            'property_name' => $propertyName,
+            'issue_description' => $issueDescription,
+            'priority' => $priority,
+            'tenant_id' => $tenant->id,
+            'owner_id' => $owner->id,
+        ];
+
+        return self::sendPushNotification(
+            $owner->user,
+            $title,
+            $body,
+            'maintenance_request',
+            $data
+        );
+    }
+
+    /**
+     * Send subscription expiry notification
+     */
+    public static function sendSubscriptionExpiryNotification($owner, $daysLeft, $planName)
+    {
+        $title = 'Subscription Expiring Soon';
+        $body = "Your {$planName} subscription expires in {$daysLeft} days";
+        
+        $data = [
+            'days_left' => $daysLeft,
+            'plan_name' => $planName,
+            'owner_id' => $owner->id,
+        ];
+
+        return self::sendPushNotification(
+            $owner->user,
+            $title,
+            $body,
+            'subscription_expiry',
+            $data
+        );
+    }
+
+    /**
+     * Send new tenant notification
+     */
+    public static function sendNewTenantNotification($owner, $tenant, $propertyName)
+    {
+        $title = 'New Tenant Added';
+        $body = "New tenant {$tenant->user->name} has been added to {$propertyName}";
+        
+        $data = [
+            'tenant_name' => $tenant->user->name,
+            'property_name' => $propertyName,
+            'tenant_id' => $tenant->id,
+            'owner_id' => $owner->id,
+        ];
+
+        return self::sendPushNotification(
+            $owner->user,
+            $title,
+            $body,
+            'new_tenant',
+            $data
+        );
+    }
+
+    /**
+     * Send bulk push notification
+     */
+    public static function sendBulkPushNotification($userIds, $title, $body, $type, $data = [], $imageUrl = null, $actionUrl = null)
+    {
+        $results = [];
+        $users = \App\Models\User::whereIn('id', $userIds)->get();
+
+        foreach ($users as $user) {
+            $result = self::sendPushNotification($user, $title, $body, $type, $data, $imageUrl, $actionUrl);
+            $results[] = [
+                'user_id' => $user->id,
+                'success' => $result['success'],
+                'message' => $result['message']
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Bulk notification sent',
+            'data' => $results
+        ];
+    }
+
+    /**
+     * Send topic-based notification
+     */
+    public static function sendTopicNotification($topic, $title, $body, $type, $data = [], $imageUrl = null, $actionUrl = null)
+    {
+        try {
+            $credentialsPath = config('services.firebase.credentials');
+            
+            if (!$credentialsPath || !file_exists($credentialsPath)) {
+                return [
+                    'success' => false,
+                    'message' => 'Firebase credentials not configured'
+                ];
+            }
+
+            // Use Firebase Admin SDK
+            $firebase = \Kreait\Firebase\Factory::withServiceAccount($credentialsPath);
+            $messaging = $firebase->createMessaging();
+
+            $messageData = array_merge($data, [
+                'type' => $type,
+                'action_url' => $actionUrl,
+                'created_at' => now()->toISOString(),
+            ]);
+
+            $message = \Kreait\Firebase\Messaging\CloudMessage::withTarget('topic', $topic)
+                ->withNotification(\Kreait\Firebase\Messaging\Notification::create($title, $body))
+                ->withData($messageData);
+
+            if ($imageUrl) {
+                $message = $message->withAndroidConfig(
+                    \Kreait\Firebase\Messaging\AndroidConfig::fromArray([
+                        'notification' => [
+                            'image' => $imageUrl
+                        ]
+                    ])
+                );
+            }
+
+            $result = $messaging->send($message);
+
+            return [
+                'success' => true,
+                'message' => 'Topic notification sent successfully',
+                'message_id' => $result
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Error sending topic notification: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to send topic notification'
+            ];
+        }
+    }
 }

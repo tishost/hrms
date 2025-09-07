@@ -17,6 +17,7 @@ use App\Models\District;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\SubscriptionController as ApiSubscriptionController;
+use App\Http\Controllers\Api\NotificationController;
 
 
 // Tenant Registration Routes
@@ -192,6 +193,22 @@ Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement
 
     // Universal User Profile (for user type detection)
     Route::get('/user/profile', [AuthController::class, 'getUserProfile']);
+
+    // Notification Routes
+    Route::prefix('notifications')->group(function () {
+        Route::post('/send', [NotificationController::class, 'sendNotification']);
+        Route::post('/send-bulk', [NotificationController::class, 'sendBulkNotification']);
+        Route::post('/send-role-based', [NotificationController::class, 'sendRoleBasedNotification']);
+        Route::post('/rent-reminder', [NotificationController::class, 'sendRentReminder']);
+        Route::post('/payment-confirmation', [NotificationController::class, 'sendPaymentConfirmation']);
+        Route::post('/maintenance-request', [NotificationController::class, 'sendMaintenanceRequest']);
+        Route::post('/subscription-expiry', [NotificationController::class, 'sendSubscriptionExpiry']);
+        Route::get('/history', [NotificationController::class, 'getNotificationHistory']);
+        Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/delete', [NotificationController::class, 'deleteNotification']);
+        Route::get('/stats', [NotificationController::class, 'getNotificationStats']);
+    });
 });
 
 

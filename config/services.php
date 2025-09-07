@@ -31,11 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'sms' => [
-        'api_token' => env('SMS_API_TOKEN', ''),
-        'sender_id' => env('SMS_SENDER_ID', 'BARI MANAGER'),
-        'api_url' => env('SMS_API_URL', 'https://api.smsinbd.com/sms-api/sendsms'),
-        'balance_url' => env('SMS_BALANCE_URL', 'https://api.smsinbd.com/sms-api/balance'),
+    'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS_PATH', storage_path('app/firebase-credentials.json')),
+        'project_id' => env('FIREBASE_PROJECT_ID', 'bari-manager'),
+        'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID', '663618335262'),
     ],
 
 ];
