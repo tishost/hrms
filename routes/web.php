@@ -454,6 +454,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('notifications/send', [App\Http\Controllers\Admin\NotificationController::class, 'send'])->name('notifications.send.post');
     Route::get('notifications/history', [App\Http\Controllers\Admin\NotificationController::class, 'history'])->name('notifications.history');
     Route::get('notifications/stats', [App\Http\Controllers\Admin\NotificationController::class, 'stats'])->name('notifications.stats');
+    Route::post('notifications/test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])->name('notifications.test');
 
 
     // SMS Group Settings Route

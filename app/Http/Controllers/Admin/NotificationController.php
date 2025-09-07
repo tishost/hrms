@@ -67,14 +67,21 @@ class NotificationController extends Controller
                 'scheduled_at' => 'nullable|date|after:now',
                 'user_ids' => 'required_if:target_type,specific_users|array',
                 'user_ids.*' => 'exists:users,id',
-                'role_id' => 'required_if:target_type,role_based|exists:roles,id',
+                'role_id' => 'required_if:target_type,role_based|nullable|integer',
             ]);
             
             if ($validator->fails()) {
+                $errors = $validator->errors();
+                $errorMessages = [];
+                
+                foreach ($errors->all() as $error) {
+                    $errorMessages[] = $error;
+                }
+                
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'message' => 'Validation failed: ' . implode(', ', $errorMessages),
+                    'errors' => $errors
                 ], 422);
             }
             
@@ -354,6 +361,48 @@ class NotificationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get notification statistics'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Send test notification to all users
+     */
+    public function sendTestNotification(Request $request)
+    {
+        try {
+            $title = $request->input('title', 'Test Notification');
+            $body = $request->input('body', 'This is a test notification from HRMS Admin Panel');
+            $type = $request->input('type', 'general');
+            
+            // Send to all users
+            $result = $this->sendToAllUsers([
+                'title' => $title,
+                'body' => $body,
+                'notification_type' => $type,
+                'priority' => 'normal',
+                'action_url' => null,
+                'image_url' => null,
+            ]);
+            
+            if ($result && $result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Test notification sent successfully!',
+                    'data' => $result
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to send test notification'
+                ], 500);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error sending test notification: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while sending test notification: ' . $e->getMessage()
             ], 500);
         }
     }

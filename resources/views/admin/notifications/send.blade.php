@@ -168,6 +168,9 @@
                                 <button type="submit" class="btn btn-primary" id="sendBtn">
                                     <i class="fas fa-paper-plane"></i> Send Notification
                                 </button>
+                                <button type="button" class="btn btn-warning" id="testBtn">
+                                    <i class="fas fa-vial"></i> Send Test
+                                </button>
                                 <button type="button" class="btn btn-secondary" onclick="resetForm()">
                                     <i class="fas fa-undo"></i> Reset
                                 </button>
@@ -316,8 +319,28 @@ $(document).ready(function() {
     $('#notificationForm').submit(function(e) {
         e.preventDefault();
         
-        const formData = new FormData(this);
+        // Basic form validation
+        const title = $('input[name="title"]').val().trim();
+        const body = $('textarea[name="body"]').val().trim();
         const targetType = $('#targetType').val();
+        
+        if (!title) {
+            alert('Please enter a notification title');
+            $('input[name="title"]').focus();
+            return;
+        }
+        
+        if (!body) {
+            alert('Please enter a notification message');
+            $('textarea[name="body"]').focus();
+            return;
+        }
+        
+        if (!targetType) {
+            alert('Please select a target audience');
+            $('#targetType').focus();
+            return;
+        }
         
         // Validate specific users selection
         if (targetType === 'specific_users') {
@@ -327,6 +350,18 @@ $(document).ready(function() {
                 return;
             }
         }
+        
+        // Validate role-based selection
+        if (targetType === 'role_based') {
+            const roleId = $('#roleId').val();
+            if (!roleId) {
+                alert('Please select a role');
+                $('#roleId').focus();
+                return;
+            }
+        }
+        
+        const formData = new FormData(this);
         
         // Show loading state
         $('#sendBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
@@ -347,11 +382,73 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                const error = xhr.responseJSON?.message || 'Failed to send notification';
-                alert('Error: ' + error);
+                let errorMessage = 'Failed to send notification';
+                
+                if (xhr.responseJSON) {
+                    if (xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    if (xhr.responseJSON.errors) {
+                        const errors = xhr.responseJSON.errors;
+                        const errorList = [];
+                        
+                        for (const field in errors) {
+                            if (errors[field]) {
+                                errorList.push(`${field}: ${errors[field].join(', ')}`);
+                            }
+                        }
+                        
+                        if (errorList.length > 0) {
+                            errorMessage += '\n\nDetails:\n' + errorList.join('\n');
+                        }
+                    }
+                }
+                
+                alert('Error: ' + errorMessage);
             },
             complete: function() {
                 $('#sendBtn').prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Send Notification');
+            }
+        });
+    });
+
+    // Test button handler
+    $('#testBtn').click(function() {
+        const title = $('input[name="title"]').val() || 'Test Notification';
+        const body = $('textarea[name="body"]').val() || 'This is a test notification from HRMS Admin Panel';
+        const type = $('select[name="notification_type"]').val() || 'general';
+        
+        if (!confirm('Send test notification to all users?')) {
+            return;
+        }
+        
+        // Show loading state
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Testing...');
+        
+        // Send test notification
+        $.ajax({
+            url: '{{ route("admin.notifications.test") }}',
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                title: title,
+                body: body,
+                type: type
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Test notification sent successfully!');
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to send test notification'));
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.message || 'Failed to send test notification';
+                alert('Error: ' + error);
+            },
+            complete: function() {
+                $('#testBtn').prop('disabled', false).html('<i class="fas fa-vial"></i> Send Test');
             }
         });
     });
