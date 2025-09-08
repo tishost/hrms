@@ -28,6 +28,7 @@ class User extends Authenticatable
         'password',
         'tenant_id',
         'owner_id',
+        'fcm_token',
     ];
 
     /**

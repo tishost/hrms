@@ -617,8 +617,16 @@ class NotificationController extends Controller
             ]);
             
             $user = $request->user();
+            Log::info('FCM token update request received', [
+                'user_id' => $user?->id,
+                'token_preview' => substr($request->fcm_token, 0, 20) . '...',
+            ]);
             $user->fcm_token = $request->fcm_token;
             $user->save();
+            Log::info('FCM token updated successfully', [
+                'user_id' => $user->id,
+                'has_token' => !empty($user->fcm_token)
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -631,6 +639,9 @@ class NotificationController extends Controller
             ]);
             
         } catch (\Exception $e) {
+            Log::error('Failed to update FCM token', [
+                'error' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update FCM token: ' . $e->getMessage()
@@ -645,6 +656,10 @@ class NotificationController extends Controller
     {
         try {
             $user = $request->user();
+            Log::info('Get FCM token request', [
+                'user_id' => $user?->id,
+                'has_token' => !empty($user?->fcm_token)
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -670,8 +685,15 @@ class NotificationController extends Controller
     {
         try {
             $user = $request->user();
+            Log::info('Test notification request', [
+                'user_id' => $user?->id,
+                'has_token' => !empty($user?->fcm_token)
+            ]);
             
             if (!$user->fcm_token) {
+                Log::warning('Test notification blocked: No FCM token', [
+                    'user_id' => $user?->id
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'User does not have FCM token'
