@@ -21,7 +21,9 @@ class VerifyCsrfToken extends Middleware
         // Test routes
         'test-csrf',
         'test-template-save',
-        'test-template-save-admin'
+        'test-template-save-admin',
+        // Admin notifications (forms / ajax from admin panel)
+        'admin/notifications/*'
     ];
 
     /**
