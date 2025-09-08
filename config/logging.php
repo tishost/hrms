@@ -54,7 +54,8 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            // Hard-wire stack to include both single and push channels
+            'channels' => ['single', 'push'],
             'ignore_exceptions' => false,
         ],
 
