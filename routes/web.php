@@ -451,10 +451,14 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
 
     // Push Notifications Management
     Route::get('notifications/send', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.send');
-    Route::post('notifications/send', [App\Http\Controllers\Admin\NotificationController::class, 'send'])->name('notifications.send.post');
+    Route::post('notifications/send', [App\Http\Controllers\Admin\NotificationController::class, 'send'])
+        ->name('notifications.send.post')
+        ->withoutMiddleware([App\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('notifications/history', [App\Http\Controllers\Admin\NotificationController::class, 'history'])->name('notifications.history');
     Route::get('notifications/stats', [App\Http\Controllers\Admin\NotificationController::class, 'stats'])->name('notifications.stats');
-    Route::post('notifications/test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])->name('notifications.test');
+    Route::post('notifications/test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])
+        ->name('notifications.test')
+        ->withoutMiddleware([App\Http\Middleware\VerifyCsrfToken::class]);
     
     // Simple test route for debugging
     Route::get('notifications/debug', function() {
