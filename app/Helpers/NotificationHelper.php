@@ -683,45 +683,59 @@ class NotificationHelper
     }
 
     /**
-     * Send FCM notification using HTTP API
+     * Send FCM notification using HTTP v1 API
      */
     private static function sendFCMNotification($fcmToken, $title, $body, $data)
     {
         try {
-            // Get Firebase server key from config
-            $serverKey = config('services.firebase.server_key');
+            $credentialsPath = config('services.firebase.credentials');
             
-            if (!$serverKey || $serverKey === 'AAAA...') {
+            if (!$credentialsPath || !file_exists($credentialsPath)) {
                 return [
                     'success' => false,
-                    'message' => 'Firebase server key not configured. Please add your Firebase server key to .env file'
+                    'message' => 'Firebase credentials not configured or file not found'
                 ];
             }
 
-            // FCM HTTP API endpoint
-            $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+            // Get access token from service account
+            $accessToken = self::getAccessToken($credentialsPath);
+            if (!$accessToken) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to get access token from service account'
+                ];
+            }
+
+            // FCM HTTP v1 API endpoint
+            $projectId = config('services.firebase.project_id', 'bari-manager');
+            $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
             
-            // Prepare notification payload
+            // Prepare notification payload for v1 API
             $payload = [
-                'to' => $fcmToken,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                    'sound' => 'default',
-                    'icon' => 'ic_launcher'
-                ],
-                'data' => $data,
-                'priority' => 'high'
+                'message' => [
+                    'token' => $fcmToken,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body
+                    ],
+                    'data' => $data,
+                    'android' => [
+                        'notification' => [
+                            'sound' => 'default',
+                            'icon' => 'ic_launcher'
+                        ]
+                    ]
+                ]
             ];
 
             // Add image if provided
             if (isset($data['image_url']) && $data['image_url']) {
-                $payload['notification']['image'] = $data['image_url'];
+                $payload['message']['android']['notification']['image'] = $data['image_url'];
             }
 
             // Prepare headers
             $headers = [
-                'Authorization: key=' . $serverKey,
+                'Authorization: Bearer ' . $accessToken,
                 'Content-Type: application/json'
             ];
 
@@ -750,26 +764,24 @@ class NotificationHelper
             $responseData = json_decode($response, true);
 
             // Log response for debugging
-            \Log::info('FCM API Response', [
+            \Log::info('FCM v1 API Response', [
                 'http_code' => $httpCode,
                 'response' => $response,
                 'response_data' => $responseData
             ]);
 
-            if ($httpCode == 200 && isset($responseData['success']) && $responseData['success'] == 1) {
+            if ($httpCode == 200 && isset($responseData['name'])) {
                 return [
                     'success' => true,
                     'message' => 'FCM notification sent successfully',
-                    'message_id' => $responseData['results'][0]['message_id'] ?? null
+                    'message_id' => $responseData['name'] ?? null
                 ];
             } else {
-                $errorMessage = 'FCM API error';
-                if (isset($responseData['results'][0]['error'])) {
-                    $errorMessage = $responseData['results'][0]['error'];
+                $errorMessage = 'FCM v1 API error';
+                if (isset($responseData['error']['message'])) {
+                    $errorMessage = $responseData['error']['message'];
                 } elseif (isset($responseData['error'])) {
-                    $errorMessage = $responseData['error'];
-                } elseif (isset($responseData['message'])) {
-                    $errorMessage = $responseData['message'];
+                    $errorMessage = json_encode($responseData['error']);
                 }
                 
                 return [
@@ -786,6 +798,67 @@ class NotificationHelper
                 'success' => false,
                 'message' => 'Failed to send FCM notification: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Get access token from service account
+     */
+    private static function getAccessToken($credentialsPath)
+    {
+        try {
+            $credentials = json_decode(file_get_contents($credentialsPath), true);
+            
+            if (!$credentials) {
+                return false;
+            }
+
+            // Create JWT token
+            $header = json_encode(['typ' => 'JWT', 'alg' => 'RS256']);
+            $now = time();
+            $payload = json_encode([
+                'iss' => $credentials['client_email'],
+                'scope' => 'https://www.googleapis.com/auth/cloud-platform',
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'exp' => $now + 3600,
+                'iat' => $now
+            ]);
+
+            $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+            $base64Payload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+
+            $signature = '';
+            $privateKey = $credentials['private_key'];
+            openssl_sign($base64Header . '.' . $base64Payload, $signature, $privateKey, 'SHA256');
+            $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+
+            $jwt = $base64Header . '.' . $base64Payload . '.' . $base64Signature;
+
+            // Exchange JWT for access token
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://oauth2.googleapis.com/token');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode == 200) {
+                $tokenData = json_decode($response, true);
+                return $tokenData['access_token'] ?? false;
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            \Log::error('Error getting access token: ' . $e->getMessage());
+            return false;
         }
     }
 
