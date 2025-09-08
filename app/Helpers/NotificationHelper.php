@@ -1070,9 +1070,28 @@ class NotificationHelper
             ];
         }
 
+        $successCount = 0;
+        $failureCount = 0;
+        foreach ($results as $r) {
+            if (!empty($r['success'])) {
+                $successCount++;
+            } else {
+                $failureCount++;
+            }
+        }
+
+        $overallSuccess = $successCount > 0;
+        $summaryMessage = "Bulk send finished: {$successCount} success, {$failureCount} failed";
+
+        \Log::channel('push')->info('Bulk push summary', [
+            'success' => $overallSuccess,
+            'success_count' => $successCount,
+            'failure_count' => $failureCount,
+        ]);
+
         return [
-            'success' => true,
-            'message' => 'Bulk notification sent',
+            'success' => $overallSuccess,
+            'message' => $summaryMessage,
             'data' => $results
         ];
     }
