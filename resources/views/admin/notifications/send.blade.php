@@ -261,6 +261,20 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    function refreshCsrfToken(callback) {
+        fetch('/refresh-csrf', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.token) {
+                    // Update meta tag and hidden input
+                    const meta = document.querySelector('meta[name="csrf-token"]');
+                    if (meta) meta.setAttribute('content', data.token);
+                    const hidden = document.querySelector('input[name="_token"]');
+                    if (hidden) hidden.value = data.token;
+                }
+            })
+            .finally(() => { if (typeof callback === 'function') callback(); });
+    }
     // Target type change handler
     $('#targetType').change(function() {
         const targetType = $(this).val();
@@ -315,7 +329,7 @@ $(document).ready(function() {
         applyTemplate(template);
     });
 
-    // Ensure CSRF header for all AJAX
+    // Ensure CSRF header for all AJAX (uses current meta value)
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -419,7 +433,10 @@ $(document).ready(function() {
                 alert('Error: ' + errorMessage);
             },
             complete: function() {
-                $('#sendBtn').prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Send Notification');
+                // Refresh CSRF token for next submission
+                refreshCsrfToken(function() {
+                    $('#sendBtn').prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Send Notification');
+                });
             }
         });
     });
@@ -459,7 +476,9 @@ $(document).ready(function() {
                 alert('Error: ' + error);
             },
             complete: function() {
-                $('#testBtn').prop('disabled', false).html('<i class="fas fa-vial"></i> Send Test');
+                refreshCsrfToken(function() {
+                    $('#testBtn').prop('disabled', false).html('<i class="fas fa-vial"></i> Send Test');
+                });
             }
         });
     });
