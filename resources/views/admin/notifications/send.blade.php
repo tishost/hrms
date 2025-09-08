@@ -13,7 +13,7 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    <form id="notificationForm" action="{{ route('admin.notifications.send') }}" method="POST">
+                    <form id="notificationForm" action="{{ route('admin.notifications.send.post') }}" method="POST">
                         @csrf
                         
                         <!-- Target Selection -->
