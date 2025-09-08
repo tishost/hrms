@@ -797,7 +797,33 @@ class NotificationHelper
                 } elseif (isset($responseData['error'])) {
                     $errorMessage = json_encode($responseData['error']);
                 }
-                
+                // Auto-clear invalid/expired tokens
+                if (isset($responseData['error']['status'])) {
+                    $status = $responseData['error']['status'];
+                    $invalidStatuses = [
+                        'INVALID_ARGUMENT', // invalid token format
+                        'UNREGISTERED',     // device token no longer valid
+                        'NOT_FOUND',        // project or token issues
+                        'PERMISSION_DENIED' // wrong project for token
+                    ];
+                    if (in_array($status, $invalidStatuses)) {
+                        try {
+                            // Attempt to find user by token and clear it
+                            $user = \App\Models\User::where('fcm_token', $fcmToken)->first();
+                            if ($user) {
+                                $user->fcm_token = null;
+                                $user->save();
+                                \Log::warning('Cleared invalid FCM token for user', [
+                                    'user_id' => $user->id,
+                                    'status' => $status
+                                ]);
+                            }
+                        } catch (\Throwable $t) {
+                            \Log::error('Failed to clear invalid FCM token: ' . $t->getMessage());
+                        }
+                    }
+                }
+
                 return [
                     'success' => false,
                     'message' => $errorMessage,
