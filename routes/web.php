@@ -458,6 +458,13 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     
     // Simple test route for debugging
     Route::get('notifications/debug', function() {
+        \Log::channel('push')->info('Push debug ping', [
+            'timestamp' => now()->toISOString(),
+            'user_id' => auth()->id()
+        ]);
+        \Log::info('Push debug mirror (laravel.log)', [
+            'timestamp' => now()->toISOString()
+        ]);
         return response()->json([
             'success' => true,
             'message' => 'Notification system is working',
