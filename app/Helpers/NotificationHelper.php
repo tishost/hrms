@@ -749,6 +749,13 @@ class NotificationHelper
 
             $responseData = json_decode($response, true);
 
+            // Log response for debugging
+            \Log::info('FCM API Response', [
+                'http_code' => $httpCode,
+                'response' => $response,
+                'response_data' => $responseData
+            ]);
+
             if ($httpCode == 200 && isset($responseData['success']) && $responseData['success'] == 1) {
                 return [
                     'success' => true,
@@ -761,12 +768,15 @@ class NotificationHelper
                     $errorMessage = $responseData['results'][0]['error'];
                 } elseif (isset($responseData['error'])) {
                     $errorMessage = $responseData['error'];
+                } elseif (isset($responseData['message'])) {
+                    $errorMessage = $responseData['message'];
                 }
                 
                 return [
                     'success' => false,
                     'message' => $errorMessage,
-                    'response' => $responseData
+                    'response' => $responseData,
+                    'http_code' => $httpCode
                 ];
             }
 
