@@ -21,9 +21,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'set.locale' => \App\Http\Middleware\SetLocale::class,
         ]);
 
-        // Enable CORS for API rourtes
-        $middleware->web(append: [
-            \Illuminate\Http\Middleware\HandleCors::class,
+        // Ensure full web middleware stack (Laravel 12 style)
+        $middleware->web(replace: [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // Custom web middlewares
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\SeoOptimizationMiddleware::class,
             \App\Http\Middleware\ApplySystemSettings::class,
