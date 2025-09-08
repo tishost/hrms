@@ -35,6 +35,7 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS_PATH', storage_path('app/firebase-credentials.json')),
         'project_id' => env('FIREBASE_PROJECT_ID', 'bari-manager'),
         'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID', '663618335262'),
+        'server_key' => env('FIREBASE_SERVER_KEY', 'AAAA...'), // Add your Firebase server key here
     ],
 
 ];

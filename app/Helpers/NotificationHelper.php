@@ -683,51 +683,98 @@ class NotificationHelper
     }
 
     /**
-     * Send FCM notification
+     * Send FCM notification using HTTP API
      */
     private static function sendFCMNotification($fcmToken, $title, $body, $data)
     {
         try {
-            $credentialsPath = config('services.firebase.credentials');
+            // Get Firebase server key from config
+            $serverKey = config('services.firebase.server_key');
             
-            if (!$credentialsPath || !file_exists($credentialsPath)) {
+            if (!$serverKey || $serverKey === 'AAAA...') {
                 return [
                     'success' => false,
-                    'message' => 'Firebase credentials not configured'
+                    'message' => 'Firebase server key not configured. Please add your Firebase server key to .env file'
                 ];
             }
 
-            // Use Firebase Admin SDK
-            $firebase = \Kreait\Firebase\Factory::withServiceAccount($credentialsPath);
-            $messaging = $firebase->createMessaging();
+            // FCM HTTP API endpoint
+            $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+            
+            // Prepare notification payload
+            $payload = [
+                'to' => $fcmToken,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $body,
+                    'sound' => 'default',
+                    'icon' => 'ic_launcher'
+                ],
+                'data' => $data,
+                'priority' => 'high'
+            ];
 
-            $message = \Kreait\Firebase\Messaging\CloudMessage::withTarget('token', $fcmToken)
-                ->withNotification(\Kreait\Firebase\Messaging\Notification::create($title, $body))
-                ->withData($data);
-
+            // Add image if provided
             if (isset($data['image_url']) && $data['image_url']) {
-                $message = $message->withAndroidConfig(
-                    \Kreait\Firebase\Messaging\AndroidConfig::fromArray([
-                        'notification' => [
-                            'image' => $data['image_url']
-                        ]
-                    ])
-                );
+                $payload['notification']['image'] = $data['image_url'];
             }
 
-            $result = $messaging->send($message);
-
-            return [
-                'success' => true,
-                'message' => 'FCM notification sent successfully',
-                'message_id' => $result
+            // Prepare headers
+            $headers = [
+                'Authorization: key=' . $serverKey,
+                'Content-Type: application/json'
             ];
+
+            // Send cURL request
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $fcmUrl);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlError) {
+                return [
+                    'success' => false,
+                    'message' => 'cURL error: ' . $curlError
+                ];
+            }
+
+            $responseData = json_decode($response, true);
+
+            if ($httpCode == 200 && isset($responseData['success']) && $responseData['success'] == 1) {
+                return [
+                    'success' => true,
+                    'message' => 'FCM notification sent successfully',
+                    'message_id' => $responseData['results'][0]['message_id'] ?? null
+                ];
+            } else {
+                $errorMessage = 'FCM API error';
+                if (isset($responseData['results'][0]['error'])) {
+                    $errorMessage = $responseData['results'][0]['error'];
+                } elseif (isset($responseData['error'])) {
+                    $errorMessage = $responseData['error'];
+                }
+                
+                return [
+                    'success' => false,
+                    'message' => $errorMessage,
+                    'response' => $responseData
+                ];
+            }
 
         } catch (\Exception $e) {
             \Log::error('Error sending FCM notification: ' . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Failed to send FCM notification'
+                'message' => 'Failed to send FCM notification: ' . $e->getMessage()
             ];
         }
     }

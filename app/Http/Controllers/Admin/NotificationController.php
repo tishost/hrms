@@ -375,21 +375,84 @@ class NotificationController extends Controller
             $body = $request->input('body', 'This is a test notification from HRMS Admin Panel');
             $type = $request->input('type', 'general');
             
-            // Simple test - just return success for now
-            Log::info('Test notification requested', [
+            // Get all users with FCM tokens
+            $usersWithTokens = User::whereNotNull('fcm_token')->get();
+            
+            if ($usersWithTokens->count() == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No users with FCM tokens found. Please ensure users have logged in and FCM tokens are saved.'
+                ], 400);
+            }
+            
+            $successCount = 0;
+            $failureCount = 0;
+            $results = [];
+            
+            // Send notification to each user
+            foreach ($usersWithTokens as $user) {
+                try {
+                    $result = NotificationHelper::sendPushNotification(
+                        $user,
+                        $title,
+                        $body,
+                        $type,
+                        [
+                            'type' => $type,
+                            'user_id' => $user->id,
+                            'timestamp' => time(),
+                            'test_notification' => true
+                        ]
+                    );
+                    
+                    if ($result['success']) {
+                        $successCount++;
+                        $results[] = [
+                            'user_id' => $user->id,
+                            'name' => $user->name,
+                            'status' => 'success'
+                        ];
+                    } else {
+                        $failureCount++;
+                        $results[] = [
+                            'user_id' => $user->id,
+                            'name' => $user->name,
+                            'status' => 'failed',
+                            'error' => $result['message']
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    $failureCount++;
+                    $results[] = [
+                        'user_id' => $user->id,
+                        'name' => $user->name,
+                        'status' => 'failed',
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+            
+            Log::info('Test notification sent', [
                 'title' => $title,
                 'body' => $body,
                 'type' => $type,
+                'total_users' => $usersWithTokens->count(),
+                'success_count' => $successCount,
+                'failure_count' => $failureCount,
                 'timestamp' => now()
             ]);
             
             return response()->json([
-                'success' => true,
-                'message' => 'Test notification logged successfully! (Firebase integration pending)',
+                'success' => $successCount > 0,
+                'message' => "Test notification sent to {$successCount} users successfully. {$failureCount} failed.",
                 'data' => [
                     'title' => $title,
                     'body' => $body,
                     'type' => $type,
+                    'total_users' => $usersWithTokens->count(),
+                    'success_count' => $successCount,
+                    'failure_count' => $failureCount,
+                    'results' => $results,
                     'timestamp' => now()->toISOString()
                 ]
             ]);
