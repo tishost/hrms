@@ -684,19 +684,39 @@ class NotificationController extends Controller
     public function testNotification(Request $request)
     {
         try {
-            $user = $request->user();
-            Log::info('Test notification request', [
-                'user_id' => $user?->id,
-                'has_token' => !empty($user?->fcm_token)
+            // Optional: allow testing for a specific user
+            $request->validate([
+                'user_id' => 'nullable|integer|exists:users,id',
             ]);
-            
-            if (!$user->fcm_token) {
-                Log::warning('Test notification blocked: No FCM token', [
-                    'user_id' => $user?->id
-                ]);
+
+            $authUser = $request->user();
+            $targetUser = $authUser;
+            $usedFallback = false;
+
+            if ($request->filled('user_id')) {
+                $targetUser = \App\Models\User::find($request->integer('user_id'));
+            }
+
+            // If no token on target (common for admin web users), try fallback to any user with token
+            if (!$targetUser || empty($targetUser->fcm_token)) {
+                $fallback = \App\Models\User::whereNotNull('fcm_token')->latest('updated_at')->first();
+                if ($fallback) {
+                    $targetUser = $fallback;
+                    $usedFallback = true;
+                }
+            }
+
+            Log::info('Test notification request', [
+                'auth_user_id' => $authUser?->id,
+                'target_user_id' => $targetUser?->id,
+                'target_has_token' => !empty($targetUser?->fcm_token),
+                'used_fallback' => $usedFallback,
+            ]);
+
+            if (!$targetUser || empty($targetUser->fcm_token)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User does not have FCM token'
+                    'message' => 'No user with FCM token available for test. Please open the mobile app and log in to register a token.'
                 ], 400);
             }
             
@@ -706,13 +726,13 @@ class NotificationController extends Controller
             $type = 'test';
             $data = [
                 'type' => 'test',
-                'user_id' => $user->id,
+                'user_id' => $targetUser->id,
                 'timestamp' => time()
             ];
             
             // Send notification using NotificationHelper
             $result = \App\Helpers\NotificationHelper::sendPushNotification(
-                $user,
+                $targetUser,
                 $title,
                 $body,
                 $type,
@@ -723,8 +743,10 @@ class NotificationController extends Controller
                 'success' => $result['success'],
                 'message' => $result['message'],
                 'data' => [
-                    'user_id' => $user->id,
-                    'fcm_token' => substr($user->fcm_token, 0, 20) . '...',
+                    'auth_user_id' => $authUser->id,
+                    'target_user_id' => $targetUser->id,
+                    'fcm_token' => substr($targetUser->fcm_token, 0, 20) . '...',
+                    'used_fallback' => $usedFallback,
                     'notification_sent' => $result['success']
                 ]
             ]);
