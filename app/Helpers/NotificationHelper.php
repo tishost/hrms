@@ -810,6 +810,7 @@ class NotificationHelper
             $credentials = json_decode(file_get_contents($credentialsPath), true);
             
             if (!$credentials) {
+                \Log::error('Failed to parse credentials JSON');
                 return false;
             }
 
@@ -829,9 +830,13 @@ class NotificationHelper
 
             $signature = '';
             $privateKey = $credentials['private_key'];
-            openssl_sign($base64Header . '.' . $base64Payload, $signature, $privateKey, 'SHA256');
-            $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+            
+            if (!openssl_sign($base64Header . '.' . $base64Payload, $signature, $privateKey, 'SHA256')) {
+                \Log::error('OpenSSL sign failed: ' . openssl_error_string());
+                return false;
+            }
 
+            $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
             $jwt = $base64Header . '.' . $base64Payload . '.' . $base64Signature;
 
             // Exchange JWT for access token
@@ -844,17 +849,35 @@ class NotificationHelper
             ]));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
+
+            if ($curlError) {
+                \Log::error('cURL error in token exchange: ' . $curlError);
+                return false;
+            }
+
+            \Log::info('Token exchange response', [
+                'http_code' => $httpCode,
+                'response' => $response
+            ]);
 
             if ($httpCode == 200) {
                 $tokenData = json_decode($response, true);
-                return $tokenData['access_token'] ?? false;
+                if (isset($tokenData['access_token'])) {
+                    return $tokenData['access_token'];
+                } else {
+                    \Log::error('No access token in response: ' . $response);
+                    return false;
+                }
+            } else {
+                \Log::error('Token exchange failed with HTTP code: ' . $httpCode . ', Response: ' . $response);
+                return false;
             }
-
-            return false;
 
         } catch (\Exception $e) {
             \Log::error('Error getting access token: ' . $e->getMessage());
