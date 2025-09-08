@@ -88,7 +88,7 @@ class NotificationController extends Controller
             $data = $request->all();
             
             // Log the notification request
-            Log::info('Notification send requested', [
+            Log::channel('push')->info('Notification send requested', [
                 'target_type' => $data['target_type'],
                 'title' => $data['title'],
                 'body' => $data['body'],
@@ -119,7 +119,7 @@ class NotificationController extends Controller
                     $result = ['success' => false, 'message' => 'Invalid target type'];
             }
 
-            Log::info('Admin send result', [
+            Log::channel('push')->info('Admin send result', [
                 'target_type' => $data['target_type'],
                 'success' => $result['success'] ?? null,
                 'message' => $result['message'] ?? null,
@@ -166,7 +166,7 @@ class NotificationController extends Controller
                 return ['success' => false, 'message' => 'No users found'];
             }
             $withTokenCount = User::whereIn('id', $allUserIds)->whereNotNull('fcm_token')->count();
-            Log::info('Admin bulk plan: all users', [
+            Log::channel('push')->info('Admin bulk plan: all users', [
                 'total_users' => count($allUserIds),
                 'with_tokens' => $withTokenCount,
                 'title' => $data['title'],
@@ -188,7 +188,7 @@ class NotificationController extends Controller
             if (isset($result['data']) && is_array($result['data'])) {
                 $succ = collect($result['data'])->where('success', true)->count();
                 $fail = collect($result['data'])->where('success', false)->count();
-                Log::info('Admin bulk result: all users', [
+                Log::channel('push')->info('Admin bulk result: all users', [
                     'success_count' => $succ,
                     'failure_count' => $fail
                 ]);
@@ -213,7 +213,7 @@ class NotificationController extends Controller
                 return ['success' => false, 'message' => 'No owners found'];
             }
             $withTokenCount = User::whereIn('id', $ownerIds)->whereNotNull('fcm_token')->count();
-            Log::info('Admin bulk plan: all owners', [
+            Log::channel('push')->info('Admin bulk plan: all owners', [
                 'total_users' => count($ownerIds),
                 'with_tokens' => $withTokenCount,
                 'title' => $data['title'],
@@ -235,7 +235,7 @@ class NotificationController extends Controller
             if (isset($result['data']) && is_array($result['data'])) {
                 $succ = collect($result['data'])->where('success', true)->count();
                 $fail = collect($result['data'])->where('success', false)->count();
-                Log::info('Admin bulk result: all owners', [
+                Log::channel('push')->info('Admin bulk result: all owners', [
                     'success_count' => $succ,
                     'failure_count' => $fail
                 ]);
@@ -260,7 +260,7 @@ class NotificationController extends Controller
                 return ['success' => false, 'message' => 'No tenants found'];
             }
             $withTokenCount = User::whereIn('id', $tenantIds)->whereNotNull('fcm_token')->count();
-            Log::info('Admin bulk plan: all tenants', [
+            Log::channel('push')->info('Admin bulk plan: all tenants', [
                 'total_users' => count($tenantIds),
                 'with_tokens' => $withTokenCount,
                 'title' => $data['title'],
@@ -282,7 +282,7 @@ class NotificationController extends Controller
             if (isset($result['data']) && is_array($result['data'])) {
                 $succ = collect($result['data'])->where('success', true)->count();
                 $fail = collect($result['data'])->where('success', false)->count();
-                Log::info('Admin bulk result: all tenants', [
+                Log::channel('push')->info('Admin bulk result: all tenants', [
                     'success_count' => $succ,
                     'failure_count' => $fail
                 ]);
@@ -305,7 +305,7 @@ class NotificationController extends Controller
                 return ['success' => false, 'message' => 'No users selected'];
             }
             $withTokenCount = User::whereIn('id', $userIds)->whereNotNull('fcm_token')->count();
-            Log::info('Admin bulk plan: specific users', [
+            Log::channel('push')->info('Admin bulk plan: specific users', [
                 'selected_users' => count($userIds),
                 'with_tokens' => $withTokenCount,
                 'title' => $data['title'],
@@ -327,7 +327,7 @@ class NotificationController extends Controller
             if (isset($result['data']) && is_array($result['data'])) {
                 $succ = collect($result['data'])->where('success', true)->count();
                 $fail = collect($result['data'])->where('success', false)->count();
-                Log::info('Admin bulk result: specific users', [
+                Log::channel('push')->info('Admin bulk result: specific users', [
                     'success_count' => $succ,
                     'failure_count' => $fail
                 ]);
@@ -359,7 +359,7 @@ class NotificationController extends Controller
                 return ['success' => false, 'message' => 'No users found with selected role'];
             }
             $withTokenCount = User::whereIn('id', $users)->whereNotNull('fcm_token')->count();
-            Log::info('Admin bulk plan: role based', [
+            Log::channel('push')->info('Admin bulk plan: role based', [
                 'role_id' => $data['role_id'],
                 'total_users' => count($users),
                 'with_tokens' => $withTokenCount,
@@ -382,7 +382,7 @@ class NotificationController extends Controller
             if (isset($result['data']) && is_array($result['data'])) {
                 $succ = collect($result['data'])->where('success', true)->count();
                 $fail = collect($result['data'])->where('success', false)->count();
-                Log::info('Admin bulk result: role based', [
+                Log::channel('push')->info('Admin bulk result: role based', [
                     'success_count' => $succ,
                     'failure_count' => $fail
                 ]);
