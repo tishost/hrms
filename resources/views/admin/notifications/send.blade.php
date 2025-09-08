@@ -315,6 +315,13 @@ $(document).ready(function() {
         applyTemplate(template);
     });
 
+    // Ensure CSRF header for all AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     // Form submission with loading state
     $('#notificationForm').submit(function(e) {
         e.preventDefault();
@@ -366,13 +373,17 @@ $(document).ready(function() {
         // Show loading state
         $('#sendBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
         
-        // Send AJAX request
+        // Send AJAX request (with FormData)
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
             data: formData,
             processData: false,
             contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(response) {
                 if (response.success) {
                     alert('Notification sent successfully!');
