@@ -662,4 +662,57 @@ class NotificationController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Test notification sending
+     */
+    public function testNotification(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user->fcm_token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User does not have FCM token'
+                ], 400);
+            }
+            
+            // Test notification data
+            $title = 'Test Notification';
+            $body = 'This is a test notification from HRMS system';
+            $type = 'test';
+            $data = [
+                'type' => 'test',
+                'user_id' => $user->id,
+                'timestamp' => time()
+            ];
+            
+            // Send notification using NotificationHelper
+            $result = \App\Helpers\NotificationHelper::sendPushNotification(
+                $user,
+                $title,
+                $body,
+                $type,
+                $data
+            );
+            
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'data' => [
+                    'user_id' => $user->id,
+                    'fcm_token' => substr($user->fcm_token, 0, 20) . '...',
+                    'notification_sent' => $result['success']
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Test notification error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send test notification: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -212,6 +212,7 @@ Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement
         // FCM Token management
         Route::post('/fcm-token', [NotificationController::class, 'updateFCMToken']);
         Route::get('/fcm-token', [NotificationController::class, 'getFCMToken']);
+        Route::post('/test', [NotificationController::class, 'testNotification']);
     });
 });
 
