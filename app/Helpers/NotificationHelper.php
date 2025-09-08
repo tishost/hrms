@@ -726,7 +726,7 @@ class NotificationHelper
                 }
             }
             // Add standard keys as strings
-            $stringData['type'] = (string) ($data['type'] ?? $type);
+            $stringData['type'] = isset($data['type']) ? (string) $data['type'] : 'general';
             $stringData['created_at'] = now()->toISOString();
 
             $payload = [

@@ -75,10 +75,12 @@ return [
 
         // Dedicated channel for push notification debugging
         'push' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/push.log'),
+            'driver' => 'monolog',
+            'handler' => Monolog\Handler\StreamHandler::class,
+            'with' => [
+                'stream' => storage_path('logs/push.log'),
+            ],
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
 
