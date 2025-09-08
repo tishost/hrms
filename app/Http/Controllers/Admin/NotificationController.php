@@ -165,11 +165,12 @@ class NotificationController extends Controller
     private function sendToAllUsers($data)
     {
         try {
-            // Get all user IDs (both owners and tenants)
-            $allUserIds = User::where(function($query) {
-                $query->whereNotNull('owner_id')
-                      ->orWhereNotNull('tenant_id');
-            })->pluck('id')->toArray();
+            // Get all user IDs (both owners and tenants) who have FCM tokens
+            $allUserIds = User::whereNotNull('fcm_token')
+                ->where(function($query) {
+                    $query->whereNotNull('owner_id')
+                          ->orWhereNotNull('tenant_id');
+                })->pluck('id')->toArray();
             
             if (empty($allUserIds)) {
                 return ['success' => false, 'message' => 'No users found'];
@@ -223,8 +224,10 @@ class NotificationController extends Controller
     private function sendToAllOwners($data)
     {
         try {
-            // Get all owner user IDs
-            $ownerIds = User::whereNotNull('owner_id')->pluck('id')->toArray();
+            // Get all owner user IDs with FCM tokens
+            $ownerIds = User::whereNotNull('owner_id')
+                ->whereNotNull('fcm_token')
+                ->pluck('id')->toArray();
             
             if (empty($ownerIds)) {
                 return ['success' => false, 'message' => 'No owners found'];
@@ -278,8 +281,10 @@ class NotificationController extends Controller
     private function sendToAllTenants($data)
     {
         try {
-            // Get all tenant user IDs
-            $tenantIds = User::whereNotNull('tenant_id')->pluck('id')->toArray();
+            // Get all tenant user IDs with FCM tokens
+            $tenantIds = User::whereNotNull('tenant_id')
+                ->whereNotNull('fcm_token')
+                ->pluck('id')->toArray();
             
             if (empty($tenantIds)) {
                 return ['success' => false, 'message' => 'No tenants found'];
@@ -337,6 +342,14 @@ class NotificationController extends Controller
             if (empty($userIds)) {
                 return ['success' => false, 'message' => 'No users selected'];
             }
+            // Filter only those who have FCM tokens
+            $userIds = User::whereIn('id', $userIds)
+                ->whereNotNull('fcm_token')
+                ->pluck('id')
+                ->toArray();
+            if (empty($userIds)) {
+                return ['success' => false, 'message' => 'Selected users do not have FCM tokens'];
+            }
             $withTokenCount = User::whereIn('id', $userIds)->whereNotNull('fcm_token')->count();
             Log::channel('push')->info('Admin bulk plan: specific users', [
                 'selected_users' => count($userIds),
@@ -391,10 +404,12 @@ class NotificationController extends Controller
                 return ['success' => false, 'message' => 'No role selected'];
             }
             
-            // Get users with specific role
+            // Get users with specific role and with FCM tokens
             $users = User::whereHas('roles', function($query) use ($roleId) {
                 $query->where('role_id', $roleId);
-            })->pluck('id')->toArray();
+            })
+            ->whereNotNull('fcm_token')
+            ->pluck('id')->toArray();
             
             if (empty($users)) {
                 return ['success' => false, 'message' => 'No users found with selected role'];
