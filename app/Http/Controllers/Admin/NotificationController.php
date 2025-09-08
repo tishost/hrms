@@ -165,8 +165,16 @@ class NotificationController extends Controller
             if (empty($allUserIds)) {
                 return ['success' => false, 'message' => 'No users found'];
             }
+            $withTokenCount = User::whereIn('id', $allUserIds)->whereNotNull('fcm_token')->count();
+            Log::info('Admin bulk plan: all users', [
+                'total_users' => count($allUserIds),
+                'with_tokens' => $withTokenCount,
+                'title' => $data['title'],
+                'type' => $data['notification_type'],
+                'priority' => $data['priority']
+            ]);
             
-            return NotificationHelper::sendBulkPushNotification(
+            $result = NotificationHelper::sendBulkPushNotification(
                 $allUserIds,
                 $data['title'],
                 $data['body'],
@@ -177,6 +185,15 @@ class NotificationController extends Controller
                     'image_url' => $data['image_url'] ?? null,
                 ]
             );
+            if (isset($result['data']) && is_array($result['data'])) {
+                $succ = collect($result['data'])->where('success', true)->count();
+                $fail = collect($result['data'])->where('success', false)->count();
+                Log::info('Admin bulk result: all users', [
+                    'success_count' => $succ,
+                    'failure_count' => $fail
+                ]);
+            }
+            return $result;
         } catch (\Exception $e) {
             Log::error('Error sending to all users: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
@@ -195,8 +212,16 @@ class NotificationController extends Controller
             if (empty($ownerIds)) {
                 return ['success' => false, 'message' => 'No owners found'];
             }
-            
-            return NotificationHelper::sendBulkPushNotification(
+            $withTokenCount = User::whereIn('id', $ownerIds)->whereNotNull('fcm_token')->count();
+            Log::info('Admin bulk plan: all owners', [
+                'total_users' => count($ownerIds),
+                'with_tokens' => $withTokenCount,
+                'title' => $data['title'],
+                'type' => $data['notification_type'],
+                'priority' => $data['priority']
+            ]);
+
+            $result = NotificationHelper::sendBulkPushNotification(
                 $ownerIds,
                 $data['title'],
                 $data['body'],
@@ -207,6 +232,15 @@ class NotificationController extends Controller
                     'image_url' => $data['image_url'] ?? null,
                 ]
             );
+            if (isset($result['data']) && is_array($result['data'])) {
+                $succ = collect($result['data'])->where('success', true)->count();
+                $fail = collect($result['data'])->where('success', false)->count();
+                Log::info('Admin bulk result: all owners', [
+                    'success_count' => $succ,
+                    'failure_count' => $fail
+                ]);
+            }
+            return $result;
         } catch (\Exception $e) {
             Log::error('Error sending to all owners: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
@@ -225,8 +259,16 @@ class NotificationController extends Controller
             if (empty($tenantIds)) {
                 return ['success' => false, 'message' => 'No tenants found'];
             }
-            
-            return NotificationHelper::sendBulkPushNotification(
+            $withTokenCount = User::whereIn('id', $tenantIds)->whereNotNull('fcm_token')->count();
+            Log::info('Admin bulk plan: all tenants', [
+                'total_users' => count($tenantIds),
+                'with_tokens' => $withTokenCount,
+                'title' => $data['title'],
+                'type' => $data['notification_type'],
+                'priority' => $data['priority']
+            ]);
+
+            $result = NotificationHelper::sendBulkPushNotification(
                 $tenantIds,
                 $data['title'],
                 $data['body'],
@@ -237,6 +279,15 @@ class NotificationController extends Controller
                     'image_url' => $data['image_url'] ?? null,
                 ]
             );
+            if (isset($result['data']) && is_array($result['data'])) {
+                $succ = collect($result['data'])->where('success', true)->count();
+                $fail = collect($result['data'])->where('success', false)->count();
+                Log::info('Admin bulk result: all tenants', [
+                    'success_count' => $succ,
+                    'failure_count' => $fail
+                ]);
+            }
+            return $result;
         } catch (\Exception $e) {
             Log::error('Error sending to all tenants: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
@@ -253,8 +304,16 @@ class NotificationController extends Controller
             if (empty($userIds)) {
                 return ['success' => false, 'message' => 'No users selected'];
             }
-            
-            return NotificationHelper::sendBulkPushNotification(
+            $withTokenCount = User::whereIn('id', $userIds)->whereNotNull('fcm_token')->count();
+            Log::info('Admin bulk plan: specific users', [
+                'selected_users' => count($userIds),
+                'with_tokens' => $withTokenCount,
+                'title' => $data['title'],
+                'type' => $data['notification_type'],
+                'priority' => $data['priority']
+            ]);
+
+            $result = NotificationHelper::sendBulkPushNotification(
                 $userIds,
                 $data['title'],
                 $data['body'],
@@ -265,6 +324,15 @@ class NotificationController extends Controller
                     'image_url' => $data['image_url'] ?? null,
                 ]
             );
+            if (isset($result['data']) && is_array($result['data'])) {
+                $succ = collect($result['data'])->where('success', true)->count();
+                $fail = collect($result['data'])->where('success', false)->count();
+                Log::info('Admin bulk result: specific users', [
+                    'success_count' => $succ,
+                    'failure_count' => $fail
+                ]);
+            }
+            return $result;
         } catch (\Exception $e) {
             Log::error('Error sending to specific users: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
@@ -290,8 +358,17 @@ class NotificationController extends Controller
             if (empty($users)) {
                 return ['success' => false, 'message' => 'No users found with selected role'];
             }
-            
-            return NotificationHelper::sendBulkPushNotification(
+            $withTokenCount = User::whereIn('id', $users)->whereNotNull('fcm_token')->count();
+            Log::info('Admin bulk plan: role based', [
+                'role_id' => $data['role_id'],
+                'total_users' => count($users),
+                'with_tokens' => $withTokenCount,
+                'title' => $data['title'],
+                'type' => $data['notification_type'],
+                'priority' => $data['priority']
+            ]);
+
+            $result = NotificationHelper::sendBulkPushNotification(
                 $users,
                 $data['title'],
                 $data['body'],
@@ -302,6 +379,15 @@ class NotificationController extends Controller
                     'image_url' => $data['image_url'] ?? null,
                 ]
             );
+            if (isset($result['data']) && is_array($result['data'])) {
+                $succ = collect($result['data'])->where('success', true)->count();
+                $fail = collect($result['data'])->where('success', false)->count();
+                Log::info('Admin bulk result: role based', [
+                    'success_count' => $succ,
+                    'failure_count' => $fail
+                ]);
+            }
+            return $result;
         } catch (\Exception $e) {
             Log::error('Error sending to role-based users: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
