@@ -465,13 +465,33 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
         \Log::info('Push debug mirror (laravel.log)', [
             'timestamp' => now()->toISOString()
         ]);
+
+        // Manual write test to push.log to bypass logging stack issues
+        $pushPath = storage_path('logs/push.log');
+        $writeOk = @file_put_contents($pushPath, '['.now()->toISOString()."] manual write test\n", FILE_APPEND) !== false;
+        $exists = file_exists($pushPath);
+        $size = $exists ? @filesize($pushPath) : 0;
+
+        $stackConfig = config('logging.channels.stack');
+        $defaultChannel = config('logging.default');
+
         return response()->json([
             'success' => true,
             'message' => 'Notification system is working',
             'timestamp' => now(),
             'users_count' => \App\Models\User::count(),
             'owners_count' => \App\Models\User::whereNotNull('owner_id')->count(),
-            'tenants_count' => \App\Models\User::whereNotNull('tenant_id')->count()
+            'tenants_count' => \App\Models\User::whereNotNull('tenant_id')->count(),
+            'log' => [
+                'default' => $defaultChannel,
+                'stack_channels' => $stackConfig['channels'] ?? $stackConfig ?? null,
+                'push_file' => [
+                    'path' => $pushPath,
+                    'exists' => $exists,
+                    'size' => $size,
+                    'manual_write_ok' => $writeOk,
+                ]
+            ]
         ]);
     })->name('notifications.debug');
 
