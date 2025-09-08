@@ -196,23 +196,16 @@ Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement
 
     // Notification Routes
     Route::prefix('notifications')->group(function () {
-        Route::post('/send', [NotificationController::class, 'sendNotification']);
-        Route::post('/send-bulk', [NotificationController::class, 'sendBulkNotification']);
-        Route::post('/send-role-based', [NotificationController::class, 'sendRoleBasedNotification']);
-        Route::post('/rent-reminder', [NotificationController::class, 'sendRentReminder']);
-        Route::post('/payment-confirmation', [NotificationController::class, 'sendPaymentConfirmation']);
-        Route::post('/maintenance-request', [NotificationController::class, 'sendMaintenanceRequest']);
-        Route::post('/subscription-expiry', [NotificationController::class, 'sendSubscriptionExpiry']);
+        // Mobile app: notification history and read-state
         Route::get('/history', [NotificationController::class, 'getNotificationHistory']);
         Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::delete('/delete', [NotificationController::class, 'deleteNotification']);
         Route::get('/stats', [NotificationController::class, 'getNotificationStats']);
-        
-        // FCM Token management
+
+        // Mobile app: FCM Token management
         Route::post('/fcm-token', [NotificationController::class, 'updateFCMToken']);
         Route::get('/fcm-token', [NotificationController::class, 'getFCMToken']);
-        Route::post('/test', [NotificationController::class, 'testNotification']);
     });
 });
 

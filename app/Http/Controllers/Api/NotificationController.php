@@ -25,6 +25,9 @@ class NotificationController extends Controller
     public function sendNotification(Request $request): JsonResponse
     {
         try {
+            Log::info('SendNotification called', [
+                'payload' => $request->all()
+            ]);
             $validator = Validator::make($request->all(), [
                 'user_id' => 'required|integer|exists:users,id',
                 'title' => 'required|string|max:255',
@@ -51,6 +54,12 @@ class NotificationController extends Controller
                 ], 404);
             }
 
+            Log::info('Target user for sendNotification', [
+                'user_id' => $user->id,
+                'has_token' => !empty($user->fcm_token),
+                'token_preview' => $user->fcm_token ? substr($user->fcm_token, 0, 20) . '...' : null
+            ]);
+
             // Send push notification
             $result = NotificationHelper::sendPushNotification(
                 $user,
@@ -61,6 +70,13 @@ class NotificationController extends Controller
                 $request->image_url,
                 $request->action_url
             );
+
+            Log::info('SendNotification result', [
+                'success' => $result['success'] ?? null,
+                'message' => $result['message'] ?? null,
+                'http_code' => $result['http_code'] ?? null,
+                'fcm_error' => $result['response']['error']['message'] ?? null,
+            ]);
 
             if ($result['success']) {
                 return response()->json([
@@ -90,6 +106,9 @@ class NotificationController extends Controller
     public function sendBulkNotification(Request $request): JsonResponse
     {
         try {
+            Log::info('SendBulkNotification called', [
+                'payload' => $request->all()
+            ]);
             $validator = Validator::make($request->all(), [
                 'user_ids' => 'required|array|min:1',
                 'user_ids.*' => 'integer|exists:users,id',
@@ -110,9 +129,18 @@ class NotificationController extends Controller
             }
 
             $users = User::whereIn('id', $request->user_ids)->get();
+            Log::info('Bulk target users loaded', [
+                'count' => $users->count(),
+            ]);
             $results = [];
 
             foreach ($users as $user) {
+                $hasToken = !empty($user->fcm_token);
+                Log::info('Bulk send to user', [
+                    'user_id' => $user->id,
+                    'has_token' => $hasToken,
+                    'token_preview' => $hasToken ? substr($user->fcm_token, 0, 20) . '...' : null
+                ]);
                 $result = NotificationHelper::sendPushNotification(
                     $user,
                     $request->title,
@@ -122,6 +150,12 @@ class NotificationController extends Controller
                     $request->image_url,
                     $request->action_url
                 );
+                Log::info('Bulk send result', [
+                    'user_id' => $user->id,
+                    'success' => $result['success'] ?? null,
+                    'message' => $result['message'] ?? null,
+                    'http_code' => $result['http_code'] ?? null,
+                ]);
                 $results[] = [
                     'user_id' => $user->id,
                     'success' => $result['success'],
@@ -150,6 +184,9 @@ class NotificationController extends Controller
     public function sendRoleBasedNotification(Request $request): JsonResponse
     {
         try {
+            Log::info('SendRoleBasedNotification called', [
+                'payload' => $request->all()
+            ]);
             $validator = Validator::make($request->all(), [
                 'role' => 'required|string|in:owner,tenant,admin',
                 'title' => 'required|string|max:255',
@@ -169,9 +206,19 @@ class NotificationController extends Controller
             }
 
             $users = User::where('role', $request->role)->get();
+            Log::info('Role-based users loaded', [
+                'role' => $request->role,
+                'count' => $users->count(),
+            ]);
             $results = [];
 
             foreach ($users as $user) {
+                $hasToken = !empty($user->fcm_token);
+                Log::info('Role-based send to user', [
+                    'user_id' => $user->id,
+                    'has_token' => $hasToken,
+                    'token_preview' => $hasToken ? substr($user->fcm_token, 0, 20) . '...' : null
+                ]);
                 $result = NotificationHelper::sendPushNotification(
                     $user,
                     $request->title,
@@ -181,6 +228,12 @@ class NotificationController extends Controller
                     $request->image_url,
                     $request->action_url
                 );
+                Log::info('Role-based send result', [
+                    'user_id' => $user->id,
+                    'success' => $result['success'] ?? null,
+                    'message' => $result['message'] ?? null,
+                    'http_code' => $result['http_code'] ?? null,
+                ]);
                 $results[] = [
                     'user_id' => $user->id,
                     'success' => $result['success'],

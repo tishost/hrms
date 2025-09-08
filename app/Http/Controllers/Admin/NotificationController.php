@@ -97,19 +97,33 @@ class NotificationController extends Controller
                 'timestamp' => now()
             ]);
             
-            // For now, just return success (Firebase integration pending)
-            $result = [
-                'success' => true,
-                'message' => 'Notification logged successfully! (Firebase integration pending)',
-                'data' => [
-                    'target_type' => $data['target_type'],
-                    'title' => $data['title'],
-                    'body' => $data['body'],
-                    'type' => $data['notification_type'],
-                    'priority' => $data['priority'],
-                    'timestamp' => now()->toISOString()
-                ]
-            ];
+            // Route to appropriate sender based on target_type
+            $result = null;
+            switch ($data['target_type']) {
+                case 'all_users':
+                    $result = $this->sendToAllUsers($data);
+                    break;
+                case 'all_owners':
+                    $result = $this->sendToAllOwners($data);
+                    break;
+                case 'all_tenants':
+                    $result = $this->sendToAllTenants($data);
+                    break;
+                case 'specific_users':
+                    $result = $this->sendToSpecificUsers($data);
+                    break;
+                case 'role_based':
+                    $result = $this->sendToRoleBased($data);
+                    break;
+                default:
+                    $result = ['success' => false, 'message' => 'Invalid target type'];
+            }
+
+            Log::info('Admin send result', [
+                'target_type' => $data['target_type'],
+                'success' => $result['success'] ?? null,
+                'message' => $result['message'] ?? null,
+            ]);
             
             if ($result && $result['success']) {
                 // Log the notification

@@ -711,6 +711,11 @@ class NotificationHelper
             $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
             
             // Prepare notification payload for v1 API
+            \Log::info('Preparing FCM payload', [
+                'token_preview' => substr($fcmToken, 0, 20) . '...',
+                'title' => $title,
+                'body' => $body,
+            ]);
             // Ensure data payload is flat strings only
             $stringData = [];
             foreach (($data ?? []) as $key => $value) {
@@ -769,6 +774,9 @@ class NotificationHelper
             curl_close($ch);
 
             if ($curlError) {
+                \Log::error('FCM cURL error', [
+                    'error' => $curlError
+                ]);
                 return [
                     'success' => false,
                     'message' => 'cURL error: ' . $curlError
