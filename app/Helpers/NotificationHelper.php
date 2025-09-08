@@ -711,6 +711,19 @@ class NotificationHelper
             $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
             
             // Prepare notification payload for v1 API
+            // Ensure data payload is flat strings only
+            $stringData = [];
+            foreach (($data ?? []) as $key => $value) {
+                if (is_scalar($value)) {
+                    $stringData[(string) $key] = (string) $value;
+                } else {
+                    $stringData[(string) $key] = json_encode($value);
+                }
+            }
+            // Add standard keys as strings
+            $stringData['type'] = (string) ($data['type'] ?? $type);
+            $stringData['created_at'] = now()->toISOString();
+
             $payload = [
                 'message' => [
                     'token' => $fcmToken,
@@ -718,11 +731,12 @@ class NotificationHelper
                         'title' => $title,
                         'body' => $body
                     ],
-                    'data' => $data,
+                    'data' => $stringData,
                     'android' => [
                         'notification' => [
                             'sound' => 'default',
-                            'icon' => 'ic_launcher'
+                            'icon' => 'ic_launcher',
+                            'channel_id' => 'hrms_notifications'
                         ]
                     ]
                 ]
@@ -819,7 +833,7 @@ class NotificationHelper
             $now = time();
             $payload = json_encode([
                 'iss' => $credentials['client_email'],
-                'scope' => 'https://www.googleapis.com/auth/cloud-platform',
+                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
                 'aud' => 'https://oauth2.googleapis.com/token',
                 'exp' => $now + 3600,
                 'iat' => $now
