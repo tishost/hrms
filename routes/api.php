@@ -198,6 +198,8 @@ Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement
     Route::prefix('notifications')->group(function () {
         // Mobile app: notification history and read-state
         Route::get('/history', [NotificationController::class, 'getNotificationHistory']);
+        // Mobile app: fetch last 15 notifications from last 10 days
+        Route::get('/recent', [NotificationController::class, 'getRecentNotifications']);
         Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::delete('/delete', [NotificationController::class, 'deleteNotification']);

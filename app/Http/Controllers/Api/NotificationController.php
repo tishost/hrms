@@ -516,6 +516,34 @@ class NotificationController extends Controller
     }
 
     /**
+     * Get recent notifications from last 10 days (limit 15)
+     */
+    public function getRecentNotifications(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $since = now()->subDays(10);
+
+            $rows = $user->notifications()
+                ->where('created_at', '>=', $since)
+                ->orderBy('created_at', 'desc')
+                ->limit(15)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $rows
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting recent notifications: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
      * Mark notification as read
      */
     public function markAsRead(Request $request): JsonResponse

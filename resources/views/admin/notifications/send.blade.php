@@ -388,6 +388,8 @@ $(document).ready(function() {
         $('#sendBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
         refreshCsrfToken(function() {
             const formData = new FormData(form);
+            // Avoid stale _token when route is CSRF-exempt
+            formData.delete('_token');
 
             $.ajax({
                 url: $(form).attr('action'),
