@@ -747,9 +747,11 @@ class NotificationHelper
                 ]
             ];
 
-            // Add image if provided
+            // Add image if provided (set both top-level notification.image and android.notification.image)
             if (isset($data['image_url']) && $data['image_url']) {
-                $payload['message']['android']['notification']['image'] = $data['image_url'];
+                $imageUrl = (string) $data['image_url'];
+                $payload['message']['android']['notification']['image'] = $imageUrl;
+                $payload['message']['notification']['image'] = $imageUrl;
             }
 
             // Prepare headers

@@ -336,33 +336,33 @@ $(document).ready(function() {
         }
     });
 
-    // Form submission with loading state
+    // Form submission with loading state (refresh CSRF before each send)
     $('#notificationForm').submit(function(e) {
         e.preventDefault();
-        
+
         // Basic form validation
         const title = $('input[name="title"]').val().trim();
         const body = $('textarea[name="body"]').val().trim();
         const targetType = $('#targetType').val();
-        
+
         if (!title) {
             alert('Please enter a notification title');
             $('input[name="title"]').focus();
             return;
         }
-        
+
         if (!body) {
             alert('Please enter a notification message');
             $('textarea[name="body"]').focus();
             return;
         }
-        
+
         if (!targetType) {
             alert('Please select a target audience');
             $('#targetType').focus();
             return;
         }
-        
+
         // Validate specific users selection
         if (targetType === 'specific_users') {
             const selectedUsers = $('input[name="user_ids[]"]:checked').length;
@@ -371,7 +371,7 @@ $(document).ready(function() {
                 return;
             }
         }
-        
+
         // Validate role-based selection
         if (targetType === 'role_based') {
             const roleId = $('#roleId').val();
@@ -381,105 +381,112 @@ $(document).ready(function() {
                 return;
             }
         }
-        
-        const formData = new FormData(this);
-        
-        // Show loading state
+
+        const form = this;
+
+        // Always refresh CSRF token just before sending
         $('#sendBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
-        
-        // Send AJAX request (with FormData)
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Notification sent successfully!');
-                    resetForm();
-                } else {
-                    alert('Error: ' + (response.message || 'Failed to send notification'));
-                }
-            },
-            error: function(xhr) {
-                let errorMessage = 'Failed to send notification';
-                
-                if (xhr.responseJSON) {
-                    if (xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
+        refreshCsrfToken(function() {
+            const formData = new FormData(form);
+
+            $.ajax({
+                url: $(form).attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Notification sent successfully!');
+                        resetForm();
+                    } else {
+                        alert('Error: ' + (response.message || 'Failed to send notification'));
                     }
-                    
-                    if (xhr.responseJSON.errors) {
-                        const errors = xhr.responseJSON.errors;
-                        const errorList = [];
-                        
-                        for (const field in errors) {
-                            if (errors[field]) {
-                                errorList.push(`${field}: ${errors[field].join(', ')}`);
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Failed to send notification';
+
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+
+                        if (xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
+                            const errorList = [];
+
+                            for (const field in errors) {
+                                if (errors[field]) {
+                                    errorList.push(`${field}: ${errors[field].join(', ')}`);
+                                }
+                            }
+
+                            if (errorList.length > 0) {
+                                errorMessage += '\n\nDetails:\n' + errorList.join('\n');
                             }
                         }
-                        
-                        if (errorList.length > 0) {
-                            errorMessage += '\n\nDetails:\n' + errorList.join('\n');
-                        }
                     }
+
+                    alert('Error: ' + errorMessage);
+                },
+                complete: function() {
+                    // Refresh CSRF token for subsequent submissions
+                    refreshCsrfToken(function() {
+                        $('#sendBtn').prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Send Notification');
+                    });
                 }
-                
-                alert('Error: ' + errorMessage);
-            },
-            complete: function() {
-                // Refresh CSRF token for next submission
-                refreshCsrfToken(function() {
-                    $('#sendBtn').prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Send Notification');
-                });
-            }
+            });
         });
     });
 
-    // Test button handler
+    // Test button handler (refresh CSRF before sending)
     $('#testBtn').click(function() {
         const title = $('input[name="title"]').val() || 'Test Notification';
         const body = $('textarea[name="body"]').val() || 'This is a test notification from HRMS Admin Panel';
         const type = $('select[name="notification_type"]').val() || 'general';
-        
+
         if (!confirm('Send test notification to all users?')) {
             return;
         }
-        
+
         // Show loading state
-        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Testing...');
-        
-        // Send test notification
-        $.ajax({
-            url: '{{ route("admin.notifications.test") }}',
-            method: 'POST',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-                title: title,
-                body: body,
-                type: type
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Test notification sent successfully!');
-                } else {
-                    alert('Error: ' + (response.message || 'Failed to send test notification'));
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Testing...');
+
+        refreshCsrfToken(function() {
+            $.ajax({
+                url: '{{ route("admin.notifications.test") }}',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: {
+                    title: title,
+                    body: body,
+                    type: type
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Test notification sent successfully!');
+                    } else {
+                        alert('Error: ' + (response.message || 'Failed to send test notification'));
+                    }
+                },
+                error: function(xhr) {
+                    const error = xhr.responseJSON?.message || 'Failed to send test notification';
+                    alert('Error: ' + error);
+                },
+                complete: function() {
+                    refreshCsrfToken(function() {
+                        btn.prop('disabled', false).html('<i class="fas fa-vial"></i> Send Test');
+                    });
                 }
-            },
-            error: function(xhr) {
-                const error = xhr.responseJSON?.message || 'Failed to send test notification';
-                alert('Error: ' + error);
-            },
-            complete: function() {
-                refreshCsrfToken(function() {
-                    $('#testBtn').prop('disabled', false).html('<i class="fas fa-vial"></i> Send Test');
-                });
-            }
+            });
         });
     });
 });
