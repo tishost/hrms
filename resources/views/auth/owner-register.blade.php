@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Registration - HRMS</title>
+    <title>Owner Registration - {{ \App\Helpers\SystemHelper::getCompanyName() }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -286,7 +286,7 @@
     <div class="register-container">
         <div class="register-header">
             <h2><i class="fas fa-user-tie"></i> Owner Registration</h2>
-            <p>Join HRMS as a Building Owner</p>
+            <p>Join {{ \App\Helpers\SystemHelper::getCompanyName() }} as a property owner and manage your tenants smartly.</p>
         </div>
 
         <div class="register-body">

@@ -214,6 +214,22 @@
             color: #764ba2;
         }
 
+        .back-to-home {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .back-to-home a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-to-home a:hover {
+            color: #764ba2;
+        }
+
         .alert {
             border-radius: 12px;
             border: none;
@@ -508,7 +524,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-login">
-                    <i class="fas fa-sign-in-alt"></i> Login to HRMS
+                    <i class="fas fa-sign-in-alt"></i> login
                 </button>
 
                 @if (Route::has('password.request'))
@@ -518,6 +534,11 @@
                         </a>
                     </div>
                 @endif
+                <div class="back-to-home">
+                    <a href="{{ url('/') }}">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
             </form>
 
             <!-- Registration Section -->
