@@ -169,7 +169,7 @@
                         <a href="#features" class="nav-link text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors" data-section="features">{{ __('Features') }}</a>
                         <a href="#packages" class="nav-link text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors" data-section="packages">{{ __('Packages') }}</a>
                         <a href="#support" class="nav-link text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors" data-section="support">{{ __('Support') }}</a>
-                        <a href="{{ route('login') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">{{ __('Login') }}</a>
+                        <a href="{{ url('/login') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">{{ __('Login') }}</a>
 
                         <!-- Language Switcher -->
                         <div class="flex items-center space-x-2 ml-4">
@@ -194,7 +194,7 @@
                     <a href="#features" class="nav-link block text-gray-700 hover:text-purple-600 px-4 py-3 rounded-md text-base font-medium transition-colors" data-section="features">{{ __('Features') }}</a>
                     <a href="#packages" class="nav-link block text-gray-700 hover:text-purple-600 px-4 py-3 rounded-md text-base font-medium transition-colors" data-section="packages">{{ __('Packages') }}</a>
                     <a href="#support" class="nav-link block text-gray-700 hover:text-purple-600 px-4 py-3 rounded-md text-base font-medium transition-colors" data-section="support">{{ __('Support') }}</a>
-                    <a href="{{ route('login') }}" class="block bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md text-base font-medium transition-colors text-center">{{ __('Login') }}</a>
+                    <a href="{{ url('/login') }}" class="block bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md text-base font-medium transition-colors text-center">{{ __('Login') }}</a>
 
                     <!-- Mobile Language Switcher -->
                     <div class="flex items-center justify-center space-x-3 pt-4">
