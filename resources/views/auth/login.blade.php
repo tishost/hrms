@@ -436,7 +436,7 @@
 
     <div class="login-container">
         <div class="login-header">
-            <h2><i class="fas fa-building"></i> HRMS</h2>
+            <h2>{{ \App\Helpers\SystemHelper::getCompanyName() }}</h2>
             <p>Welcome Back! Please login to your account</p>
         </div>
 
