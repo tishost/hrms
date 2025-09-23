@@ -7,9 +7,23 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Dynamic Favicon -->
-    @if(\App\Helpers\SystemHelper::getCompanyFavicon())
-        <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SystemHelper::getCompanyFavicon() }}">
-        <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Helpers\SystemHelper::getCompanyFavicon() }}">
+    @php
+        $faviconUrl = \App\Helpers\SystemHelper::getCompanyFavicon();
+        $faviconType = null;
+        if ($faviconUrl) {
+            $ext = strtolower(pathinfo(parse_url($faviconUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+            $faviconType = match ($ext) {
+                'png' => 'image/png',
+                'svg' => 'image/svg+xml',
+                'gif' => 'image/gif',
+                'jpg', 'jpeg' => 'image/jpeg',
+                default => 'image/x-icon',
+            };
+        }
+    @endphp
+    @if($faviconUrl)
+        <link rel="icon" href="{{ $faviconUrl }}" type="{{ $faviconType }}">
+        <link rel="shortcut icon" href="{{ $faviconUrl }}" type="{{ $faviconType }}">
     @endif
     
     <!-- Bootstrap CSS -->

@@ -8,9 +8,23 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Dynamic Favicon -->
-    @if(\App\Helpers\SystemHelper::getCompanyFavicon())
-        <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SystemHelper::getCompanyFavicon() }}">
-        <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Helpers\SystemHelper::getCompanyFavicon() }}">
+    @php
+        $faviconUrl = \App\Helpers\SystemHelper::getCompanyFavicon();
+        $faviconType = null;
+        if ($faviconUrl) {
+            $ext = strtolower(pathinfo(parse_url($faviconUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+            $faviconType = match ($ext) {
+                'png' => 'image/png',
+                'svg' => 'image/svg+xml',
+                'gif' => 'image/gif',
+                'jpg', 'jpeg' => 'image/jpeg',
+                default => 'image/x-icon',
+            };
+        }
+    @endphp
+    @if($faviconUrl)
+        <link rel="icon" href="{{ $faviconUrl }}" type="{{ $faviconType }}">
+        <link rel="shortcut icon" href="{{ $faviconUrl }}" type="{{ $faviconType }}">
     @endif
     
     {!! \App\Services\SeoService::renderMetaTags('landing') !!}
@@ -141,7 +155,11 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <a href="#home" class="cursor-pointer">
-                            <img src="{{ asset('images/bari-manager-logo.svg') }}" alt="Bari Manager Logo" class="h-8 sm:h-12 w-auto hover:opacity-80 transition-opacity">
+                            @if(\App\Helpers\SystemHelper::getCompanyLogo())
+                                <img src="{{ \App\Helpers\SystemHelper::getCompanyLogo() }}" alt="{{ \App\Helpers\SystemHelper::getCompanyName() }}" class="h-8 sm:h-12 w-auto hover:opacity-80 transition-opacity">
+                            @else
+                                <img src="{{ asset('images/bari-manager-logo.svg') }}" alt="Bari Manager Logo" class="h-8 sm:h-12 w-auto hover:opacity-80 transition-opacity">
+                            @endif
                         </a>
                     </div>
                 </div>
@@ -824,7 +842,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="text-center sm:text-left">
                     <a href="#home" class="cursor-pointer">
-                        <img src="{{ asset('images/bari-manager-logo.svg') }}" alt="Bari Manager Logo" class="h-8 lg:h-10 w-auto mb-4 hover:opacity-80 transition-opacity mx-auto sm:mx-0">
+                        @if(\App\Helpers\SystemHelper::getCompanyLogo())
+                            <img src="{{ \App\Helpers\SystemHelper::getCompanyLogo() }}" alt="{{ \App\Helpers\SystemHelper::getCompanyName() }}" class="h-8 lg:h-10 w-auto mb-4 hover:opacity-80 transition-opacity mx-auto sm:mx-0">
+                        @else
+                            <img src="{{ asset('images/bari-manager-logo.svg') }}" alt="Bari Manager Logo" class="h-8 lg:h-10 w-auto mb-4 hover:opacity-80 transition-opacity mx-auto sm:mx-0">
+                        @endif
                     </a>
                     <p class="text-gray-400 mb-4 text-sm lg:text-base">
                         {{ __('The complete house rent management solution for property owners.') }}
