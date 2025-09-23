@@ -200,7 +200,7 @@
 
         .forgot-password {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 8px;
         }
 
         .forgot-password a {
@@ -272,14 +272,14 @@
 
                 /* Registration Section Styles */
         .registration-section {
-            margin-top: 30px;
-            padding-top: 20px;
+            margin-top: 10px;
+            padding-top: 0;
         }
 
         .divider {
             text-align: center;
             position: relative;
-            margin: 20px 0;
+            margin: 12px 0;
         }
 
         .divider::before {
