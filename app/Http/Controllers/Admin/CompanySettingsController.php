@@ -28,8 +28,10 @@ class CompanySettingsController extends Controller
                 'company_state' => 'nullable|string|max:100',
                 'company_country' => 'nullable|string|max:100',
                 'company_postal_code' => 'nullable|string|max:20',
-                'company_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'company_favicon' => 'nullable|image|mimes:ico,png,jpg,gif|max:1024',
+                // Allow SVG and slightly larger logos; rely on mimes to validate
+                'company_logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg|max:4096',
+                // Favicon can be ico/png/svg/jpg
+                'company_favicon' => 'nullable|mimes:ico,png,jpg,jpeg,gif,svg|max:2048',
                 'company_facebook' => 'nullable|url|max:255',
                 'company_twitter' => 'nullable|url|max:255',
                 'company_linkedin' => 'nullable|url|max:255',
