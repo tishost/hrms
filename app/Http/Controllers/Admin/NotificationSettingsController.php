@@ -168,6 +168,16 @@ class NotificationSettingsController extends Controller
         return view('admin.settings.sms-templates', compact('allSettings'));
     }
 
+    /**
+     * Show template groups overview page
+     */
+    public function templateGroups()
+    {
+        $this->checkSuperAdmin();
+        $allSettings = $this->getAllSettings();
+        return view('admin.settings.template-groups', compact('allSettings'));
+    }
+
 
 
 

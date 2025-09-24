@@ -439,7 +439,6 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('otp-settings/toggle', [App\Http\Controllers\Admin\OtpSettingsController::class, 'toggle'])->name('otp-settings.toggle');
 
     // Notification Settings
-    Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('settings.notifications');
     Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get');
     Route::match(['GET', 'POST'], 'settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save');
     Route::post('settings/notifications/template/save', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplates'])->name('settings.notifications.template.save');
@@ -613,9 +612,10 @@ Route::get('analytics/summary', [App\Http\Controllers\Admin\AnalyticsController:
     Route::post('sms/smart-send', [App\Http\Controllers\Admin\SmsCreditController::class, 'sendSmartSms'])->name('sms.smart-send');
 
     // Notification Settings Routes
-    Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('settings.notifications');
-    Route::get('settings/email-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'emailTemplates'])->name('settings.email.templates');
-    Route::get('settings/sms-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'smsTemplates'])->name('settings.sms.templates');
+    Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('admin.settings.notifications');
+    Route::get('settings/template-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'templateGroups'])->name('admin.settings.template.groups');
+    Route::get('settings/email-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'emailTemplates'])->name('admin.settings.email.templates');
+    Route::get('settings/sms-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'smsTemplates'])->name('admin.settings.sms.templates');
 });
 
 // API OTP Settings Route (Public)

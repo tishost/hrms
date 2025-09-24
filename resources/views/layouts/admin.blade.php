@@ -965,6 +965,12 @@
                             </a>
                         </li>
                         <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.template.groups.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.template.groups') }}">
+                                <i class="fas fa-layer-group me-2"></i>Template Groups
+                            </a>
+                        </li>
+                        <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.email.templates.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.email.templates') }}">
                                 <i class="fas fa-envelope me-2"></i>Email Templates
