@@ -165,30 +165,43 @@
             box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
         
-        /* Enhanced Dropdown Styling */
-        .sidebar .dropdown-menu {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            margin-top: 5px;
-            padding: 8px;
-            min-width: 220px;
-            backdrop-filter: blur(10px);
+        /* Accordion-style Sub-menu Styling */
+        .sidebar .submenu {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            margin: 5px 0 0 20px;
+            padding: 0;
+            list-style: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            border-radius: 0 8px 8px 0;
+            opacity: 0;
         }
         
-        .sidebar .dropdown-item {
-            color: #ecf0f1 !important;
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin: 2px 0;
+        .sidebar .submenu.show {
+            max-height: 500px;
+            padding: 8px 0;
+            opacity: 1;
+        }
+        
+        .sidebar .submenu-item {
+            margin: 0;
+        }
+        
+        .sidebar .submenu-link {
+            color: #b8c7ce !important;
+            padding: 10px 20px 10px 30px;
+            border-radius: 0;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             text-decoration: none;
+            display: block;
+            font-size: 0.9rem;
         }
         
-        .sidebar .dropdown-item::before {
+        .sidebar .submenu-link::before {
             content: '';
             position: absolute;
             left: 0;
@@ -200,56 +213,63 @@
             z-index: -1;
         }
         
-        .sidebar .dropdown-item:hover {
+        .sidebar .submenu-link:hover {
             color: #fff !important;
             background: transparent;
             transform: translateX(5px);
         }
         
-        .sidebar .dropdown-item:hover::before {
+        .sidebar .submenu-link:hover::before {
             width: 100%;
         }
         
-        .sidebar .dropdown-item.active {
+        .sidebar .submenu-link.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff !important;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .sidebar .submenu-link i {
+            width: 16px;
+            text-align: center;
+            margin-right: 8px;
+            transition: transform 0.3s ease;
+            font-size: 0.85rem;
+        }
+        
+        .sidebar .submenu-link:hover i {
+            transform: scale(1.1);
+        }
+        
+        /* Menu Toggle Arrow */
+        .sidebar .menu-toggle::after {
+            content: '▼';
+            float: right;
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+        
+        .sidebar .menu-toggle.open::after {
+            transform: rotate(180deg);
+        }
+        
+        /* Menu Item with Submenu */
+        .sidebar .has-submenu .nav-link {
+            position: relative;
+        }
+        
+        .sidebar .has-submenu .nav-link.menu-toggle {
+            cursor: pointer;
+        }
+        
+        .sidebar .has-submenu.open .nav-link {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: #fff !important;
             box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
         
-        .sidebar .dropdown-item i {
-            width: 20px;
-            text-align: center;
-            margin-right: 10px;
-            transition: transform 0.3s ease;
-        }
-        
-        .sidebar .dropdown-item:hover i {
-            transform: scale(1.2);
-        }
-        
-        /* Dropdown Animation */
-        .sidebar .dropdown-menu {
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Dropdown Toggle Arrow */
-        .sidebar .dropdown-toggle::after {
-            transition: transform 0.3s ease;
-            margin-left: 8px;
-        }
-        
-        .sidebar .dropdown.show .dropdown-toggle::after {
+        .sidebar .has-submenu.open .nav-link::after {
             transform: rotate(180deg);
         }
         
@@ -428,22 +448,24 @@
                 margin-bottom: 5px;
             }
             
-            .sidebar .dropdown-menu {
+            .sidebar .submenu {
                 position: static !important;
                 transform: none !important;
                 box-shadow: none;
                 background: rgba(52, 152, 219, 0.1);
-                margin-top: 10px;
+                margin-top: 5px;
                 margin-left: 20px;
-                display: none;
+                display: block;
                 opacity: 1;
                 visibility: visible;
-                max-height: none;
-                overflow: visible;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease, padding 0.3s ease;
             }
             
-            .sidebar .dropdown.show .dropdown-menu {
-                display: block !important;
+            .sidebar .submenu.show {
+                max-height: 500px !important;
+                padding: 8px 0 !important;
                 opacity: 1 !important;
                 visibility: visible !important;
                 transform: none !important;
@@ -607,7 +629,7 @@
       
       <!-- Owners -->
       <div class="list-group-item bg-transparent border-0 p-0">
-        <a class="list-group-item list-group-item-action bg-transparent text-white border-0" data-bs-toggle="collapse" href="#ownersSubmenu" role="button" aria-expanded="false" aria-controls="ownersSubmenu">
+        <a class="list-group-item list-group-item-action bg-transparent text-white border-0 mobile-menu-toggle" data-bs-toggle="collapse" href="#ownersSubmenu" role="button" aria-expanded="false" aria-controls="ownersSubmenu">
           <i class="fas fa-users me-2"></i>Owners <i class="fas fa-chevron-down ms-auto"></i>
         </a>
         <div class="collapse" id="ownersSubmenu">
@@ -770,20 +792,20 @@
                 </li>
 
                 <!-- Owners Management -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.owners.*') ? 'active' : '' }}"
-                       href="#" id="ownersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item has-submenu {{ request()->routeIs('admin.owners.*') ? 'open' : '' }}">
+                    <a class="nav-link menu-toggle {{ request()->routeIs('admin.owners.*') ? 'active' : '' }}"
+                       href="javascript:void(0);">
                         <i class="fas fa-users me-2"></i>Owners
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="ownersDropdown">
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.owners.index') ? 'active' : '' }}"
+                    <ul class="submenu {{ request()->routeIs('admin.owners.*') ? 'show' : '' }}">
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.owners.index') ? 'active' : '' }}"
                                href="{{ route('admin.owners.index') }}">
                                 <i class="fas fa-list me-2"></i>Owner List
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.owners.create') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.owners.create') ? 'active' : '' }}"
                                href="{{ route('admin.owners.create') }}">
                                 <i class="fas fa-plus me-2"></i>Add New Owner
                             </a>
@@ -792,14 +814,14 @@
                 </li>
 
                 <!-- Tenants Management -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.tenants.*') ? 'active' : '' }}"
-                       href="#" id="tenantsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item has-submenu {{ request()->routeIs('admin.tenants.*') ? 'open' : '' }}">
+                    <a class="nav-link menu-toggle {{ request()->routeIs('admin.tenants.*') ? 'active' : '' }}"
+                       href="javascript:void(0);">
                         <i class="fas fa-user-friends me-2"></i>Tenants
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="tenantsDropdown">
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.tenants.index') ? 'active' : '' }}"
+                    <ul class="submenu {{ request()->routeIs('admin.tenants.*') ? 'show' : '' }}">
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.tenants.index') ? 'active' : '' }}"
                                href="{{ route('admin.tenants.index') }}">
                                 <i class="fas fa-list me-2"></i>Tenant List
                             </a>
@@ -808,26 +830,26 @@
                 </li>
 
                 <!-- Subscription Management -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.subscriptions') || request()->routeIs('admin.plans.*') || request()->routeIs('admin.billing.*') ? 'active' : '' }}"
-                       href="#" id="subscriptionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item has-submenu {{ request()->routeIs('admin.subscriptions') || request()->routeIs('admin.plans.*') || request()->routeIs('admin.billing.*') ? 'open' : '' }}">
+                    <a class="nav-link menu-toggle {{ request()->routeIs('admin.subscriptions') || request()->routeIs('admin.plans.*') || request()->routeIs('admin.billing.*') ? 'active' : '' }}"
+                       href="javascript:void(0);">
                         <i class="fas fa-credit-card me-2"></i>Subscription
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="subscriptionDropdown">
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.subscriptions') ? 'active' : '' }}"
+                    <ul class="submenu {{ request()->routeIs('admin.subscriptions') || request()->routeIs('admin.plans.*') || request()->routeIs('admin.billing.*') ? 'show' : '' }}">
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.subscriptions') ? 'active' : '' }}"
                                href="{{ route('admin.subscriptions') }}">
                                 <i class="fas fa-list me-2"></i>Subscription List
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}"
                                href="{{ route('admin.plans.index') }}">
                                 <i class="fas fa-cube me-2"></i>Package Management
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.billing.index') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.billing.index') ? 'active' : '' }}"
                                href="{{ route('admin.billing.index') }}">
                                 <i class="fas fa-file-invoice-dollar me-2"></i>Billing & Payments
                             </a>
@@ -836,26 +858,26 @@
                 </li>
 
                 <!-- Reports -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
-                       href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item has-submenu {{ request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics') || request()->routeIs('admin.login-logs.*') ? 'open' : '' }}">
+                    <a class="nav-link menu-toggle {{ request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics') || request()->routeIs('admin.login-logs.*') ? 'active' : '' }}"
+                       href="javascript:void(0);">
                         <i class="fas fa-chart-line me-2"></i>Reports
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.reports.financial') ? 'active' : '' }}"
+                    <ul class="submenu {{ request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics') || request()->routeIs('admin.login-logs.*') ? 'show' : '' }}">
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.reports.financial') ? 'active' : '' }}"
                                href="{{ route('admin.reports.financial') }}">
                                 <i class="fas fa-chart-line me-2"></i>Financial Reports
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.analytics') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.analytics') ? 'active' : '' }}"
                                href="{{ route('admin.analytics') }}">
                                 <i class="fas fa-chart-bar me-2"></i>Analytics Dashboard
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}"
                                href="{{ route('admin.login-logs.index') }}">
                                 <i class="fas fa-sign-in-alt me-2"></i>Login Logs
                             </a>
@@ -872,26 +894,26 @@
                 </li>
 
                 <!-- Ads Management -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.ads.*') ? 'active' : '' }}"
-                       href="#" id="adsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item has-submenu {{ request()->routeIs('admin.ads.*') ? 'open' : '' }}">
+                    <a class="nav-link menu-toggle {{ request()->routeIs('admin.ads.*') ? 'active' : '' }}"
+                       href="javascript:void(0);">
                         <i class="fas fa-ad me-2"></i>Ads Management
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="adsDropdown">
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.ads.index') ? 'active' : '' }}"
+                    <ul class="submenu {{ request()->routeIs('admin.ads.*') ? 'show' : '' }}">
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.ads.index') ? 'active' : '' }}"
                                href="{{ route('admin.ads.index') }}">
                                 <i class="fas fa-list me-2"></i>All Ads
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.ads.create') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.ads.create') ? 'active' : '' }}"
                                href="{{ route('admin.ads.create') }}">
                                 <i class="fas fa-plus me-2"></i>Create New Ad
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.ads.stats') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.ads.stats') ? 'active' : '' }}"
                                href="{{ route('admin.ads.stats') }}">
                                 <i class="fas fa-chart-bar me-2"></i>Ads Statistics
                             </a>
@@ -900,116 +922,116 @@
                 </li>
 
                 <!-- Settings -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
-                       href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item has-submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.otp-settings.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.charges.*') || request()->routeIs('admin.security.otp.*') || request()->routeIs('admin.chat.*') ? 'open' : '' }}">
+                    <a class="nav-link menu-toggle {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.otp-settings.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.charges.*') || request()->routeIs('admin.security.otp.*') || request()->routeIs('admin.chat.*') ? 'active' : '' }}"
+                       href="javascript:void(0);">
                         <i class="fas fa-cog me-2"></i>Settings
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="settingsDropdown">
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.company') ? 'active' : '' }}"
+                    <ul class="submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.otp-settings.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.charges.*') || request()->routeIs('admin.security.otp.*') || request()->routeIs('admin.chat.*') ? 'show' : '' }}">
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.company') ? 'active' : '' }}"
                                href="{{ route('admin.settings.company') }}">
                                 <i class="fas fa-building me-2"></i>Company Information
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.system') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.system') ? 'active' : '' }}"
                                href="{{ route('admin.settings.system') }}">
                                 <i class="fas fa-cogs me-2"></i>System Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.landing') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.landing') ? 'active' : '' }}"
                                href="{{ route('admin.settings.landing') }}">
                                 <i class="fas fa-globe me-2"></i>Landing Page
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.company') && !request()->routeIs('admin.settings.system') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.company') && !request()->routeIs('admin.settings.system') && !request()->routeIs('admin.settings.landing') && !request()->routeIs('admin.settings.notifications') && !request()->routeIs('admin.settings.email.templates') && !request()->routeIs('admin.settings.sms.templates') && !request()->routeIs('admin.settings.notification-logs') && !request()->routeIs('admin.settings.email-configuration') && !request()->routeIs('admin.settings.seo') && !request()->routeIs('admin.settings.chat') && !request()->routeIs('admin.settings.sms') && !request()->routeIs('admin.settings.backup') ? 'active' : '' }}"
                                href="{{ route('admin.settings.index') }}">
                                 <i class="fas fa-cog me-2"></i>General Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
                                href="{{ route('admin.otp-settings.index') }}">
                                 <i class="fas fa-mobile-alt me-2"></i>OTP Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.notifications.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.notifications.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.notifications') }}">
                                 <i class="fas fa-bell me-2"></i>Notification Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.email.templates.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.email.templates.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.email.templates') }}">
                                 <i class="fas fa-envelope me-2"></i>Email Templates
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.sms.templates.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.sms.templates.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.sms.templates') }}">
                                 <i class="fas fa-sms me-2"></i>SMS Templates
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.notification-logs.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.notification-logs.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.notification-logs') }}">
                                 <i class="fas fa-history me-2"></i>Notification Logs
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"
                                href="{{ route('admin.notifications.send') }}">
                                 <i class="fas fa-paper-plane me-2"></i>Send Push Notifications
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.email-configuration.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.email-configuration.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.email-configuration') }}">
                                 <i class="fas fa-envelope me-2"></i>Email Configuration
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.seo') }}">
                                 <i class="fas fa-search me-2"></i>SEO Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.chat.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.chat.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.chat') }}">
                                 <i class="fas fa-comments me-2"></i>Chat Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.sms.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.sms.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.sms') }}">
                                 <i class="fas fa-sms me-2"></i>SMS Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.settings.backup.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.backup.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.backup') }}">
                                 <i class="fas fa-database me-2"></i>Backup Settings
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.charges.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.charges.*') ? 'active' : '' }}"
                                href="{{ route('admin.charges.index') }}">
                                 <i class="fas fa-money-bill-wave me-2"></i>Charges Setup
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.security.otp.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.security.otp.*') ? 'active' : '' }}"
                                href="{{ route('admin.security.otp') }}">
                                 <i class="fas fa-shield-alt me-2"></i>OTP Security
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"
                                href="{{ route('admin.dashboard') }}">
                                 <i class="fas fa-comments me-2"></i>Chat Agent Dashboard
                             </a>
@@ -1308,123 +1330,93 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshCsrfToken();
     });
     
-    // Enhanced dropdown interactions
-    const dropdowns = document.querySelectorAll('.sidebar .dropdown');
-    dropdowns.forEach(dropdown => {
-        const toggle = dropdown.querySelector('.dropdown-toggle');
-        const menu = dropdown.querySelector('.dropdown-menu');
-        
-        // Add hover effect for desktop
-        if (window.innerWidth > 768) {
-            dropdown.addEventListener('mouseenter', function() {
-                this.classList.add('show');
-                menu.style.display = 'block';
+    // Accordion-style menu interactions
+    const menuToggles = document.querySelectorAll('.sidebar .menu-toggle');
+    menuToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const parent = this.closest('.has-submenu');
+            const submenu = parent.querySelector('.submenu');
+            const isOpen = parent.classList.contains('open');
+            
+            // Close all other submenus
+            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
+                if (item !== parent) {
+                    item.classList.remove('open');
+                    const otherSubmenu = item.querySelector('.submenu');
+                    if (otherSubmenu) {
+                        otherSubmenu.classList.remove('show');
+                    }
+                }
             });
             
-            dropdown.addEventListener('mouseleave', function() {
-                this.classList.remove('show');
-                menu.style.display = 'none';
-            });
-        }
-        
-        // Add click effect for mobile
-        toggle.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                e.stopPropagation();
-                const isOpen = dropdown.classList.contains('show');
-                
-                // Close all other dropdowns
-                dropdowns.forEach(d => {
-                    if (d !== dropdown) {
-                        d.classList.remove('show');
-                        const otherMenu = d.querySelector('.dropdown-menu');
-                        if (otherMenu) {
-                            otherMenu.style.display = 'none';
-                        }
-                    }
-                });
-                
-                // Toggle current dropdown
-                if (!isOpen) {
-                    dropdown.classList.add('show');
-                    menu.style.display = 'block';
-                } else {
-                    dropdown.classList.remove('show');
-                    menu.style.display = 'none';
-                }
+            // Toggle current submenu
+            if (!isOpen) {
+                parent.classList.add('open');
+                submenu.classList.add('show');
+            } else {
+                parent.classList.remove('open');
+                submenu.classList.remove('show');
             }
         });
         
         // Add touch support for mobile
         toggle.addEventListener('touchstart', function(e) {
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                e.stopPropagation();
-                const isOpen = dropdown.classList.contains('show');
-                
-                // Close all other dropdowns
-                dropdowns.forEach(d => {
-                    if (d !== dropdown) {
-                        d.classList.remove('show');
-                        const otherMenu = d.querySelector('.dropdown-menu');
-                        if (otherMenu) {
-                            otherMenu.style.display = 'none';
-                        }
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const parent = this.closest('.has-submenu');
+            const submenu = parent.querySelector('.submenu');
+            const isOpen = parent.classList.contains('open');
+            
+            // Close all other submenus
+            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
+                if (item !== parent) {
+                    item.classList.remove('open');
+                    const otherSubmenu = item.querySelector('.submenu');
+                    if (otherSubmenu) {
+                        otherSubmenu.classList.remove('show');
                     }
-                });
-                
-                // Toggle current dropdown
-                if (!isOpen) {
-                    dropdown.classList.add('show');
-                    menu.style.display = 'block';
-                } else {
-                    dropdown.classList.remove('show');
-                    menu.style.display = 'none';
                 }
+            });
+            
+            // Toggle current submenu
+            if (!isOpen) {
+                parent.classList.add('open');
+                submenu.classList.add('show');
+            } else {
+                parent.classList.remove('open');
+                submenu.classList.remove('show');
             }
         });
     });
     
-    // Close dropdowns when clicking outside
+    // Close submenus when clicking outside
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.sidebar .dropdown')) {
-            dropdowns.forEach(dropdown => {
-                dropdown.classList.remove('show');
-                const menu = dropdown.querySelector('.dropdown-menu');
-                if (menu) {
-                    menu.style.display = 'none';
+        if (!e.target.closest('.sidebar .has-submenu')) {
+            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
+                item.classList.remove('open');
+                const submenu = item.querySelector('.submenu');
+                if (submenu) {
+                    submenu.classList.remove('show');
                 }
             });
         }
     });
     
-    // Close dropdowns when touching outside
+    // Close submenus when touching outside
     document.addEventListener('touchstart', function(e) {
-        if (!e.target.closest('.sidebar .dropdown')) {
-            dropdowns.forEach(dropdown => {
-                dropdown.classList.remove('show');
-                const menu = dropdown.querySelector('.dropdown-menu');
-                if (menu) {
-                    menu.style.display = 'none';
+        if (!e.target.closest('.sidebar .has-submenu')) {
+            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
+                item.classList.remove('open');
+                const submenu = item.querySelector('.submenu');
+                if (submenu) {
+                    submenu.classList.remove('show');
                 }
             });
         }
-    });
-    
-    // Handle dropdown arrow rotation
-    const dropdownToggles = document.querySelectorAll('.sidebar .dropdown-toggle');
-    dropdownToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                const arrow = this.querySelector('.dropdown-toggle::after');
-                if (arrow) {
-                    arrow.style.transform = this.closest('.dropdown').classList.contains('show') 
-                        ? 'rotate(180deg)' 
-                        : 'rotate(0deg)';
-                }
-            }
-        });
     });
 });
 </script>
