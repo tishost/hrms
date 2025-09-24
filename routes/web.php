@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\Role; // Correct
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Owner\SettingController;
 
 use App\Http\Controllers\Owner\CheckoutController;
 use Illuminate\Http\Request;
+
 Route::get('/', [App\Http\Controllers\LandingController::class, 'index'])->name('home');
 
 Route::get('/welcome', function () {
@@ -45,7 +47,7 @@ Route::post('/test-csrf', function () {
 // Test template save route outside admin middleware
 Route::post('/test-template-save', function (\Illuminate\Http\Request $request) {
     return response()->json([
-        'success' => true, 
+        'success' => true,
         'message' => 'Template save test working',
         'data' => $request->all()
     ]);
@@ -67,7 +69,7 @@ Route::post('/test-csrf-simple', function (\Illuminate\Http\Request $request) {
 })->name('test.csrf.simple');
 
 // CSRF token refresh route
-Route::get('/refresh-csrf', function() {
+Route::get('/refresh-csrf', function () {
     return response()->json(['token' => csrf_token()]);
 })->name('refresh.csrf');
 
@@ -75,7 +77,7 @@ Route::get('/refresh-csrf', function() {
 Route::post('/test-csrf-token', function (\Illuminate\Http\Request $request) {
     $csrfToken = $request->header('X-CSRF-TOKEN');
     $sessionToken = session()->token();
-    
+
     return response()->json([
         'success' => $csrfToken === $sessionToken,
         'csrf_token' => $csrfToken ? substr($csrfToken, 0, 20) . '...' : 'null',
@@ -95,7 +97,7 @@ Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) 
             'email' => 'test' . time() . '@example.com',
             'password' => \Illuminate\Support\Facades\Hash::make('password123'),
         ]);
-        
+
         $owner = \App\Models\Owner::create([
             'user_id' => $user->id,
             'name' => 'Test Owner ' . time(),
@@ -107,19 +109,19 @@ Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) 
             'status' => 'active',
             'is_super_admin' => false,
         ]);
-        
+
         $user->update([
             'owner_id' => $owner->id,
             'phone' => $owner->phone
         ]);
-        
+
         $freshUser = \App\Models\User::find($user->id);
         $freshOwner = \App\Models\Owner::find($owner->id);
-        
+
         // Clean up
         $owner->delete();
         $user->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Test completed successfully',
@@ -139,7 +141,7 @@ Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) 
 Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
     $action = $request->get('action');
     $templateName = $request->get('template_name');
-    
+
     // Handle GET action (load template)
     if ($action === 'get' && $templateName) {
         try {
@@ -148,7 +150,7 @@ Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
                 ->orWhere('key', $templateName)
                 ->orWhere('key', $templateName . '_template')
                 ->first();
-            
+
             if ($template) {
                 $templateData = json_decode($template->value, true);
                 return response()->json([
@@ -159,7 +161,7 @@ Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
                 // Debug: Log what we're looking for
                 \Log::info('Template not found for: ' . $templateName);
                 \Log::info('Available templates: ' . \App\Models\SystemSetting::where('key', 'like', '%template%')->orWhere('key', 'like', '%_email')->orWhere('key', 'like', '%_sms')->pluck('key')->toJson());
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Template not found'
@@ -172,15 +174,15 @@ Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
             ]);
         }
     }
-    
+
     // Handle save action
     $content = $request->get('content');
     $subject = $request->get('subject');
-    
+
     if ($templateName && $content) {
         try {
             $templateData = [];
-            
+
             // Check if it's an SMS template (contains '_sms' in name)
             if (str_contains($templateName, '_sms')) {
                 $templateData = ['content' => $content];
@@ -191,24 +193,24 @@ Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
                     'content' => $content
                 ];
             }
-            
+
             $result = \App\Models\SystemSetting::setValue('template_' . $templateName, json_encode($templateData));
-            
+
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Template saved successfully!',
                 'id' => $result->id
             ]);
         } catch (Exception $e) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Failed to save template: ' . $e->getMessage()
             ]);
         }
     }
-    
+
     return response()->json([
-        'success' => false, 
+        'success' => false,
         'message' => 'Missing template parameters'
     ]);
 })->name('test.save.template');
@@ -293,7 +295,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::put('tenants/{tenant}', [TenantController::class, 'update'])->name('tenants.update');
     Route::get('/tenants/{tenant}/assign-rent', [TenantRentController::class, 'create'])->name('rents.create');
     Route::post('/tenants/{tenant}/assign-rent', [TenantRentController::class, 'store'])->name('rents.store');
-    
+
     // Settings Routes
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
@@ -302,7 +304,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('/settings/reset-templates', [SettingController::class, 'resetTemplates'])->name('settings.reset-templates');
     Route::get('/units-by-building/{id}', [TenantController::class, 'getUnitsByBuilding'])->name('units.byBuilding');
     Route::get('/unit-fees/{unit}', [OwnerUnitController::class, 'getFees'])->name('units.fees');
-    Route::get('rent-payments/create',[RentPaymentController::class, 'create'])->name('rent_payments.create');
+    Route::get('rent-payments/create', [RentPaymentController::class, 'create'])->name('rent_payments.create');
     Route::post('rent-payments', [RentPaymentController::class, 'store'])->name('rent_payments.store');
     Route::get('rent-payments/fees-dues', [RentPaymentController::class, 'getFeesAndDues'])->name('rent_payments.fees_dues');
 
@@ -317,7 +319,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('checkouts/{checkout}', [CheckoutController::class, 'show'])->name('checkouts.show');
     Route::get('checkouts/{checkout}/invoice', [CheckoutController::class, 'generateInvoice'])->name('checkouts.invoice');
 
-               // Subscription routes
+    // Subscription routes
     Route::get('subscription/current', [App\Http\Controllers\Owner\SubscriptionController::class, 'currentPlan'])->name('subscription.current');
     Route::get('subscription/plans', [App\Http\Controllers\Owner\SubscriptionController::class, 'availablePlans'])->name('subscription.plans');
     Route::post('subscription/purchase', [App\Http\Controllers\Owner\SubscriptionController::class, 'purchasePlan'])->name('subscription.purchase');
@@ -356,7 +358,6 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::put('settings/backup', [App\Http\Controllers\Owner\BackupSettingsController::class, 'update'])->name('settings.backup.update');
     Route::post('settings/backup/test', [App\Http\Controllers\Owner\BackupSettingsController::class, 'testBackup'])->name('settings.backup.test');
     Route::get('settings/backup/stats', [App\Http\Controllers\Owner\BackupSettingsController::class, 'getStats'])->name('settings.backup.stats');
-
 });
 
 
@@ -412,7 +413,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('settings/bkash/status', [App\Http\Controllers\Admin\AdminSettingController::class, 'getBkashConfigurationStatus'])->name('settings.bkash.status');
 
     // Test route for debugging
-    Route::get('test-super-admin', function() {
+    Route::get('test-super-admin', function () {
         $user = auth()->user();
         if ($user) {
             return response()->json([
@@ -444,7 +445,7 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('settings/notifications/template/save', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplates'])->name('settings.notifications.template.save');
     Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
     Route::get('settings/notifications/log/details', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getLogDetails'])->name('notifications.log.details');
-    
+
     // Notification Logs
     Route::get('settings/notification-logs', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'notificationLogs'])->name('settings.notification-logs');
 
@@ -458,9 +459,9 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('notifications/test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])
         ->name('notifications.test')
         ->withoutMiddleware([App\Http\Middleware\VerifyCsrfToken::class]);
-    
+
     // Simple test route for debugging
-    Route::get('notifications/debug', function() {
+    Route::get('notifications/debug', function () {
         \Log::channel('push')->info('Push debug ping', [
             'timestamp' => now()->toISOString(),
             'user_id' => auth()->id()
@@ -511,58 +512,58 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::get('security/otp/statistics', [App\Http\Controllers\Admin\OtpSecurityController::class, 'getStatistics'])->name('security.otp.statistics');
     Route::get('security/otp/export', [App\Http\Controllers\Admin\OtpSecurityController::class, 'exportLogs'])->name('security.otp.export');
 
-        // Landing Page Management
-        Route::get('settings/landing', [App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('settings.landing');
-        Route::post('settings/landing/update', [App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('settings.landing.update');
+    // Landing Page Management
+    Route::get('settings/landing', [App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('settings.landing');
+    Route::post('settings/landing/update', [App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('settings.landing.update');
 
-        // Financial Reports
-        Route::get('reports/financial', [App\Http\Controllers\Admin\FinancialReportController::class, 'index'])->name('reports.financial');
-        Route::post('reports/financial/export-pdf', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportPdf'])->name('reports.financial.export-pdf');
-        Route::post('reports/financial/export-excel', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportExcel'])->name('reports.financial.export-excel');
+    // Financial Reports
+    Route::get('reports/financial', [App\Http\Controllers\Admin\FinancialReportController::class, 'index'])->name('reports.financial');
+    Route::post('reports/financial/export-pdf', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportPdf'])->name('reports.financial.export-pdf');
+    Route::post('reports/financial/export-excel', [App\Http\Controllers\Admin\FinancialReportController::class, 'exportExcel'])->name('reports.financial.export-excel');
 
-        // Analytics
-Route::get('analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics');
-Route::post('analytics/real-time', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeAnalytics'])->name('analytics.real-time');
-Route::post('analytics/custom', [App\Http\Controllers\Admin\AnalyticsController::class, 'getCustomAnalytics'])->name('analytics.custom');
-Route::post('analytics/device-stats', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeDeviceStats'])->name('analytics.device-stats');
-Route::post('analytics/device-trends', [App\Http\Controllers\Admin\AnalyticsController::class, 'getDeviceInstallationTrends'])->name('analytics.device-trends');
-Route::post('analytics/receive-data', [App\Http\Controllers\Admin\AnalyticsController::class, 'receiveDeviceAnalytics'])->name('analytics.receive-data');
-Route::get('analytics/summary', [App\Http\Controllers\Admin\AnalyticsController::class, 'getAnalyticsSummary'])->name('analytics.summary');
+    // Analytics
+    Route::get('analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics');
+    Route::post('analytics/real-time', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeAnalytics'])->name('analytics.real-time');
+    Route::post('analytics/custom', [App\Http\Controllers\Admin\AnalyticsController::class, 'getCustomAnalytics'])->name('analytics.custom');
+    Route::post('analytics/device-stats', [App\Http\Controllers\Admin\AnalyticsController::class, 'getRealTimeDeviceStats'])->name('analytics.device-stats');
+    Route::post('analytics/device-trends', [App\Http\Controllers\Admin\AnalyticsController::class, 'getDeviceInstallationTrends'])->name('analytics.device-trends');
+    Route::post('analytics/receive-data', [App\Http\Controllers\Admin\AnalyticsController::class, 'receiveDeviceAnalytics'])->name('analytics.receive-data');
+    Route::get('analytics/summary', [App\Http\Controllers\Admin\AnalyticsController::class, 'getAnalyticsSummary'])->name('analytics.summary');
 
-        // Login Logs
-        Route::get('login-logs', [App\Http\Controllers\Admin\LoginLogController::class, 'index'])->name('login-logs.index');
-        Route::get('login-logs/active-sessions', [App\Http\Controllers\Admin\LoginLogController::class, 'activeSessions'])->name('login-logs.active-sessions');
-        Route::get('login-logs/user/{user}/history', [App\Http\Controllers\Admin\LoginLogController::class, 'userHistory'])->name('login-logs.user-history');
-        Route::post('login-logs/block-ip', [App\Http\Controllers\Admin\LoginLogController::class, 'blockIp'])->name('login-logs.block-ip');
-        Route::post('login-logs/unblock-ip', [App\Http\Controllers\Admin\LoginLogController::class, 'unblockIp'])->name('login-logs.unblock-ip');
-        Route::get('login-logs/export', [App\Http\Controllers\Admin\LoginLogController::class, 'export'])->name('login-logs.export');
-        Route::get('login-logs/real-time-stats', [App\Http\Controllers\Admin\LoginLogController::class, 'getRealTimeStats'])->name('login-logs.real-time-stats');
-        Route::get('login-logs/{loginLog}', [App\Http\Controllers\Admin\LoginLogController::class, 'show'])->name('login-logs.show');
+    // Login Logs
+    Route::get('login-logs', [App\Http\Controllers\Admin\LoginLogController::class, 'index'])->name('login-logs.index');
+    Route::get('login-logs/active-sessions', [App\Http\Controllers\Admin\LoginLogController::class, 'activeSessions'])->name('login-logs.active-sessions');
+    Route::get('login-logs/user/{user}/history', [App\Http\Controllers\Admin\LoginLogController::class, 'userHistory'])->name('login-logs.user-history');
+    Route::post('login-logs/block-ip', [App\Http\Controllers\Admin\LoginLogController::class, 'blockIp'])->name('login-logs.block-ip');
+    Route::post('login-logs/unblock-ip', [App\Http\Controllers\Admin\LoginLogController::class, 'unblockIp'])->name('login-logs.unblock-ip');
+    Route::get('login-logs/export', [App\Http\Controllers\Admin\LoginLogController::class, 'export'])->name('login-logs.export');
+    Route::get('login-logs/real-time-stats', [App\Http\Controllers\Admin\LoginLogController::class, 'getRealTimeStats'])->name('login-logs.real-time-stats');
+    Route::get('login-logs/{loginLog}', [App\Http\Controllers\Admin\LoginLogController::class, 'show'])->name('login-logs.show');
 
-        // Backup Management
-        Route::get('backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backups.index');
-        Route::post('backups', [App\Http\Controllers\Admin\BackupController::class, 'store'])->name('backups.store');
-        Route::get('backups/{backup}', [App\Http\Controllers\Admin\BackupController::class, 'show'])->name('backups.show');
-        Route::get('backups/{backup}/download', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backups.download');
-        Route::post('backups/{backup}/restore', [App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backups.restore');
-        Route::delete('backups/{backup}', [App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backups.destroy');
-        Route::post('backups/clean-old', [App\Http\Controllers\Admin\BackupController::class, 'cleanOld'])->name('backups.clean-old');
-        Route::get('backups/stats', [App\Http\Controllers\Admin\BackupController::class, 'getStats'])->name('backups.stats');
-                Route::get('backups/{backup}/details', [App\Http\Controllers\Admin\BackupController::class, 'getDetails'])->name('backups.details');
+    // Backup Management
+    Route::get('backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backups.index');
+    Route::post('backups', [App\Http\Controllers\Admin\BackupController::class, 'store'])->name('backups.store');
+    Route::get('backups/{backup}', [App\Http\Controllers\Admin\BackupController::class, 'show'])->name('backups.show');
+    Route::get('backups/{backup}/download', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backups.download');
+    Route::post('backups/{backup}/restore', [App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backups.restore');
+    Route::delete('backups/{backup}', [App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+    Route::post('backups/clean-old', [App\Http\Controllers\Admin\BackupController::class, 'cleanOld'])->name('backups.clean-old');
+    Route::get('backups/stats', [App\Http\Controllers\Admin\BackupController::class, 'getStats'])->name('backups.stats');
+    Route::get('backups/{backup}/details', [App\Http\Controllers\Admin\BackupController::class, 'getDetails'])->name('backups.details');
 
-        // Backup Settings Routes
-        Route::get('settings/backup', [App\Http\Controllers\Admin\BackupSettingsController::class, 'index'])->name('settings.backup');
-        Route::put('settings/backup', [App\Http\Controllers\Admin\BackupSettingsController::class, 'update'])->name('settings.backup.update');
-        Route::post('settings/backup/test', [App\Http\Controllers\Admin\BackupSettingsController::class, 'testBackup'])->name('settings.backup.test');
-        Route::post('settings/backup/clean', [App\Http\Controllers\Admin\BackupSettingsController::class, 'cleanOldBackups'])->name('settings.backup.clean');
-        Route::get('settings/backup/stats', [App\Http\Controllers\Admin\BackupSettingsController::class, 'getStats'])->name('settings.backup.stats');
-        Route::post('settings/backup/schedule', [App\Http\Controllers\Admin\BackupSettingsController::class, 'scheduleBackup'])->name('settings.backup.schedule');
+    // Backup Settings Routes
+    Route::get('settings/backup', [App\Http\Controllers\Admin\BackupSettingsController::class, 'index'])->name('settings.backup');
+    Route::put('settings/backup', [App\Http\Controllers\Admin\BackupSettingsController::class, 'update'])->name('settings.backup.update');
+    Route::post('settings/backup/test', [App\Http\Controllers\Admin\BackupSettingsController::class, 'testBackup'])->name('settings.backup.test');
+    Route::post('settings/backup/clean', [App\Http\Controllers\Admin\BackupSettingsController::class, 'cleanOldBackups'])->name('settings.backup.clean');
+    Route::get('settings/backup/stats', [App\Http\Controllers\Admin\BackupSettingsController::class, 'getStats'])->name('settings.backup.stats');
+    Route::post('settings/backup/schedule', [App\Http\Controllers\Admin\BackupSettingsController::class, 'scheduleBackup'])->name('settings.backup.schedule');
 
-        // Email Configuration Routes
-        Route::get('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'index'])->name('settings.email-configuration');
-        Route::put('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'updateEmailSettings'])->name('settings.email-configuration.update');
-        Route::post('settings/email-configuration/test', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'testEmail'])->name('settings.email-configuration.test');
-        Route::get('settings/email-configuration/debug', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'debugEmailSettings'])->name('settings.email-configuration.debug');
+    // Email Configuration Routes
+    Route::get('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'index'])->name('settings.email-configuration');
+    Route::put('settings/email-configuration', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'updateEmailSettings'])->name('settings.email-configuration.update');
+    Route::post('settings/email-configuration/test', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'testEmail'])->name('settings.email-configuration.test');
+    Route::get('settings/email-configuration/debug', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'debugEmailSettings'])->name('settings.email-configuration.debug');
 
     // Tickets Management
     Route::get('tickets', [App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets.index');
@@ -582,18 +583,18 @@ Route::get('analytics/summary', [App\Http\Controllers\Admin\AnalyticsController:
     Route::post('settings/seo/sitemap', [App\Http\Controllers\Admin\SeoSettingsController::class, 'generateSitemap'])->name('settings.seo.sitemap');
     Route::post('settings/seo/robots', [App\Http\Controllers\Admin\SeoSettingsController::class, 'generateRobotsTxt'])->name('settings.seo.robots');
     Route::post('settings/seo/preview', [App\Http\Controllers\Admin\SeoSettingsController::class, 'previewSeo'])->name('settings.seo.preview');
-    
+
     // Chat Settings Routes
     Route::get('settings/chat', [App\Http\Controllers\Admin\ChatSettingsController::class, 'index'])->name('settings.chat');
     Route::put('settings/chat', [App\Http\Controllers\Admin\ChatSettingsController::class, 'update'])->name('settings.chat.update');
     Route::get('settings/chat/test', [App\Http\Controllers\Admin\ChatSettingsController::class, 'testChat'])->name('settings.chat.test');
     Route::get('settings/chat/settings', [App\Http\Controllers\Admin\ChatSettingsController::class, 'getChatSettings'])->name('settings.chat.settings');
-    
+
     // SMS Settings Routes
     Route::get('settings/sms', [App\Http\Controllers\Admin\SmsSettingsController::class, 'index'])->name('settings.sms');
     Route::put('settings/sms', [App\Http\Controllers\Admin\SmsSettingsController::class, 'update'])->name('settings.sms.update');
     Route::post('settings/sms/test', [App\Http\Controllers\Admin\SmsSettingsController::class, 'testSms'])->name('settings.sms.test');
-    
+
     // Charges Setup Routes
     Route::resource('charges', App\Http\Controllers\Admin\ChargeController::class);
     Route::post('charges/{charge}/toggle-status', [App\Http\Controllers\Admin\ChargeController::class, 'toggleStatus'])->name('charges.toggle-status');
@@ -616,19 +617,18 @@ Route::get('analytics/summary', [App\Http\Controllers\Admin\AnalyticsController:
     Route::get('settings/template-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'templateGroups'])->name('settings.template.groups');
     Route::get('settings/email-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'emailTemplates'])->name('settings.email.templates');
     Route::get('settings/sms-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'smsTemplates'])->name('settings.sms.templates');
-    
 });
 
 // API OTP Settings Route (Public)
 Route::get('/api/otp-settings', [App\Http\Controllers\Admin\OtpSettingsController::class, 'getSettings']);
 
 // SEO Routes (Public)
-Route::get('/sitemap.xml', function() {
+Route::get('/sitemap.xml', function () {
     $sitemap = \App\Services\SeoService::generateSitemap();
     return response($sitemap, 200, ['Content-Type' => 'application/xml']);
 });
 
-Route::get('/robots.txt', function() {
+Route::get('/robots.txt', function () {
     $robots = \App\Services\SeoService::generateRobotsTxt();
     return response($robots, 200, ['Content-Type' => 'text/plain']);
 });
@@ -652,4 +652,4 @@ Route::middleware(['auth', 'role:admin|super_admin|agent'])->prefix('admin/chat'
     Route::get('/analytics', [App\Http\Controllers\Admin\ChatAgentController::class, 'getAnalytics'])->name('analytics');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
