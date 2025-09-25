@@ -58,11 +58,11 @@
                             </div>
                             <div class="text-sm text-gray-600">
                                 @if($owner->subscription)
-                                    <i class="fas fa-calendar me-1"></i>Expires: {{ $owner->subscription->end_date->format('M d, Y') }}<br>
-                                    <i class="fas fa-credit-card me-1"></i>Price: ৳{{ number_format($owner->subscription->plan->price ?? 0, 2) }}<br>
-                                    <i class="fas fa-sms me-1"></i>SMS Credits: {{ $owner->subscription->sms_credits ?? 0 }}
+                                <i class="fas fa-calendar me-1"></i>Expires: {{ $owner->subscription->end_date ? $owner->subscription->end_date->format('M d, Y') : 'N/A' }}<br>
+                                <i class="fas fa-credit-card me-1"></i>Price: ৳{{ number_format($owner->subscription->plan->price ?? 0, 2) }}<br>
+                                <i class="fas fa-sms me-1"></i>SMS Credits: {{ $owner->subscription->sms_credits ?? 0 }}
                                 @else
-                                    <span class="text-warning">No active subscription</span>
+                                <span class="text-warning">No active subscription</span>
                                 @endif
                             </div>
                         </div>
@@ -240,9 +240,9 @@
                                     <h5>Subscription Details</h5>
                                     <div class="card">
                                         <div class="card-body">
-                                            <p><strong>Start Date:</strong> {{ $owner->subscription->start_date->format('M d, Y') }}</p>
-                                            <p><strong>End Date:</strong> {{ $owner->subscription->end_date->format('M d, Y') }}</p>
-                                            <p><strong>Status:</strong> 
+                                            <p><strong>Start Date:</strong> {{ $owner->subscription->start_date ? $owner->subscription->start_date->format('M d, Y') : 'N/A' }}</p>
+                                            <p><strong>End Date:</strong> {{ $owner->subscription->end_date ? $owner->subscription->end_date->format('M d, Y') : 'N/A' }}</p>
+                                            <p><strong>Status:</strong>
                                                 <span class="badge bg-{{ $owner->subscription->status === 'active' ? 'success' : 'warning' }}">
                                                     {{ ucfirst($owner->subscription->status) }}
                                                 </span>
@@ -279,7 +279,7 @@
                                         @forelse($owner->billing ?? [] as $bill)
                                         <tr>
                                             <td>{{ $bill->invoice_number }}</td>
-                                            <td>{{ $bill->created_at->format('M d, Y') }}</td>
+                                            <td>{{ $bill->created_at ? $bill->created_at->format('M d, Y') : 'N/A' }}</td>
                                             <td>৳{{ number_format($bill->amount, 2) }}</td>
                                             <td>
                                                 <span class="badge bg-{{ $bill->status === 'paid' ? 'success' : 'warning' }}">
@@ -328,7 +328,7 @@
                                     <tbody>
                                         @forelse($notificationLogs ?? [] as $log)
                                         <tr>
-                                            <td>{{ $log->created_at->format('M d, Y H:i') }}</td>
+                                            <td>{{ $log->created_at ? $log->created_at->format('M d, Y H:i') : 'N/A' }}</td>
                                             <td>
                                                 <span class="badge bg-{{ $log->type === 'email' ? 'primary' : 'info' }}">
                                                     {{ strtoupper($log->type) }}
@@ -342,7 +342,7 @@
                                             </td>
                                             <td>{{ Str::limit($log->content, 50) }}</td>
                                             <td>
-                                                <button class="btn btn-sm btn-warning" onclick="resendNotification({{ $log->id }})" title="Resend">
+                                                <button class="btn btn-sm btn-warning resend-btn" title="Resend" data-log-id="{{ $log->id ?? 0 }}">
                                                     <i class="fas fa-redo"></i>
                                                 </button>
                                             </td>
@@ -398,99 +398,110 @@
 
 @push('scripts')
 <script>
-function sendTestNotification() {
-    $('#testNotificationModal').modal('show');
-}
-
-function sendNotification() {
-    const type = $('#notificationType').val();
-    const message = $('#customMessage').val();
-    
-    $.ajax({
-        url: '{{ route("admin.owners.test-notification", $owner->id) }}',
-        method: 'POST',
-        data: {
-            type: type,
-            message: message,
-            _token: '{{ csrf_token() }}'
-        },
-        success: function(response) {
-            if (response.success) {
-                alert('Notification sent successfully!');
-                location.reload();
-            } else {
-                alert('Failed to send notification: ' + response.message);
-            }
-        },
-        error: function() {
-            alert('Error sending notification');
-        }
+    $(document).ready(function() {
+        // Handle resend notification button clicks
+        $('.resend-btn').on('click', function() {
+            const logId = $(this).data('log-id');
+            resendNotification(logId);
+        });
     });
-    
-    $('#testNotificationModal').modal('hide');
-}
 
-function sendTestEmail() {
-    $.ajax({
-        url: '{{ route("admin.owners.test-email", $owner->id) }}',
-        method: 'POST',
-        data: {
-            _token: '{{ csrf_token() }}'
-        },
-        success: function(response) {
-            if (response.success) {
-                alert('Test email sent successfully!');
-            } else {
-                alert('Failed to send test email: ' + response.message);
-            }
-        },
-        error: function() {
-            alert('Error sending test email');
-        }
-    });
-}
+    function sendTestNotification() {
+        $('#testNotificationModal').modal('show');
+    }
 
-function sendTestSms() {
-    $.ajax({
-        url: '{{ route("admin.owners.test-sms", $owner->id) }}',
-        method: 'POST',
-        data: {
-            _token: '{{ csrf_token() }}'
-        },
-        success: function(response) {
-            if (response.success) {
-                alert('Test SMS sent successfully!');
-            } else {
-                alert('Failed to send test SMS: ' + response.message);
-            }
-        },
-        error: function() {
-            alert('Error sending test SMS');
-        }
-    });
-}
+    function sendNotification() {
+        const type = $('#notificationType').val();
+        const message = $('#customMessage').val();
 
-function resendNotification(logId) {
-    if (confirm('Are you sure you want to resend this notification?')) {
         $.ajax({
-            url: '{{ route("admin.owners.resend-notification", ["id" => $owner->id, "log_id" => "LOG_ID_PLACEHOLDER"]) }}'.replace('LOG_ID_PLACEHOLDER', logId),
+            url: '{{ route("admin.owners.test-notification", $owner->id) }}',
+            method: 'POST',
+            data: {
+                type: type,
+                message: message,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Notification sent successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to send notification: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Error sending notification');
+            }
+        });
+
+        $('#testNotificationModal').modal('hide');
+    }
+
+    function sendTestEmail() {
+        $.ajax({
+            url: '{{ route("admin.owners.test-email", $owner->id) }}',
             method: 'POST',
             data: {
                 _token: '{{ csrf_token() }}'
             },
             success: function(response) {
                 if (response.success) {
-                    alert('Notification resent successfully!');
-                    location.reload();
+                    alert('Test email sent successfully!');
                 } else {
-                    alert('Failed to resend notification: ' + response.message);
+                    alert('Failed to send test email: ' + response.message);
                 }
             },
             error: function() {
-                alert('Error resending notification');
+                alert('Error sending test email');
             }
         });
     }
-}
+
+    function sendTestSms() {
+        $.ajax({
+            url: '{{ route("admin.owners.test-sms", $owner->id) }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Test SMS sent successfully!');
+                } else {
+                    alert('Failed to send test SMS: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Error sending test SMS');
+            }
+        });
+    }
+
+    function resendNotification(logId) {
+        if (confirm('Are you sure you want to resend this notification?')) {
+            const baseUrl = '{{ route("admin.owners.resend-notification", ["id" => $owner->id, "log_id" => "PLACEHOLDER"]) }}';
+            const url = baseUrl.replace('PLACEHOLDER', logId);
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Notification resent successfully!');
+                        location.reload();
+                    } else {
+                        alert('Failed to resend notification: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error resending notification');
+                }
+            });
+        }
+    }
 </script>
-@endpush 
+@endpush
