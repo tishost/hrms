@@ -4,6 +4,10 @@ namespace App\Helpers;
 
 use App\Services\NotificationService;
 use App\Helpers\SmsHelper;
+use App\Models\EmailTemplate;
+use App\Models\SmsTemplate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 /**
  * 🚀 HRMS Notification Helper
@@ -62,11 +66,53 @@ class NotificationHelper
     }
 
     /**
-     * Send notification using template
+     * Send notification using template with new template system
      */
     public static function sendTemplate($type, $to, $templateName, $variables = [])
     {
-        return self::getService()->sendTemplateNotification($type, $to, $templateName, $variables);
+        if ($type === 'email') {
+            // Check if email notification is enabled
+            if (!self::isEmailNotificationEnabled($templateName)) {
+                return ['success' => false, 'message' => 'Email notifications are disabled for this template'];
+            }
+
+            // Get email template
+            $template = self::getEmailTemplate($templateName);
+            if (!$template || !$template['is_active']) {
+                return ['success' => false, 'message' => 'Email template not found or disabled'];
+            }
+
+            // Replace variables
+            $subject = self::replaceVariables($template['subject'], $variables);
+            $content = self::replaceVariables($template['content'], $variables);
+
+            // Send email
+            return self::sendEmail($to, $subject, $content);
+        } elseif ($type === 'sms') {
+            // Check if SMS notification is enabled
+            if (!self::isSmsNotificationEnabled($templateName)) {
+                return ['success' => false, 'message' => 'SMS notifications are disabled for this template'];
+            }
+
+            // Get SMS template
+            $template = self::getSmsTemplate($templateName);
+            if (!$template || !$template['is_active']) {
+                return ['success' => false, 'message' => 'SMS template not found or disabled'];
+            }
+
+            // Replace variables
+            $content = self::replaceVariables($template['content'], $variables);
+
+            // Check character limit
+            if ($template['character_limit'] && strlen($content) > $template['character_limit']) {
+                $content = substr($content, 0, $template['character_limit'] - 3) . '...';
+            }
+
+            // Send SMS
+            return self::sendSms($to, $content, $variables);
+        }
+
+        return ['success' => false, 'message' => 'Invalid notification type'];
     }
 
     /**
@@ -218,6 +264,29 @@ class NotificationHelper
      */
     public static function isSmsNotificationEnabled($notificationType)
     {
+        // First check if it's a template-based notification
+        $template = SmsTemplate::where('key', $notificationType)->first();
+        if ($template) {
+            return $template->is_active;
+        }
+
+        // Fallback to system settings for backward compatibility
+        $setting = \App\Models\SystemSetting::where('key', $notificationType)->value('value');
+        return $setting === null ? true : ($setting === '1');
+    }
+
+    /**
+     * Check if specific email notification is enabled
+     */
+    public static function isEmailNotificationEnabled($notificationType)
+    {
+        // First check if it's a template-based notification
+        $template = EmailTemplate::where('key', $notificationType)->first();
+        if ($template) {
+            return $template->is_active;
+        }
+
+        // Fallback to system settings for backward compatibility
         $setting = \App\Models\SystemSetting::where('key', $notificationType)->value('value');
         return $setting === null ? true : ($setting === '1');
     }
@@ -232,12 +301,14 @@ class NotificationHelper
             return ['success' => false, 'message' => 'OTP SMS notifications are disabled'];
         }
 
+        // Get template from new system
+        $template = self::getSmsTemplate('system_otp_sms');
+        if (!$template || !$template['is_active']) {
+            return ['success' => false, 'message' => 'OTP SMS template not found or disabled'];
+        }
+
         // Get language settings
         $notificationLanguage = \App\Models\SystemSetting::getValue('notification_language', 'bangla');
-
-        // Get template content from new system
-        $contentBangla = \App\Models\SystemSetting::getValue('password_reset_otp_sms_content_bangla', 'আপনার OTP: {otp}। এই OTP 10 মিনিটের জন্য বৈধ। {company_name}');
-        $contentEnglish = \App\Models\SystemSetting::getValue('password_reset_otp_sms_content_english', 'Your OTP: {otp}. This OTP is valid for 10 minutes. {company_name}');
 
         // Replace variables in template
         $variables = [
@@ -245,21 +316,15 @@ class NotificationHelper
             'company_name' => config('app.name', 'HRMS')
         ];
 
-        // Replace variables in content
-        $contentBangla = self::replaceVariables($contentBangla, $variables);
-        $contentEnglish = self::replaceVariables($contentEnglish, $variables);
+        // Replace variables in template content
+        $content = self::replaceVariables($template['content'], $variables);
 
-        // Determine which language to use
-        $content = $contentBangla;
-
-        if ($notificationLanguage === 'english') {
-            $content = $contentEnglish;
-        } elseif ($notificationLanguage === 'both') {
-            // Send both languages (SMS has character limit, so send Bangla first)
-            $content = $contentBangla . ' / ' . $contentEnglish;
+        // Check character limit if template has one
+        if ($template['character_limit'] && strlen($content) > $template['character_limit']) {
+            $content = substr($content, 0, $template['character_limit'] - 3) . '...';
         }
 
-        // Send SMS with selected language
+        // Send SMS
         return self::sendSms($phone, $content, $variables);
     }
 
@@ -282,16 +347,16 @@ class NotificationHelper
      */
     public static function sendPasswordResetEmail($user, $resetToken)
     {
-        // Get language settings
-        $notificationLanguage = \App\Models\SystemSetting::getValue('notification_language', 'bangla');
-        $userLanguagePreference = \App\Models\SystemSetting::getValue('user_language_preference', 'enabled');
+        // Check if password reset email is enabled
+        if (!self::isEmailNotificationEnabled('password_reset_email')) {
+            return ['success' => false, 'message' => 'Password reset email notifications are disabled'];
+        }
 
-        // Get template content from new system
-        $subjectBangla = \App\Models\SystemSetting::getValue('password_reset_email_subject_bangla', 'পাসওয়ার্ড রিসেট অনুরোধ');
-        $contentBangla = \App\Models\SystemSetting::getValue('password_reset_email_content_bangla', 'প্রিয় {user_name}, আপনার পাসওয়ার্ড রিসেট করার অনুরোধ পাওয়া গেছে। আপনার OTP: {otp} এই OTP 10 মিনিটের জন্য বৈধ। যদি আপনি এই অনুরোধ করেননি, তাহলে এই ইমেইল উপেক্ষা করুন। ধন্যবাদ, {company_name}');
-        
-        $subjectEnglish = \App\Models\SystemSetting::getValue('password_reset_email_subject_english', 'Password Reset Request');
-        $contentEnglish = \App\Models\SystemSetting::getValue('password_reset_email_content_english', 'Dear {user_name}, A password reset request has been received for your account. Your OTP: {otp} This OTP is valid for 10 minutes. If you did not request this, please ignore this email. Thank you, {company_name}');
+        // Get template from new system
+        $template = self::getEmailTemplate('password_reset_email');
+        if (!$template || !$template['is_active']) {
+            return ['success' => false, 'message' => 'Password reset email template not found or disabled'];
+        }
 
         // Replace variables in template
         $variables = [
@@ -301,26 +366,11 @@ class NotificationHelper
             'company_name' => config('app.name', 'HRMS')
         ];
 
-        // Replace variables in content
-        $subjectBangla = self::replaceVariables($subjectBangla, $variables);
-        $contentBangla = self::replaceVariables($contentBangla, $variables);
-        $subjectEnglish = self::replaceVariables($subjectEnglish, $variables);
-        $contentEnglish = self::replaceVariables($contentEnglish, $variables);
+        // Replace variables in template
+        $subject = self::replaceVariables($template['subject'], $variables);
+        $content = self::replaceVariables($template['content'], $variables);
 
-        // Determine which language to use
-        $subject = $subjectBangla;
-        $content = $contentBangla;
-
-        if ($notificationLanguage === 'english') {
-            $subject = $subjectEnglish;
-            $content = $contentEnglish;
-        } elseif ($notificationLanguage === 'both') {
-            // Send both languages
-            $subject = $subjectBangla . ' / ' . $subjectEnglish;
-            $content = $contentBangla . "\n\n---\n\n" . $contentEnglish;
-        }
-
-        // Send email with selected language
+        // Send email
         return self::sendEmail($user->email, $subject, $content);
     }
 
@@ -435,7 +485,7 @@ class NotificationHelper
             if (!$user->relationLoaded('owner')) {
                 $user->load('owner');
             }
-            
+
             if ($user->owner) {
                 // Check if owner welcome SMS is enabled
                 if (self::isSmsNotificationEnabled('owner_welcome_sms')) {
@@ -580,44 +630,79 @@ class NotificationHelper
     {
         // Get owner's language preference
         $language = \App\Models\OwnerSetting::getValue($ownerId, 'notification_language', 'bangla');
-        
-        // Get template with language preference
-        $template = \App\Models\OwnerSetting::getTemplateWithLanguage($ownerId, $templateKey, $variables);
-        
-        if (!$template) {
-            // Fallback to system template
-            $template = self::getSystemTemplate($templateKey . '_' . $language);
-            if (!$template) {
-                $template = self::getSystemTemplate($templateKey);
+
+        // Get template from new system
+        if ($type === 'email') {
+            $template = self::getEmailTemplate($templateKey);
+            if ($template && $template['is_active']) {
+                $subject = self::replaceVariables($template['subject'], $variables);
+                $content = self::replaceVariables($template['content'], $variables);
+                return self::sendEmail($recipient, $subject, $content);
             }
-            
-            if (!$template) {
-                return false;
-            }
-            
-            // Replace variables in system template
-            foreach ($variables as $key => $value) {
-                $template = str_replace('{' . $key . '}', $value, $template);
+        } elseif ($type === 'sms') {
+            $template = self::getSmsTemplate($templateKey);
+            if ($template && $template['is_active']) {
+                $content = self::replaceVariables($template['content'], $variables);
+
+                // Check character limit
+                if ($template['character_limit'] && strlen($content) > $template['character_limit']) {
+                    $content = substr($content, 0, $template['character_limit'] - 3) . '...';
+                }
+
+                return self::sendSms($recipient, $content, $variables);
             }
         }
-        
-        // Send notification
-        return self::sendNotification($type, $recipient, $template);
+
+        return false;
     }
 
     /**
-     * Get system template
+     * Get system template from new template tables
      */
-    private static function getSystemTemplate($templateKey)
+    private static function getSystemTemplate($templateKey, $type = 'email')
     {
-        $template = \App\Models\SystemSetting::getValue('template_' . $templateKey);
-        
-        if ($template) {
-            $templateData = json_decode($template, true);
-            return $templateData['content'] ?? '';
+        if ($type === 'email') {
+            $template = EmailTemplate::where('key', $templateKey)->first();
+            return $template ? $template->content : '';
+        } elseif ($type === 'sms') {
+            $template = SmsTemplate::where('key', $templateKey)->first();
+            return $template ? $template->content : '';
         }
-        
+
         return '';
+    }
+
+    /**
+     * Get email template with subject
+     */
+    private static function getEmailTemplate($templateKey)
+    {
+        $template = EmailTemplate::where('key', $templateKey)->first();
+        if ($template) {
+            return [
+                'subject' => $template->subject,
+                'content' => $template->content,
+                'is_active' => $template->is_active
+            ];
+        }
+        return null;
+    }
+
+    /**
+     * Get SMS template with metadata
+     */
+    private static function getSmsTemplate($templateKey)
+    {
+        $template = SmsTemplate::where('key', $templateKey)->first();
+        if ($template) {
+            return [
+                'content' => $template->content,
+                'is_active' => $template->is_active,
+                'character_limit' => $template->character_limit,
+                'unicode_support' => $template->unicode_support
+            ];
+        }
+        return null;
     }
 
     /**
@@ -672,7 +757,6 @@ class NotificationHelper
                     'message' => $result['message']
                 ];
             }
-
         } catch (\Exception $e) {
             \Log::error('Error sending push notification: ' . $e->getMessage());
             return [
@@ -689,7 +773,7 @@ class NotificationHelper
     {
         try {
             $credentialsPath = config('services.firebase.credentials');
-            
+
             if (!$credentialsPath || !file_exists($credentialsPath)) {
                 return [
                     'success' => false,
@@ -709,7 +793,7 @@ class NotificationHelper
             // FCM HTTP v1 API endpoint
             $projectId = config('services.firebase.project_id', 'bari-manager');
             $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
-            
+
             // Prepare notification payload for v1 API
             \Log::info('Preparing FCM payload', [
                 'token_preview' => substr($fcmToken, 0, 20) . '...',
@@ -841,7 +925,6 @@ class NotificationHelper
                     'http_code' => $httpCode
                 ];
             }
-
         } catch (\Exception $e) {
             \Log::error('Error sending FCM notification: ' . $e->getMessage());
             return [
@@ -858,7 +941,7 @@ class NotificationHelper
     {
         try {
             $credentials = json_decode(file_get_contents($credentialsPath), true);
-            
+
             if (!$credentials) {
                 \Log::error('Failed to parse credentials JSON');
                 return false;
@@ -880,7 +963,7 @@ class NotificationHelper
 
             $signature = '';
             $privateKey = $credentials['private_key'];
-            
+
             if (!openssl_sign($base64Header . '.' . $base64Payload, $signature, $privateKey, 'SHA256')) {
                 \Log::error('OpenSSL sign failed: ' . openssl_error_string());
                 return false;
@@ -928,7 +1011,6 @@ class NotificationHelper
                 \Log::error('Token exchange failed with HTTP code: ' . $httpCode . ', Response: ' . $response);
                 return false;
             }
-
         } catch (\Exception $e) {
             \Log::error('Error getting access token: ' . $e->getMessage());
             return false;
@@ -942,7 +1024,7 @@ class NotificationHelper
     {
         $title = 'Rent Reminder';
         $body = "Your rent of ৳{$amount} for {$propertyName} is due on {$dueDate}";
-        
+
         $data = [
             'amount' => $amount,
             'due_date' => $dueDate,
@@ -966,7 +1048,7 @@ class NotificationHelper
     {
         $title = 'Payment Confirmed';
         $body = "Your payment of ৳{$amount} via {$paymentMethod} has been confirmed";
-        
+
         $data = [
             'amount' => $amount,
             'transaction_id' => $transactionId,
@@ -990,7 +1072,7 @@ class NotificationHelper
     {
         $title = 'New Maintenance Request';
         $body = "New maintenance request from {$tenant->user->name} for {$propertyName}";
-        
+
         $data = [
             'property_name' => $propertyName,
             'issue_description' => $issueDescription,
@@ -1015,7 +1097,7 @@ class NotificationHelper
     {
         $title = 'Subscription Expiring Soon';
         $body = "Your {$planName} subscription expires in {$daysLeft} days";
-        
+
         $data = [
             'days_left' => $daysLeft,
             'plan_name' => $planName,
@@ -1038,7 +1120,7 @@ class NotificationHelper
     {
         $title = 'New Tenant Added';
         $body = "New tenant {$tenant->user->name} has been added to {$propertyName}";
-        
+
         $data = [
             'tenant_name' => $tenant->user->name,
             'property_name' => $propertyName,
@@ -1105,7 +1187,7 @@ class NotificationHelper
     {
         try {
             $credentialsPath = config('services.firebase.credentials');
-            
+
             if (!$credentialsPath || !file_exists($credentialsPath)) {
                 return [
                     'success' => false,
@@ -1144,7 +1226,6 @@ class NotificationHelper
                 'message' => 'Topic notification sent successfully',
                 'message_id' => $result
             ];
-
         } catch (\Exception $e) {
             \Log::error('Error sending topic notification: ' . $e->getMessage());
             return [
