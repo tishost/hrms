@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('email_templates', function (Blueprint $table) {
+        Schema::dropIfExists('sms_templates');
+
+        Schema::create('sms_templates', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
             $table->string('name');
-            $table->string('subject');
             $table->longText('content');
             $table->string('category')->default('system');
             $table->boolean('is_active')->default(true);
             $table->integer('priority')->default(1);
             $table->text('description')->nullable();
+            $table->integer('character_limit')->default(160);
+            $table->boolean('unicode_support')->default(true);
             $table->json('tags')->nullable();
             $table->timestamps();
         });
@@ -31,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('email_templates');
+        Schema::dropIfExists('sms_templates');
     }
 };

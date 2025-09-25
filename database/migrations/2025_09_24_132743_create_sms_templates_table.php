@@ -13,19 +13,16 @@ return new class extends Migration
     {
         Schema::create('sms_templates', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->text('content_bangla')->nullable();
-            $table->text('content_english')->nullable();
-            $table->json('variables')->nullable();
+            $table->string('key')->unique();
+            $table->string('name');
+            $table->longText('content');
             $table->string('category')->default('system');
             $table->boolean('is_active')->default(true);
+            $table->integer('priority')->default(1);
             $table->text('description')->nullable();
             $table->integer('character_limit')->default(160);
-            $table->integer('priority')->default(1);
-            $table->json('tags')->nullable();
             $table->boolean('unicode_support')->default(true);
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->json('tags')->nullable();
             $table->timestamps();
         });
     }
