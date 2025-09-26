@@ -70,7 +70,7 @@ class OtpController extends Controller
                 ->where('reason', 'admin_reset')
                 ->where('created_at', '>', now()->subMinutes(5))
                 ->exists();
-            
+
             if ($recentReset) {
                 // If recently reset by admin, start fresh count
                 $todaySendCount = 0;
@@ -84,7 +84,7 @@ class OtpController extends Controller
                     ->where('reason', '!=', 'admin_reset') // Exclude admin reset logs
                     ->count();
             }
-            
+
             if ($todaySendCount >= $otpLimit) {
                 // Log blocked attempt
                 try {
@@ -99,7 +99,8 @@ class OtpController extends Controller
                         'user_id' => $userId ?? optional($request->user())->id,
                         'session_id' => session()->getId(),
                     ]);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                }
 
                 return response()->json([
                     'success' => false,
@@ -163,7 +164,8 @@ class OtpController extends Controller
                         'session_id' => session()->getId(),
                         'reason' => 'reuse_existing',
                     ]);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                }
 
                 return response()->json([
                     'success' => true,
@@ -190,10 +192,22 @@ class OtpController extends Controller
                     'user_id' => $userId ?? optional($request->user())->id,
                     'session_id' => session()->getId(),
                 ]);
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
 
-            // TODO: Integrate with SMS service (Twilio, etc.)
-            // For now, we'll return the OTP in response for testing
+            // Send SMS via SMS service
+            $smsService = new \App\Services\SmsService();
+            $smsResult = $smsService->sendSms($phone, "Your OTP is: {$otp->otp}. Valid for {$otpSettings->otp_expiry_minutes} minutes. - Bari Manager");
+
+            // Log SMS result
+            \Log::info('OTP SMS send result', [
+                'phone' => $phone,
+                'otp' => $otp->otp,
+                'sms_success' => $smsResult['success'] ?? false,
+                'sms_message' => $smsResult['message'] ?? 'No message',
+                'sms_response' => $smsResult
+            ]);
+
             $resendCooldownForType = (int) $otpSettings->resend_cooldown_seconds;
             if ($isProfileUpdate) {
                 $resendCooldownForType = 300; // 5 minutes for profile update
@@ -201,13 +215,14 @@ class OtpController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'OTP sent successfully',
-                'otp' => $otp->otp, // Remove this in production
+                'message' => $smsResult['success'] ? 'OTP sent successfully via SMS' : 'OTP generated but SMS delivery failed',
+                'otp' => $otp->otp, // Keep for testing
+                'sms_delivery' => $smsResult['success'] ?? false,
+                'sms_message' => $smsResult['message'] ?? 'SMS not sent',
                 'expires_in' => $otpSettings->otp_expiry_minutes, // minutes
                 'expires_in_seconds' => $otpSettings->otp_expiry_minutes * 60,
                 'resend_in_seconds' => $resendCooldownForType,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -275,7 +290,7 @@ class OtpController extends Controller
                         $owner->phone_verified = true;
                         $owner->save();
                     }
-                    
+
                     // Update Tenant phone verification
                     $tenant = \App\Models\Tenant::where('mobile', $phone)->first();
                     if ($tenant) {
@@ -330,7 +345,7 @@ class OtpController extends Controller
                             'phone_verified' => true
                         ];
                     }
-                    
+
                     // Check if it's an owner
                     $owner = \App\Models\Owner::where('phone', $phone)->first();
                     if ($owner) {
@@ -418,7 +433,6 @@ class OtpController extends Controller
                     'max_attempts' => $maxAttempts,
                 ], 422);
             }
-
         } catch (\Exception $e) {
             \Log::error('OTP verification error', [
                 'phone' => $phone,
@@ -523,7 +537,8 @@ class OtpController extends Controller
                             'user_id' => $userId ?? optional($request->user())->id,
                             'session_id' => session()->getId(),
                         ]);
-                    } catch (\Exception $e) {}
+                    } catch (\Exception $e) {
+                    }
 
                     return response()->json([
                         'success' => false,
@@ -575,18 +590,32 @@ class OtpController extends Controller
                     'session_id' => session()->getId(),
                     'reason' => 'resend',
                 ]);
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
 
-            // TODO: Integrate with SMS service
+            // Send SMS via SMS service
+            $smsService = new \App\Services\SmsService();
+            $smsResult = $smsService->sendSms($phone, "Your OTP is: {$otp->otp}. Valid for {$settings->otp_expiry_minutes} minutes. - Bari Manager");
+
+            // Log SMS result
+            \Log::info('OTP Resend SMS result', [
+                'phone' => $phone,
+                'otp' => $otp->otp,
+                'sms_success' => $smsResult['success'] ?? false,
+                'sms_message' => $smsResult['message'] ?? 'No message',
+                'sms_response' => $smsResult
+            ]);
+
             return response()->json([
                 'success' => true,
-                'message' => 'OTP resent successfully',
-                'otp' => $otp->otp, // Remove this in production
+                'message' => $smsResult['success'] ? 'OTP resent successfully via SMS' : 'OTP regenerated but SMS delivery failed',
+                'otp' => $otp->otp, // Keep for testing
+                'sms_delivery' => $smsResult['success'] ?? false,
+                'sms_message' => $smsResult['message'] ?? 'SMS not sent',
                 'expires_in' => $settings->otp_expiry_minutes, // minutes
                 'expires_in_seconds' => $settings->otp_expiry_minutes * 60,
                 'resend_in_seconds' => $cooldownSeconds,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

@@ -739,6 +739,9 @@
             <a href="{{ route('admin.settings.email-configuration') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-envelope me-2"></i>Email Config
             </a>
+            <a href="{{ route('admin.templates.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-layer-group me-2"></i>Template Management
+            </a>
             <a href="{{ route('admin.settings.seo') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-search me-2"></i>SEO Settings
             </a>
@@ -965,21 +968,9 @@
                             </a>
                         </li>
                         <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.template.groups.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.template.groups') }}">
-                                <i class="fas fa-layer-group me-2"></i>Template Groups
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.email.templates.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.email.templates') }}">
-                                <i class="fas fa-envelope me-2"></i>Email Templates
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.sms.templates.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.sms.templates') }}">
-                                <i class="fas fa-sms me-2"></i>SMS Templates
+                            <a class="submenu-link {{ request()->routeIs('admin.templates.*') ? 'active' : '' }}"
+                               href="{{ route('admin.templates.index') }}">
+                                <i class="fas fa-layer-group me-2"></i>Template Management
                             </a>
                         </li>
                         <li class="submenu-item">

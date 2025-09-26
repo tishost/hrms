@@ -44,17 +44,6 @@ Route::post('/test-csrf', function () {
     return response()->json(['success' => true, 'message' => 'CSRF working']);
 })->name('test.csrf');
 
-// Test template save route outside admin middleware
-Route::post('/test-template-save', function (\Illuminate\Http\Request $request) {
-    return response()->json([
-        'success' => true,
-        'message' => 'Template save test working',
-        'data' => $request->all()
-    ]);
-})->name('test.template.save');
-
-// Test template save route with same controller but outside admin middleware
-Route::post('/test-template-save-admin', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('test.template.save.admin');
 
 // Simple CSRF test route
 Route::post('/test-csrf-simple', function (\Illuminate\Http\Request $request) {
@@ -138,82 +127,6 @@ Route::get('/test-owner-creation', function (\Illuminate\Http\Request $request) 
     }
 })->name('test.owner.creation');
 
-Route::get('/test-save-template', function (\Illuminate\Http\Request $request) {
-    $action = $request->get('action');
-    $templateName = $request->get('template_name');
-
-    // Handle GET action (load template)
-    if ($action === 'get' && $templateName) {
-        try {
-            // Try different possible key formats
-            $template = \App\Models\SystemSetting::where('key', 'template_' . $templateName)
-                ->orWhere('key', $templateName)
-                ->orWhere('key', $templateName . '_template')
-                ->first();
-
-            if ($template) {
-                $templateData = json_decode($template->value, true);
-                return response()->json([
-                    'success' => true,
-                    'template' => $templateData
-                ]);
-            } else {
-                // Debug: Log what we're looking for
-                \Log::info('Template not found for: ' . $templateName);
-                \Log::info('Available templates: ' . \App\Models\SystemSetting::where('key', 'like', '%template%')->orWhere('key', 'like', '%_email')->orWhere('key', 'like', '%_sms')->pluck('key')->toJson());
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Template not found'
-                ]);
-            }
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error loading template: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    // Handle save action
-    $content = $request->get('content');
-    $subject = $request->get('subject');
-
-    if ($templateName && $content) {
-        try {
-            $templateData = [];
-
-            // Check if it's an SMS template (contains '_sms' in name)
-            if (str_contains($templateName, '_sms')) {
-                $templateData = ['content' => $content];
-            } else {
-                // Email template
-                $templateData = [
-                    'subject' => $subject ?? 'HRMS Notification',
-                    'content' => $content
-                ];
-            }
-
-            $result = \App\Models\SystemSetting::setValue('template_' . $templateName, json_encode($templateData));
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Template saved successfully!',
-                'id' => $result->id
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to save template: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    return response()->json([
-        'success' => false,
-        'message' => 'Missing template parameters'
-    ]);
-})->name('test.save.template');
 
 // Debug route for testing features_css
 Route::get('/debug-plans', function () {
@@ -440,9 +353,6 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('otp-settings/toggle', [App\Http\Controllers\Admin\OtpSettingsController::class, 'toggle'])->name('otp-settings.toggle');
 
     // Notification Settings
-    Route::get('settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getTemplate'])->name('notifications.template.get');
-    Route::match(['GET', 'POST'], 'settings/notifications/template', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplate'])->name('notifications.template.save');
-    Route::post('settings/notifications/template/save', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'saveTemplates'])->name('settings.notifications.template.save');
     Route::get('settings/notifications/log', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'viewLog'])->name('notifications.log.view');
     Route::get('settings/notifications/log/details', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'getLogDetails'])->name('notifications.log.details');
 
@@ -565,6 +475,29 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
     Route::post('settings/email-configuration/test', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'testEmail'])->name('settings.email-configuration.test');
     Route::get('settings/email-configuration/debug', [App\Http\Controllers\Admin\EmailConfigurationController::class, 'debugEmailSettings'])->name('settings.email-configuration.debug');
 
+    // Templates Management (Common Controller)
+    Route::get('templates', [App\Http\Controllers\Admin\TemplateController::class, 'index'])->name('templates.index');
+    
+    // Email Templates
+    Route::get('templates/email', [App\Http\Controllers\Admin\TemplateController::class, 'emailIndex'])->name('templates.email.index');
+    Route::get('templates/email/create', [App\Http\Controllers\Admin\TemplateController::class, 'createEmail'])->name('templates.email.create');
+    Route::post('templates/email', [App\Http\Controllers\Admin\TemplateController::class, 'storeEmail'])->name('templates.email.store');
+    Route::get('templates/email/{emailTemplate}', [App\Http\Controllers\Admin\TemplateController::class, 'showEmail'])->name('templates.email.show');
+    Route::get('templates/email/{emailTemplate}/edit', [App\Http\Controllers\Admin\TemplateController::class, 'editEmail'])->name('templates.email.edit');
+    Route::put('templates/email/{emailTemplate}', [App\Http\Controllers\Admin\TemplateController::class, 'updateEmail'])->name('templates.email.update');
+    Route::delete('templates/email/{emailTemplate}', [App\Http\Controllers\Admin\TemplateController::class, 'destroyEmail'])->name('templates.email.destroy');
+    Route::patch('templates/email/{emailTemplate}/toggle-status', [App\Http\Controllers\Admin\TemplateController::class, 'toggleEmailStatus'])->name('templates.email.toggle-status');
+    
+    // SMS Templates
+    Route::get('templates/sms', [App\Http\Controllers\Admin\TemplateController::class, 'smsIndex'])->name('templates.sms.index');
+    Route::get('templates/sms/create', [App\Http\Controllers\Admin\TemplateController::class, 'createSms'])->name('templates.sms.create');
+    Route::post('templates/sms', [App\Http\Controllers\Admin\TemplateController::class, 'storeSms'])->name('templates.sms.store');
+    Route::get('templates/sms/{smsTemplate}', [App\Http\Controllers\Admin\TemplateController::class, 'showSms'])->name('templates.sms.show');
+    Route::get('templates/sms/{smsTemplate}/edit', [App\Http\Controllers\Admin\TemplateController::class, 'editSms'])->name('templates.sms.edit');
+    Route::put('templates/sms/{smsTemplate}', [App\Http\Controllers\Admin\TemplateController::class, 'updateSms'])->name('templates.sms.update');
+    Route::delete('templates/sms/{smsTemplate}', [App\Http\Controllers\Admin\TemplateController::class, 'destroySms'])->name('templates.sms.destroy');
+    Route::patch('templates/sms/{smsTemplate}/toggle-status', [App\Http\Controllers\Admin\TemplateController::class, 'toggleSmsStatus'])->name('templates.sms.toggle-status');
+
     // Tickets Management
     Route::get('tickets', [App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets.index');
     Route::get('tickets/{ticket}', [App\Http\Controllers\Admin\TicketController::class, 'show'])->name('tickets.show');
@@ -614,9 +547,6 @@ Route::middleware(['auth', 'super.admin', 'refresh.session'])->prefix('admin')->
 
     // Notification Settings Routes
     Route::get('settings/notifications', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'index'])->name('settings.notifications');
-    Route::get('settings/template-groups', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'templateGroups'])->name('settings.template.groups');
-    Route::get('settings/email-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'emailTemplates'])->name('settings.email.templates');
-    Route::get('settings/sms-templates', [App\Http\Controllers\Admin\NotificationSettingsController::class, 'smsTemplates'])->name('settings.sms.templates');
 });
 
 // API OTP Settings Route (Public)
