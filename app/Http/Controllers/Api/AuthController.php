@@ -1077,9 +1077,18 @@ class AuthController extends Controller
             $softDeletedOwner = null;
             $softDeletedTenant = null;
 
+            // Search for soft deleted owners and tenants by email
+            $softDeletedOwner = Owner::onlyTrashed()->where('email', $request->email)->first();
+            $softDeletedTenant = Tenant::onlyTrashed()->where('email', $request->email)->first();
+
+            // Also search by phone if provided
             if ($request->phone) {
-                $softDeletedOwner = Owner::onlyTrashed()->where('phone', $request->phone)->first();
-                $softDeletedTenant = Tenant::onlyTrashed()->where('mobile', $request->phone)->first();
+                if (!$softDeletedOwner) {
+                    $softDeletedOwner = Owner::onlyTrashed()->where('phone', $request->phone)->first();
+                }
+                if (!$softDeletedTenant) {
+                    $softDeletedTenant = Tenant::onlyTrashed()->where('mobile', $request->phone)->first();
+                }
             }
 
             if (!$softDeletedUser && !$softDeletedOwner && !$softDeletedTenant) {
