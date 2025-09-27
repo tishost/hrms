@@ -30,7 +30,7 @@ class SmsTemplateListener
             'user_name' => $event->user->name,
             'user_email' => $event->user->email,
             'created_at' => $event->user->created_at->format('Y-m-d H:i:s'),
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -44,7 +44,7 @@ class SmsTemplateListener
             'amount' => $event->amount,
             'transaction_id' => $event->transactionId,
             'payment_date' => now()->format('Y-m-d H:i:s'),
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -59,7 +59,7 @@ class SmsTemplateListener
             'amount' => $event->amount,
             'due_date' => $event->dueDate,
             'generated_date' => now()->format('Y-m-d H:i:s'),
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -73,7 +73,7 @@ class SmsTemplateListener
             'notification_title' => $event->title,
             'notification_message' => $event->message,
             'notification_date' => now()->format('Y-m-d H:i:s'),
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -86,7 +86,7 @@ class SmsTemplateListener
             'tenant_name' => $event->user->name,
             'invitation_link' => $event->invitationLink,
             'property_name' => $event->propertyName,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -100,7 +100,7 @@ class SmsTemplateListener
             'notification_type' => $event->type,
             'message' => $event->message,
             'property_name' => $event->propertyName,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -115,7 +115,7 @@ class SmsTemplateListener
             'rent_amount' => $event->rentAmount,
             'due_date' => $event->dueDate,
             'days_remaining' => $event->daysRemaining,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -132,7 +132,7 @@ class SmsTemplateListener
             'priority' => $event->priority,
             'issue_description' => $event->issueDescription,
             'submitted_date' => now()->format('Y-m-d H:i:s'),
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -146,7 +146,7 @@ class SmsTemplateListener
             'reset_link' => $event->resetLink,
             'otp' => $event->otp,
             'expiry_minutes' => $event->expiryMinutes,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -158,7 +158,7 @@ class SmsTemplateListener
         $this->sendTemplateSms('account_verification', $event->user, [
             'user_name' => $event->user->name,
             'verification_link' => $event->verificationLink,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 
@@ -182,7 +182,7 @@ class SmsTemplateListener
             'minutes' => $event->minutes,
             'phone' => $event->phone,
             'verification_type' => $event->type,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName()
         ]);
     }
 

@@ -54,15 +54,35 @@ class NotificationHelper
      */
     public static function sendSms($to, $message, $variables = [])
     {
-        return self::getService()->sendSms($to, $message, null, $variables);
+        // Use SmsService instead of NotificationService for better reliability
+        try {
+            $smsService = new \App\Services\SmsService();
+            $result = $smsService->sendSms($to, $message);
+            
+            // Log the SMS result
+            \Log::info('SMS sent via SmsService', [
+                'to' => $to,
+                'message' => $message,
+                'success' => $result['success'] ?? false,
+                'response' => $result
+            ]);
+            
+            return $result;
+        } catch (\Exception $e) {
+            \Log::error('SMS sending failed via SmsService: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'SMS sending failed: ' . $e->getMessage()
+            ];
+        }
     }
 
     /**
      * Send Email notification
      */
-    public static function sendEmail($to, $subject, $content, $variables = [])
+    public static function sendEmail($to, $subject, $content, $template = null, $variables = [])
     {
-        return self::getService()->sendEmail($to, $subject, $content, null, $variables);
+        return self::getService()->sendEmail($to, $subject, $content, $template, $variables);
     }
 
     /**
@@ -86,8 +106,8 @@ class NotificationHelper
             $subject = self::replaceVariables($template['subject'], $variables);
             $content = self::replaceVariables($template['content'], $variables);
 
-            // Send email
-            return self::sendEmail($to, $subject, $content);
+            // Send email with template name
+            return self::sendEmail($to, $subject, $content, $templateName, $variables);
         } elseif ($type === 'sms') {
             // Check if SMS notification is enabled
             if (!self::isSmsNotificationEnabled($templateName)) {
@@ -108,8 +128,8 @@ class NotificationHelper
                 $content = substr($content, 0, $template['character_limit'] - 3) . '...';
             }
 
-            // Send SMS
-            return self::sendSms($to, $content, $variables);
+            // Send SMS with template name
+            return self::sendSms($to, $content, $templateName, $variables);
         }
 
         return ['success' => false, 'message' => 'Invalid notification type'];
@@ -316,7 +336,7 @@ class NotificationHelper
         // Replace variables in template
         $variables = [
             'otp' => $otp,
-            'company_name' => config('app.name', 'HRMS'),
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName(),
             'minutes' => $otpSettings->otp_expiry_minutes
         ];
 

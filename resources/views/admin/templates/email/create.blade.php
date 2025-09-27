@@ -472,6 +472,264 @@
     border-color: #4e73df !important;
     box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25) !important;
 }
+
+/* HTML Email Preview Styling for Create View */
+.email-html-preview {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    background: #ffffff;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.email-html-preview h1,
+.email-html-preview h2,
+.email-html-preview h3,
+.email-html-preview h4,
+.email-html-preview h5,
+.email-html-preview h6 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.email-html-preview h1 { font-size: 28px; }
+.email-html-preview h2 { font-size: 24px; }
+.email-html-preview h3 { font-size: 20px; }
+.email-html-preview h4 { font-size: 18px; }
+.email-html-preview h5 { font-size: 16px; }
+.email-html-preview h6 { font-size: 14px; }
+
+.email-html-preview p {
+    margin-bottom: 16px;
+    color: #555;
+}
+
+.email-html-preview a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.email-html-preview a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.email-html-preview ul,
+.email-html-preview ol {
+    margin-bottom: 16px;
+    padding-left: 20px;
+}
+
+.email-html-preview li {
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.email-html-preview blockquote {
+    border-left: 4px solid #007bff;
+    margin: 16px 0;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    font-style: italic;
+}
+
+.email-html-preview .btn,
+.email-html-preview button {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.email-html-preview .btn:hover,
+.email-html-preview button:hover {
+    background: #0056b3;
+}
+
+.email-html-preview .btn-secondary {
+    background: #6c757d;
+}
+
+.email-html-preview .btn-secondary:hover {
+    background: #545b62;
+}
+
+.email-html-preview .btn-success {
+    background: #28a745;
+}
+
+.email-html-preview .btn-success:hover {
+    background: #1e7e34;
+}
+
+.email-html-preview .btn-danger {
+    background: #dc3545;
+}
+
+.email-html-preview .btn-danger:hover {
+    background: #c82333;
+}
+
+.email-html-preview .alert {
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+
+.email-html-preview .alert-success {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.email-html-preview .alert-danger {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.email-html-preview .alert-warning {
+    background: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+.email-html-preview .alert-info {
+    background: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.email-html-preview .card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin: 16px 0;
+    overflow: hidden;
+}
+
+.email-html-preview .card-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 600;
+}
+
+.email-html-preview .card-body {
+    padding: 16px;
+}
+
+.email-html-preview .card-footer {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-top: 1px solid #e9ecef;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.email-html-preview .text-center { text-align: center; }
+.email-html-preview .text-left { text-align: left; }
+.email-html-preview .text-right { text-align: right; }
+
+.email-html-preview .text-primary { color: #007bff; }
+.email-html-preview .text-success { color: #28a745; }
+.email-html-preview .text-danger { color: #dc3545; }
+.email-html-preview .text-warning { color: #ffc107; }
+.email-html-preview .text-info { color: #17a2b8; }
+.email-html-preview .text-muted { color: #6c757d; }
+
+.email-html-preview .bg-primary { background-color: #007bff; color: white; }
+.email-html-preview .bg-success { background-color: #28a745; color: white; }
+.email-html-preview .bg-danger { background-color: #dc3545; color: white; }
+.email-html-preview .bg-warning { background-color: #ffc107; color: #212529; }
+.email-html-preview .bg-info { background-color: #17a2b8; color: white; }
+.email-html-preview .bg-light { background-color: #f8f9fa; color: #212529; }
+.email-html-preview .bg-dark { background-color: #343a40; color: white; }
+
+.email-html-preview .border { border: 1px solid #dee2e6; }
+.email-html-preview .border-primary { border-color: #007bff; }
+.email-html-preview .border-success { border-color: #28a745; }
+.email-html-preview .border-danger { border-color: #dc3545; }
+.email-html-preview .border-warning { border-color: #ffc107; }
+.email-html-preview .border-info { border-color: #17a2b8; }
+
+.email-html-preview .rounded { border-radius: 4px; }
+.email-html-preview .rounded-lg { border-radius: 8px; }
+.email-html-preview .rounded-circle { border-radius: 50%; }
+
+.email-html-preview .shadow { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+.email-html-preview .shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+.email-html-preview .shadow-lg { box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175); }
+
+.email-html-preview .mt-1 { margin-top: 0.25rem; }
+.email-html-preview .mt-2 { margin-top: 0.5rem; }
+.email-html-preview .mt-3 { margin-top: 1rem; }
+.email-html-preview .mt-4 { margin-top: 1.5rem; }
+.email-html-preview .mt-5 { margin-top: 3rem; }
+
+.email-html-preview .mb-1 { margin-bottom: 0.25rem; }
+.email-html-preview .mb-2 { margin-bottom: 0.5rem; }
+.email-html-preview .mb-3 { margin-bottom: 1rem; }
+.email-html-preview .mb-4 { margin-bottom: 1.5rem; }
+.email-html-preview .mb-5 { margin-bottom: 3rem; }
+
+.email-html-preview .p-1 { padding: 0.25rem; }
+.email-html-preview .p-2 { padding: 0.5rem; }
+.email-html-preview .p-3 { padding: 1rem; }
+.email-html-preview .p-4 { padding: 1.5rem; }
+.email-html-preview .p-5 { padding: 3rem; }
+
+.email-html-preview .container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.email-html-preview .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px;
+}
+
+.email-html-preview .col,
+.email-html-preview .col-1,
+.email-html-preview .col-2,
+.email-html-preview .col-3,
+.email-html-preview .col-4,
+.email-html-preview .col-5,
+.email-html-preview .col-6,
+.email-html-preview .col-7,
+.email-html-preview .col-8,
+.email-html-preview .col-9,
+.email-html-preview .col-10,
+.email-html-preview .col-11,
+.email-html-preview .col-12 {
+    padding: 0 15px;
+    flex: 1;
+}
+
+.email-html-preview .col-1 { flex: 0 0 8.333333%; }
+.email-html-preview .col-2 { flex: 0 0 16.666667%; }
+.email-html-preview .col-3 { flex: 0 0 25%; }
+.email-html-preview .col-4 { flex: 0 0 33.333333%; }
+.email-html-preview .col-5 { flex: 0 0 41.666667%; }
+.email-html-preview .col-6 { flex: 0 0 50%; }
+.email-html-preview .col-7 { flex: 0 0 58.333333%; }
+.email-html-preview .col-8 { flex: 0 0 66.666667%; }
+.email-html-preview .col-9 { flex: 0 0 75%; }
+.email-html-preview .col-10 { flex: 0 0 83.333333%; }
+.email-html-preview .col-11 { flex: 0 0 91.666667%; }
+.email-html-preview .col-12 { flex: 0 0 100%; }
 </style>
 @endpush
 
@@ -593,7 +851,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <textarea id="code-view-textarea" class="code-view-textarea" style="display: none; min-height: 350px; width: 100%; border: 1px solid #dee2e6; padding: 20px; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.4; background: #f8f9fa; resize: vertical;">${htmlContentField.value || '<p>Start typing your HTML email content here...</p>'}</textarea>
                 <div id="preview-panel" class="preview-panel" style="display: none;">
                     <h6>Preview:</h6>
-                    <div id="preview-content" class="preview-content"></div>
+                    <div id="preview-content" class="preview-content email-html-preview"></div>
                 </div>
             </div>
         `;

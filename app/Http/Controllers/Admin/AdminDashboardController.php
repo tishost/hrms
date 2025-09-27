@@ -552,7 +552,7 @@ class AdminDashboardController extends Controller
                     if ($owner->user->phone) {
                         $result = \App\Helpers\NotificationHelper::sendSms(
                             $owner->user->phone,
-                            $message ?: 'This is a test SMS from HRMS admin panel.'
+                            $message ?: 'This is a test SMS from ' . \App\Helpers\SystemHelper::getCompanyName() . ' admin panel.'
                         );
                     }
                     break;
@@ -569,15 +569,19 @@ class AdminDashboardController extends Controller
         $owner = \App\Models\Owner::with('user')->findOrFail($id);
 
         try {
-            $result = \App\Helpers\NotificationHelper::sendEmail(
+            // Use template system for professional email with header/footer
+            $result = \App\Helpers\NotificationHelper::sendTemplate(
+                'email',
                 $owner->user->email,
-                'Test Email from HRMS Admin',
-                'This is a test email sent from the HRMS admin panel. If you receive this, the email system is working correctly.',
-                null,
-                ['name' => $owner->user->name]
+                'welcome_email', // Use welcome template for professional look
+                [
+                    'user_name' => $owner->user->name,
+                    'user_email' => $owner->user->email,
+                    'created_at' => now()->format('Y-m-d H:i:s')
+                ]
             );
 
-            return response()->json(['success' => true, 'message' => 'Test email sent successfully']);
+            return response()->json(['success' => true, 'message' => 'Test email sent successfully with header and footer']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -594,7 +598,7 @@ class AdminDashboardController extends Controller
         try {
             $result = \App\Helpers\NotificationHelper::sendSms(
                 $owner->user->phone,
-                'This is a test SMS from HRMS admin panel. If you receive this, the SMS system is working correctly.'
+                'This is a test SMS from ' . \App\Helpers\SystemHelper::getCompanyName() . ' admin panel. If you receive this, the SMS system is working correctly.'
             );
 
             return response()->json(['success' => true, 'message' => 'Test SMS sent successfully']);
@@ -610,16 +614,76 @@ class AdminDashboardController extends Controller
 
         try {
             if ($notificationLog->type === 'email') {
-                $result = \App\Helpers\NotificationHelper::sendEmail(
-                    $notificationLog->recipient,
-                    'Resent: ' . ($notificationLog->template_name ?? 'Notification'),
-                    $notificationLog->content
-                );
+                // Try to use template system if template_name exists
+                if ($notificationLog->template_name) {
+                    // Get the email template
+                    $emailTemplate = \App\Models\EmailTemplate::where('key', $notificationLog->template_name)->first();
+                    if ($emailTemplate) {
+                        // Use template system with proper variables
+                        $variables = [
+                            'user_name' => $owner->user->name,
+                            'owner_name' => $owner->user->name,
+                            'company_name' => \App\Helpers\SystemHelper::getCompanyName(),
+                            'site_url' => config('app.url'),
+                            'support_email' => config('mail.from.address')
+                        ];
+                        
+                        $result = \App\Helpers\NotificationHelper::sendTemplate(
+                            'email',
+                            $notificationLog->recipient,
+                            $notificationLog->template_name,
+                            $variables
+                        );
+                    } else {
+                        // Fallback to direct email
+                        $result = \App\Helpers\NotificationHelper::sendEmail(
+                            $notificationLog->recipient,
+                            'Resent: ' . ($notificationLog->template_name ?? 'Notification'),
+                            $notificationLog->content
+                        );
+                    }
+                } else {
+                    // No template, send direct email
+                    $result = \App\Helpers\NotificationHelper::sendEmail(
+                        $notificationLog->recipient,
+                        'Resent: Notification',
+                        $notificationLog->content
+                    );
+                }
             } elseif ($notificationLog->type === 'sms') {
-                $result = \App\Helpers\NotificationHelper::sendSms(
-                    $notificationLog->recipient,
-                    $notificationLog->content
-                );
+                // Try to use template system if template_name exists
+                if ($notificationLog->template_name) {
+                    // Get the SMS template
+                    $smsTemplate = \App\Models\SmsTemplate::where('key', $notificationLog->template_name)->first();
+                    if ($smsTemplate) {
+                        // Use template system with proper variables
+                        $variables = [
+                            'user_name' => $owner->user->name,
+                            'owner_name' => $owner->user->name,
+                            'company_name' => \App\Helpers\SystemHelper::getCompanyName(),
+                            'phone' => $notificationLog->recipient
+                        ];
+                        
+                        $result = \App\Helpers\NotificationHelper::sendTemplate(
+                            'sms',
+                            $notificationLog->recipient,
+                            $notificationLog->template_name,
+                            $variables
+                        );
+                    } else {
+                        // Fallback to direct SMS
+                        $result = \App\Helpers\NotificationHelper::sendSms(
+                            $notificationLog->recipient,
+                            $notificationLog->content
+                        );
+                    }
+                } else {
+                    // No template, send direct SMS
+                    $result = \App\Helpers\NotificationHelper::sendSms(
+                        $notificationLog->recipient,
+                        $notificationLog->content
+                    );
+                }
             }
 
             // Update the notification log
@@ -628,7 +692,7 @@ class AdminDashboardController extends Controller
                 'sent_at' => now()
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Notification resent successfully']);
+            return response()->json(['success' => true, 'message' => 'Notification resent successfully using template system']);
         } catch (\Exception $e) {
             // Update the notification log with failed status
             $notificationLog->update([

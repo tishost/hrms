@@ -212,18 +212,12 @@ class OtpController extends Controller
             } catch (\Exception $e) {
             }
 
-<<<<<<< HEAD
-            // Send SMS via SMS service
-            $smsService = new \App\Services\SmsService();
-            $smsResult = $smsService->sendSms($phone, "Your OTP is: {$otp->otp}. Valid for {$otpSettings->otp_expiry_minutes} minutes. - Bari Manager");
-=======
             // Send SMS via NotificationHelper using template system
             $smsResult = \App\Helpers\NotificationHelper::sendOtpSms($phone, $otp->otp);
 
             // Dispatch OTP sent event for template system
             $user = $userId ? \App\Models\User::find($userId) : null;
             event(new \App\Events\OtpSent($user, $otp->otp, $phone, $type, $otpSettings->otp_expiry_minutes));
->>>>>>> 57581d168e4ee0ce6f427d641649f3b806477e32
 
             // Log SMS result
             \Log::info('OTP SMS send result', [
@@ -619,18 +613,12 @@ class OtpController extends Controller
             } catch (\Exception $e) {
             }
 
-<<<<<<< HEAD
-            // Send SMS via SMS service
-            $smsService = new \App\Services\SmsService();
-            $smsResult = $smsService->sendSms($phone, "Your OTP is: {$otp->otp}. Valid for {$settings->otp_expiry_minutes} minutes. - Bari Manager");
-=======
             // Send SMS via NotificationHelper using template system
             $smsResult = \App\Helpers\NotificationHelper::sendOtpSms($phone, $otp->otp);
 
             // Dispatch OTP sent event for template system
             $user = $userId ? \App\Models\User::find($userId) : null;
             event(new \App\Events\OtpSent($user, $otp->otp, $phone, 'resend', $settings->otp_expiry_minutes));
->>>>>>> 57581d168e4ee0ce6f427d641649f3b806477e32
 
             // Log SMS result
             \Log::info('OTP Resend SMS result', [

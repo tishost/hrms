@@ -75,7 +75,7 @@ class SystemHelper
      */
     public static function getCompanyName()
     {
-        return self::getSetting('company_name', 'HRMS');
+        return self::getSetting('company_name', 'BariManager');
     }
 
     /**

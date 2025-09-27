@@ -100,17 +100,43 @@ class NotificationService
             return ['success' => false, 'message' => 'Email notifications are disabled'];
         }
 
-        // Replace variables in subject and content
-        $subject = $this->replaceVariables($subject, $variables);
-        $content = $this->replaceVariables($content, $variables);
-
         try {
-            Mail::raw($content, function ($message) use ($to, $subject) {
-                $message->to($to)
-                        ->subject($subject);
-            });
+            $companyName = \App\Helpers\SystemHelper::getCompanyName();
+            
+            // If template is provided, use template system with header/footer
+            if ($template) {
+                $emailTemplate = \App\Models\EmailTemplate::where('key', $template)->first();
+                if ($emailTemplate) {
+                    // Use TemplateEmail Mailable for proper header/footer
+                    Mail::to($to)->send(new \App\Mail\TemplateEmail($emailTemplate, $variables));
+                    $this->logNotification('email', $to, $content, 'sent', null, $template);
+                    return ['success' => true, 'message' => 'Email sent successfully using template system'];
+                }
+            }
+            
+            // Fallback to direct email without template
+            // Replace variables in subject and content
+            $subject = $this->replaceVariables($subject, $variables);
+            $content = $this->replaceVariables($content, $variables);
+            
+            // Check if content is HTML
+            if (strpos($content, '<html') !== false || strpos($content, '<!DOCTYPE') !== false || strpos($content, '<h1') !== false || strpos($content, '<p') !== false) {
+                // Send as HTML email
+                Mail::html($content, function ($message) use ($to, $subject, $companyName) {
+                    $message->to($to)
+                            ->subject($subject)
+                            ->from(config('mail.from.address'), $companyName);
+                });
+            } else {
+                // Send as plain text email
+                Mail::raw($content, function ($message) use ($to, $subject, $companyName) {
+                    $message->to($to)
+                            ->subject($subject)
+                            ->from(config('mail.from.address'), $companyName);
+                });
+            }
 
-            $this->logNotification('email', $to, $content, 'sent');
+            $this->logNotification('email', $to, $content, 'sent', null, $template);
             return ['success' => true, 'message' => 'Email sent successfully'];
         } catch (\Exception $e) {
             $this->logNotification('email', $to, $content, 'failed', $e->getMessage());
@@ -312,7 +338,7 @@ class NotificationService
     /**
      * Log notification
      */
-    private function logNotification($type, $recipient, $content, $status, $error = null)
+    private function logNotification($type, $recipient, $content, $status, $error = null, $templateName = null)
     {
         try {
             NotificationLog::create([
@@ -323,6 +349,7 @@ class NotificationService
                 'status' => $status,
                 'sent_at' => $status === 'sent' ? now() : null,
                 'source' => 'system',
+                'template_name' => $templateName,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to log notification: ' . $e->getMessage());
@@ -392,7 +419,8 @@ class NotificationService
      */
     public function testSms($phone)
     {
-        return $this->sendSms($phone, 'This is a test SMS from HRMS notification system.');
+        $companyName = \App\Helpers\SystemHelper::getCompanyName();
+        return $this->sendSms($phone, 'This is a test SMS from ' . $companyName . ' notification system.');
     }
 
     /**
@@ -400,6 +428,7 @@ class NotificationService
      */
     public function testEmail($email)
     {
-        return $this->sendEmail($email, 'HRMS Test Email', 'This is a test email from HRMS notification system.');
+        $companyName = \App\Helpers\SystemHelper::getCompanyName();
+        return $this->sendEmail($email, $companyName . ' Test Email', 'This is a test email from ' . $companyName . ' notification system.');
     }
 }
