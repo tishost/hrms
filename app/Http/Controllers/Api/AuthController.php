@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Owner;
-use App\Models\Tenant;
 use App\Http\Requests\OwnerRegistrationRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
@@ -788,8 +787,8 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Check in owners table (conditionally support 'mobile'/'phone') - exclude soft deleted
-            $ownerQuery = DB::table('owners')->whereNull('deleted_at');
+            // Check in owners table (conditionally support 'mobile'/'phone')
+            $ownerQuery = DB::table('owners');
             $ownerHasMobile = Schema::hasColumn('owners', 'mobile');
             $ownerHasPhone  = Schema::hasColumn('owners', 'phone');
             if ($ownerHasMobile && $ownerHasPhone) {
@@ -815,56 +814,6 @@ class AuthController extends Controller
                         'mobile' => $owner->mobile ?? $owner->phone,
                     ]
                 ]);
-            }
-
-            // Check for soft deleted accounts
-            $softDeletedTenant = DB::table('tenants')->whereNotNull('deleted_at');
-            $softDeletedOwner = DB::table('owners')->whereNotNull('deleted_at');
-
-            // Check soft deleted tenant
-            $tenantHasMobile = Schema::hasColumn('tenants', 'mobile');
-            $tenantHasPhone  = Schema::hasColumn('tenants', 'phone');
-            if ($tenantHasMobile && $tenantHasPhone) {
-                $softDeletedTenant->where(function ($q) use ($mobile) {
-                    $q->where('mobile', $mobile)->orWhere('phone', $mobile);
-                });
-            } elseif ($tenantHasMobile) {
-                $softDeletedTenant->where('mobile', $mobile);
-            } elseif ($tenantHasPhone) {
-                $softDeletedTenant->where('phone', $mobile);
-            } else {
-                $softDeletedTenant->whereRaw('1=0');
-            }
-            $softDeletedTenantResult = $softDeletedTenant->first();
-
-            // Check soft deleted owner
-            $ownerHasMobile = Schema::hasColumn('owners', 'mobile');
-            $ownerHasPhone  = Schema::hasColumn('owners', 'phone');
-            if ($ownerHasMobile && $ownerHasPhone) {
-                $softDeletedOwner->where(function ($q) use ($mobile) {
-                    $q->where('mobile', $mobile)->orWhere('phone', $mobile);
-                });
-            } elseif ($ownerHasMobile) {
-                $softDeletedOwner->where('mobile', $mobile);
-            } elseif ($ownerHasPhone) {
-                $softDeletedOwner->where('phone', $mobile);
-            } else {
-                $softDeletedOwner->whereRaw('1=0');
-            }
-            $softDeletedOwnerResult = $softDeletedOwner->first();
-
-            if ($softDeletedTenantResult || $softDeletedOwnerResult) {
-                $role = $softDeletedTenantResult ? 'tenant' : 'owner';
-                $deletedAt = $softDeletedTenantResult ? $softDeletedTenantResult->deleted_at : $softDeletedOwnerResult->deleted_at;
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'An account with this mobile number already exists but is deactivated.',
-                    'restore_available' => true,
-                    'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
-                    'deleted_at' => $deletedAt,
-                    'role' => $role
-                ], 409);
             }
 
             // Not found in any table
@@ -1025,25 +974,6 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Check for soft deleted accounts
-            $softDeletedTenant = DB::table('tenants')->where('email', $email)->whereNotNull('deleted_at')->first();
-            $softDeletedOwner = DB::table('owners')->where('email', $email)->whereNotNull('deleted_at')->first();
-            $softDeletedUser = User::onlyTrashed()->where('email', $email)->first();
-
-            if ($softDeletedTenant || $softDeletedOwner || $softDeletedUser) {
-                $role = $softDeletedTenant ? 'tenant' : ($softDeletedOwner ? 'owner' : 'user');
-                $deletedAt = $softDeletedTenant ? $softDeletedTenant->deleted_at : ($softDeletedOwner ? $softDeletedOwner->deleted_at : ($softDeletedUser ? $softDeletedUser->deleted_at : null));
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'An account with this email already exists but is deactivated.',
-                    'restore_available' => true,
-                    'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
-                    'deleted_at' => $deletedAt,
-                    'role' => $role
-                ], 409);
-            }
-
             // Not found in any table
             return response()->json([
                 'success' => true,
@@ -1055,88 +985,6 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error checking email: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Restore soft deleted account
-     */
-    public function restoreAccount(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'phone' => 'nullable|string',
-            'confirm_restore' => 'required|boolean|accepted'
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Find soft deleted user
-            $softDeletedUser = User::onlyTrashed()->where('email', $request->email)->first();
-            $softDeletedOwner = null;
-            $softDeletedTenant = null;
-
-            // Search for soft deleted owners and tenants by email
-            $softDeletedOwner = Owner::onlyTrashed()->where('email', $request->email)->first();
-            $softDeletedTenant = Tenant::onlyTrashed()->where('email', $request->email)->first();
-
-            // Also search by phone if provided
-            if ($request->phone) {
-                if (!$softDeletedOwner) {
-                    $softDeletedOwner = Owner::onlyTrashed()->where('phone', $request->phone)->first();
-                }
-                if (!$softDeletedTenant) {
-                    $softDeletedTenant = Tenant::onlyTrashed()->where('mobile', $request->phone)->first();
-                }
-            }
-
-            if (!$softDeletedUser && !$softDeletedOwner && !$softDeletedTenant) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No deactivated account found with this email or phone number.'
-                ], 404);
-            }
-
-            $restoredAccounts = [];
-            $mobileNumber = null;
-
-            // Restore User
-            if ($softDeletedUser) {
-                $softDeletedUser->restore();
-                $restoredAccounts[] = 'User account';
-                $mobileNumber = $softDeletedUser->phone;
-            }
-
-            // Restore Owner
-            if ($softDeletedOwner) {
-                $softDeletedOwner->restore();
-                $restoredAccounts[] = 'Owner account';
-                $mobileNumber = $softDeletedOwner->phone ?? $softDeletedOwner->mobile;
-            }
-
-            // Restore Tenant
-            if ($softDeletedTenant) {
-                $softDeletedTenant->restore();
-                $restoredAccounts[] = 'Tenant account';
-                $mobileNumber = $softDeletedTenant->mobile ?? $softDeletedTenant->phone;
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Account restored successfully!',
-                'restored_accounts' => $restoredAccounts,
-                'user' => $softDeletedUser ? $softDeletedUser->fresh() : null,
-                'mobile_number' => $mobileNumber
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to restore account: ' . $e->getMessage()
             ], 500);
         }
     }
