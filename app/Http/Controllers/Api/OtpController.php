@@ -61,16 +61,15 @@ class OtpController extends Controller
         $softDeletedUser = \App\Models\User::onlyTrashed()->where('phone', $phone)->first();
         $softDeletedOwner = \App\Models\Owner::onlyTrashed()->where('phone', $phone)->first();
         $softDeletedTenant = \App\Models\Tenant::onlyTrashed()->where('mobile', $phone)->first();
-        
+
         if ($softDeletedUser || $softDeletedOwner || $softDeletedTenant) {
             return response()->json([
                 'success' => false,
                 'message' => 'An account with this phone number exists but is deactivated.',
                 'restore_available' => true,
                 'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
-                'deleted_at' => $softDeletedUser ? $softDeletedUser->deleted_at->format('Y-m-d H:i:s') : 
-                               ($softDeletedOwner ? $softDeletedOwner->deleted_at->format('Y-m-d H:i:s') : 
-                               $softDeletedTenant->deleted_at->format('Y-m-d H:i:s'))
+                'deleted_at' => $softDeletedUser ? $softDeletedUser->deleted_at->format('Y-m-d H:i:s') : ($softDeletedOwner ? $softDeletedOwner->deleted_at->format('Y-m-d H:i:s') :
+                        $softDeletedTenant->deleted_at->format('Y-m-d H:i:s'))
             ], 409);
         }
 

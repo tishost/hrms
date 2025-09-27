@@ -38,7 +38,7 @@ class PropertyController extends Controller
             }
 
             $properties = $query->with('units')->orderBy('created_at', 'desc')->get();
-            
+
             // Add dynamic unit counts to each property
             $properties = $properties->map(function ($property) {
                 return [
@@ -67,7 +67,6 @@ class PropertyController extends Controller
                 'success' => true,
                 'properties' => $properties
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to fetch properties',
@@ -84,7 +83,7 @@ class PropertyController extends Controller
         $user = auth()->user();
         $ownerId = $user->owner->id;
         $request->validate([
-            'name' => 'required|string|max:100|unique:properties,name,NULL,id,owner_id,' . $ownerId,
+            'name' => 'required|string|max:100',
             'property_type' => 'required|string',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
@@ -94,25 +93,6 @@ class PropertyController extends Controller
             'total_units' => 'required|integer|min:1',
         ]);
         try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'property_type' => 'required|string|max:255',
-                'address' => 'required|string|max:500',
-                'city' => 'required|string|max:255',
-                'state' => 'required|string|max:255',
-                'zip_code' => 'required|string|max:20',
-                'country' => 'required|string|max:255',
-                'total_units' => 'required|integer|min:1',
-                'description' => 'nullable|string|max:1000',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
             $owner = Auth::user()->owner;
 
             if (!$owner) {
@@ -157,7 +137,6 @@ class PropertyController extends Controller
                 'message' => 'Property created successfully',
                 'property' => $property
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to create property',
@@ -204,7 +183,7 @@ class PropertyController extends Controller
             ->where('owner_id', $ownerId)
             ->firstOrFail();
         $request->validate([
-            'name' => 'required|string|max:100|unique:properties,name,' . $id . ',id,owner_id,' . $ownerId,
+            'name' => 'required|string|max:100',
             'property_type' => 'required|string',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
@@ -214,25 +193,6 @@ class PropertyController extends Controller
             'total_units' => 'required|integer|min:1',
         ]);
         try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'property_type' => 'required|string|max:255',
-                'address' => 'required|string|max:500',
-                'city' => 'required|string|max:255',
-                'state' => 'required|string|max:255',
-                'zip_code' => 'required|string|max:20',
-                'country' => 'required|string|max:255',
-                'total_units' => 'required|integer|min:1',
-                'description' => 'nullable|string|max:1000',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
             $owner = Auth::user()->owner;
 
             if (!$owner) {
@@ -268,7 +228,6 @@ class PropertyController extends Controller
                 'message' => 'Property updated successfully',
                 'property' => $property
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update property',
@@ -339,7 +298,6 @@ class PropertyController extends Controller
                 'success' => true,
                 'message' => 'Property deleted successfully'
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete property',
@@ -427,7 +385,6 @@ class PropertyController extends Controller
                     'total_units' => $totalUnits,
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to fetch property statistics',
