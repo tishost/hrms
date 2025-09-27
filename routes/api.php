@@ -35,14 +35,14 @@ Route::post('/check-tenant-password-status', [AuthController::class, 'checkTenan
 // Public geo endpoints
 Route::get('/districts', function () {
     return response()->json(
-        District::orderBy('name')->select(['id','name'])->get()
+        District::orderBy('name')->select(['id', 'name'])->get()
     );
 });
 Route::get('/districts/{id}/upazilas', function ($id) {
     $rows = DB::table('upazilas')
         ->where('district_id', $id)
         ->orderBy('name')
-        ->select(['id','name'])
+        ->select(['id', 'name'])
         ->get();
     return response()->json($rows);
 });
@@ -140,14 +140,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Owner PDF Routes
     Route::get('/owner/invoices/{id}/pdf-file', [OwnerController::class, 'downloadInvoicePDF']);
     Route::get('/owner/profile', [OwnerController::class, 'profile']);
-    
+
     // Owner Subscription
     Route::get('/owner/subscription', [OwnerController::class, 'getSubscription']);
     Route::post('/subscription/purchase', [ApiSubscriptionController::class, 'purchase']);
     Route::get('/subscription/payment-methods', [ApiSubscriptionController::class, 'paymentMethods']);
     Route::get('/subscription/invoices', [ApiSubscriptionController::class, 'invoices']);
     Route::post('/subscription/checkout', [ApiSubscriptionController::class, 'checkout']);
-    
+
     // Subscription Upgrade Routes
     Route::post('/subscription/upgrade', [ApiSubscriptionController::class, 'upgradePlan']);
     Route::post('/subscription/upgrade/complete/{invoiceId}', [ApiSubscriptionController::class, 'completeUpgrade']);
@@ -180,8 +180,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/tenant/profile/update-personal-info', [TenantDashboardController::class, 'updatePersonalInfo']);
         Route::put('/tenant/profile/update-address', [TenantDashboardController::class, 'updateAddress']);
         Route::get('/tenant/invoices', [TenantDashboardController::class, 'getInvoices']);
-Route::get('/tenant/dashboard', [TenantDashboardController::class, 'getDashboard']);
-Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement']);
+        Route::get('/tenant/dashboard', [TenantDashboardController::class, 'getDashboard']);
+        Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement']);
 
         // Tenant Invoice PDF Routes
         Route::get('/tenant/invoices/{id}/pdf', [TenantController::class, 'getInvoicePDF']);
@@ -210,5 +210,3 @@ Route::get('/tenant/rent-agreement', [TenantController::class, 'getRentAgreement
         Route::get('/fcm-token', [NotificationController::class, 'getFCMToken']);
     });
 });
-
-

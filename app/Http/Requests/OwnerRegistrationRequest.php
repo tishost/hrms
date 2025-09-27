@@ -28,7 +28,7 @@ class OwnerRegistrationRequest extends FormRequest
             'phone' => 'required|string|max:20|unique:owners,phone',
             'district' => 'required|string|max:100',
             'country' => 'nullable|string|max:100',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6',
         ];
 
         // OTP validation disabled for owner registration
@@ -82,7 +82,6 @@ class OwnerRegistrationRequest extends FormRequest
             'country.max' => 'Country name cannot exceed 100 characters.',
             'password.required' => 'Password is required.',
             'password.min' => 'Password must be at least 6 characters.',
-            'password.confirmed' => 'Password confirmation does not match.',
         ];
 
         // OTP validation disabled for owner registration

@@ -165,7 +165,7 @@ class AuthController extends Controller
                     'owner_id' => $owner->id,
                     'email' => $user->email,
                     'phone' => $user->phone,
-                    'emails_sent' => count(array_filter($notificationResults, function($key) {
+                    'emails_sent' => count(array_filter($notificationResults, function ($key) {
                         return strpos($key, 'email') !== false;
                     }, ARRAY_FILTER_USE_KEY)),
                     'sms_sent' => isset($notificationResults['sms']) && $notificationResults['sms']['success']
@@ -224,7 +224,6 @@ class AuthController extends Controller
                 'role' => 'owner',
                 'phone_verified' => $owner->phone_verified
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -265,7 +264,7 @@ class AuthController extends Controller
                 } catch (\Exception $e) {
                     \Log::error('Failed to log login attempt: ' . $e->getMessage());
                 }
-                
+
                 return response()->json([
                     'error' => 'Invalid credentials'
                 ], 401);
@@ -300,7 +299,7 @@ class AuthController extends Controller
                 } catch (\Exception $e) {
                     \Log::error('Failed to log login attempt: ' . $e->getMessage());
                 }
-                
+
                 return response()->json([
                     'error' => 'Unauthorized role'
                 ], 403);
@@ -322,7 +321,6 @@ class AuthController extends Controller
                 'token' => $token,
                 'message' => 'Login successful'
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Login error: ' . $e->getMessage());
             return response()->json([
@@ -335,12 +333,12 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = $request->user();
-        
+
         if ($user) {
             // Log logout
             $this->loginLogService->logLogout($user);
         }
-        
+
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully.']);
     }
@@ -349,20 +347,20 @@ class AuthController extends Controller
     public function killSession(Request $request)
     {
         $user = $request->user();
-        
+
         if ($user) {
             // Log logout
             $this->loginLogService->logLogout($user);
-            
+
             // Delete all tokens for this user (force logout from all devices)
             $user->tokens()->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'All sessions killed successfully. User logged out from all devices.',
             ]);
         }
-        
+
         return response()->json([
             'success' => false,
             'message' => 'No user found.',
@@ -459,7 +457,6 @@ class AuthController extends Controller
                 'success' => true,
                 'user' => $profileData
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Get user profile error: ' . $e->getMessage());
             return response()->json([
@@ -482,7 +479,7 @@ class AuthController extends Controller
 
             // Check if identifier is email or mobile
             $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
-            
+
             if ($isEmail) {
                 // Search by email
                 $user = User::where('email', $identifier)->first();
@@ -513,7 +510,7 @@ class AuthController extends Controller
 
             // Generate OTP for password reset
             $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            
+
             // Store OTP in password_reset_tokens table
             \DB::table('password_reset_tokens')->updateOrInsert(
                 ['email' => $user->email],
@@ -578,7 +575,6 @@ class AuthController extends Controller
                     'results' => $results
                 ], 500);
             }
-
         } catch (\Exception $e) {
             \Log::error('Forgot password error: ' . $e->getMessage());
             return response()->json([
@@ -611,7 +607,7 @@ class AuthController extends Controller
 
             // Check if identifier is email or mobile
             $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
-            
+
             if ($isEmail) {
                 // Search by email
                 $user = User::where('email', $identifier)->first();
@@ -635,7 +631,7 @@ class AuthController extends Controller
                 ->where('token', $otp)
                 ->where('created_at', '>', now()->subMinutes(10))
                 ->first();
-                
+
             if (!$resetToken) {
                 return response()->json([
                     'success' => false,
@@ -647,7 +643,6 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'OTP verified successfully'
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Verify OTP error: ' . $e->getMessage());
             return response()->json([
@@ -674,7 +669,7 @@ class AuthController extends Controller
 
             // Check if identifier is email or mobile
             $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
-            
+
             if ($isEmail) {
                 // Search by email
                 $user = User::where('email', $identifier)->first();
@@ -698,7 +693,7 @@ class AuthController extends Controller
                 ->where('token', $otp)
                 ->where('created_at', '>', now()->subMinutes(10))
                 ->first();
-                
+
             if (!$resetToken) {
                 return response()->json([
                     'success' => false,
@@ -710,7 +705,7 @@ class AuthController extends Controller
             $user->update([
                 'password' => Hash::make($password)
             ]);
-            
+
             // Delete the used reset token
             \DB::table('password_reset_tokens')
                 ->where('email', $user->email)
@@ -723,7 +718,6 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Password reset successfully'
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Reset password error: ' . $e->getMessage());
             return response()->json([
@@ -750,7 +744,7 @@ class AuthController extends Controller
             $tenantHasMobile = Schema::hasColumn('tenants', 'mobile');
             $tenantHasPhone  = Schema::hasColumn('tenants', 'phone');
             if ($tenantHasMobile && $tenantHasPhone) {
-                $tenantQuery->where(function($q) use ($mobile) {
+                $tenantQuery->where(function ($q) use ($mobile) {
                     $q->where('mobile', $mobile)->orWhere('phone', $mobile);
                 });
             } elseif ($tenantHasMobile) {
@@ -765,12 +759,12 @@ class AuthController extends Controller
                 // Get unit and property name separately
                 $unitName = 'N/A';
                 $propertyName = 'N/A';
-                
+
                 if ($tenant->unit_id) {
                     $unit = DB::table('units')->where('id', $tenant->unit_id)->first();
                     if ($unit) {
                         $unitName = $unit->name ?? 'N/A';
-                        
+
                         // Get property name from unit
                         if ($unit->property_id) {
                             $property = DB::table('properties')->where('id', $unit->property_id)->first();
@@ -778,7 +772,7 @@ class AuthController extends Controller
                         }
                     }
                 }
-                
+
                 return response()->json([
                     'success' => true,
                     'role' => 'tenant',
@@ -798,7 +792,7 @@ class AuthController extends Controller
             $ownerHasMobile = Schema::hasColumn('owners', 'mobile');
             $ownerHasPhone  = Schema::hasColumn('owners', 'phone');
             if ($ownerHasMobile && $ownerHasPhone) {
-                $ownerQuery->where(function($q) use ($mobile) {
+                $ownerQuery->where(function ($q) use ($mobile) {
                     $q->where('mobile', $mobile)->orWhere('phone', $mobile);
                 });
             } elseif ($ownerHasMobile) {
@@ -829,7 +823,6 @@ class AuthController extends Controller
                 'message' => 'Mobile number not found in database',
                 'user_data' => null
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -850,12 +843,12 @@ class AuthController extends Controller
 
         $email = $request->email;
         $mobile = $request->mobile;
-        
+
         \Log::info('DEBUG: checkTenantPasswordStatus called with email: ' . $email . ', mobile: ' . $mobile);
 
         try {
             $user = null;
-            
+
             // Check if user exists in users table with email or mobile
             if ($email) {
                 $user = User::where('email', $email)->first();
@@ -864,18 +857,18 @@ class AuthController extends Controller
                 $user = User::where('phone', $mobile)->first();
                 \Log::info('DEBUG: Searching by mobile: ' . $mobile);
             }
-            
+
             \Log::info('DEBUG: User query result: ' . ($user ? 'User found' : 'User not found'));
-            
+
             if ($user) {
                 // User exists, check if they have a password set
                 $hasPassword = !empty($user->password);
-                
+
                 \Log::info('DEBUG: User password field: ' . ($user->password ? 'Has password' : 'No password'));
                 \Log::info('DEBUG: User password length: ' . strlen($user->password ?? ''));
                 \Log::info('DEBUG: User password is null: ' . (is_null($user->password) ? 'Yes' : 'No'));
                 \Log::info('DEBUG: User password is empty: ' . (empty($user->password) ? 'Yes' : 'No'));
-                
+
                 return response()->json([
                     'success' => true,
                     'has_password' => $hasPassword,
@@ -901,7 +894,6 @@ class AuthController extends Controller
                     'message' => 'No user found with this email or mobile'
                 ]);
             }
-
         } catch (\Exception $e) {
             \Log::error('DEBUG: Error in checkTenantPasswordStatus: ' . $e->getMessage());
             return response()->json([
@@ -923,8 +915,8 @@ class AuthController extends Controller
         $email = $request->email;
 
         try {
-            // Check in tenants table
-            $tenant = DB::table('tenants')->where('email', $email)->first();
+            // Check in tenants table (exclude soft deleted)
+            $tenant = DB::table('tenants')->where('email', $email)->whereNull('deleted_at')->first();
             if ($tenant) {
                 // Try to locate linked user and create token
                 $linkedUser = User::where('email', $email)->first();
@@ -951,8 +943,8 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Check in owners table
-            $owner = DB::table('owners')->where('email', $email)->first();
+            // Check in owners table (exclude soft deleted)
+            $owner = DB::table('owners')->where('email', $email)->whereNull('deleted_at')->first();
             if ($owner) {
                 // Try to locate linked user and create token
                 $linkedUser = User::where('email', $email)->first();
@@ -989,7 +981,6 @@ class AuthController extends Controller
                 'message' => 'Email not found in database',
                 'user_data' => null
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

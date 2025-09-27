@@ -9,7 +9,60 @@ http://103.98.76.11/api
 
 ## Authentication Endpoints
 
-### 1. Send OTP
+### 1. Restore Account
+**POST** `/restore-account`
+
+Restore a soft deleted account.
+
+#### Request Body
+```json
+{
+  "email": "user@example.com",
+  "phone": "+1234567890",
+  "confirm_restore": true
+}
+```
+
+#### Validation Rules
+- `email`: Required, valid email format
+- `phone`: Optional, string
+- `confirm_restore`: Required, boolean, must be true
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Account restored successfully!",
+  "restored_accounts": ["User account", "Owner account"],
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "user@example.com",
+    "phone": "+1234567890",
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "deleted_at": null
+  }
+}
+```
+
+#### Error Response (404)
+```json
+{
+  "success": false,
+  "message": "No deactivated account found with this email or phone number."
+}
+```
+
+#### Error Response (500)
+```json
+{
+  "success": false,
+  "message": "Failed to restore account: [error details]"
+}
+```
+
+### 2. Send OTP
 **POST** `/send-otp`
 
 Send OTP to phone number for verification.
@@ -33,6 +86,17 @@ Send OTP to phone number for verification.
   "message": "OTP sent successfully",
   "otp": "123456",
   "expires_in": 10
+}
+```
+
+#### Error Response (409 - Soft Deleted Account)
+```json
+{
+  "success": false,
+  "message": "An account with this phone number exists but is deactivated.",
+  "restore_available": true,
+  "restore_message": "Do you want to restore your old account? If yes, your account will be reactivated.",
+  "deleted_at": "2023-01-01 12:00:00"
 }
 ```
 
@@ -203,6 +267,16 @@ Register a new property owner with OTP verification.
     "phone": ["The phone number is already registered."],
     "otp": ["Invalid or expired OTP"]
   }
+}
+```
+
+#### Error Response (409 - Account Exists but Soft Deleted)
+```json
+{
+  "success": false,
+  "message": "Account with this email/phone already exists but was previously deleted",
+  "can_restore": true,
+  "restore_endpoint": "/restore-account"
 }
 ```
 
