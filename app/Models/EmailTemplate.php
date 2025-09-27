@@ -8,45 +8,59 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class EmailTemplate extends Model
 {
     protected $fillable = [
+        'key',
         'name',
-        'subject_bangla',
-        'subject_english',
-        'content_bangla',
-        'content_english',
-        'variables',
+        'subject',
+        'content',
         'category',
         'is_active',
-        'description',
-        'from_name',
-        'from_email',
         'priority',
+        'description',
         'tags',
-        'created_by',
-        'updated_by'
+        'trigger_event',
+        'trigger_conditions'
     ];
 
     protected $casts = [
-        'variables' => 'array',
-        'tags' => 'array',
         'is_active' => 'boolean',
-        'priority' => 'integer'
+        'priority' => 'integer',
+        'trigger_conditions' => 'array'
     ];
 
     /**
-     * Get the user who created this template
+     * Get tags as array
      */
-    public function creator(): BelongsTo
+    public function getTagsAttribute($value)
     {
-        return $this->belongsTo(User::class, 'created_by');
+        if (is_string($value)) {
+            // Try to decode as JSON first
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+            // If not valid JSON, treat as comma-separated string
+            $value = str_replace(['"', "'"], '', $value);
+            return array_filter(array_map('trim', explode(',', $value)));
+        }
+        return $value ?: [];
     }
 
     /**
-     * Get the user who last updated this template
+     * Set tags from array or string
      */
-    public function updater(): BelongsTo
+    public function setTagsAttribute($value)
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        if (is_array($value)) {
+            $this->attributes['tags'] = json_encode(array_filter($value));
+        } elseif (is_string($value)) {
+            // If it's a comma-separated string, convert to array then to JSON
+            $tags = array_filter(array_map('trim', explode(',', $value)));
+            $this->attributes['tags'] = json_encode($tags);
+        } else {
+            $this->attributes['tags'] = json_encode([]);
+        }
     }
+
 
     /**
      * Scope for active templates
@@ -73,24 +87,63 @@ class EmailTemplate extends Model
     }
 
     /**
-     * Get content by language
+     * Get content
      */
-    public function getContent($language = 'bangla')
+    public function getContent()
     {
-        if ($language === 'english') {
-            return $this->content_english;
-        }
-        return $this->content_bangla;
+        return $this->content;
     }
 
     /**
-     * Get subject by language
+     * Get subject
      */
-    public function getSubject($language = 'bangla')
+    public function getSubject()
     {
-        if ($language === 'english') {
-            return $this->subject_english;
+        return $this->subject;
+    }
+
+    /**
+     * Check if content is HTML
+     */
+    public function isHtml()
+    {
+        return $this->content !== strip_tags($this->content);
+    }
+
+    /**
+     * Get trigger information
+     */
+    public function getTriggerInfo()
+    {
+        if (!$this->trigger_event) {
+            return null;
         }
-        return $this->subject_bangla;
+        
+        return \App\Config\EmailTriggers::getTrigger($this->trigger_event);
+    }
+
+    /**
+     * Get available variables for this template's trigger
+     */
+    public function getAvailableVariables()
+    {
+        $triggerInfo = $this->getTriggerInfo();
+        return $triggerInfo ? $triggerInfo['variables'] : [];
+    }
+
+    /**
+     * Scope for templates with specific trigger
+     */
+    public function scopeWithTrigger($query, $triggerEvent)
+    {
+        return $query->where('trigger_event', $triggerEvent);
+    }
+
+    /**
+     * Scope for templates without trigger (manual only)
+     */
+    public function scopeWithoutTrigger($query)
+    {
+        return $query->whereNull('trigger_event');
     }
 }

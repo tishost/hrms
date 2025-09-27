@@ -787,8 +787,8 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Check in owners table (conditionally support 'mobile'/'phone')
-            $ownerQuery = DB::table('owners');
+            // Check in owners table (conditionally support 'mobile'/'phone') - exclude soft deleted
+            $ownerQuery = DB::table('owners')->whereNull('deleted_at');
             $ownerHasMobile = Schema::hasColumn('owners', 'mobile');
             $ownerHasPhone  = Schema::hasColumn('owners', 'phone');
             if ($ownerHasMobile && $ownerHasPhone) {
@@ -814,6 +814,56 @@ class AuthController extends Controller
                         'mobile' => $owner->mobile ?? $owner->phone,
                     ]
                 ]);
+            }
+
+            // Check for soft deleted accounts
+            $softDeletedTenant = DB::table('tenants')->whereNotNull('deleted_at');
+            $softDeletedOwner = DB::table('owners')->whereNotNull('deleted_at');
+
+            // Check soft deleted tenant
+            $tenantHasMobile = Schema::hasColumn('tenants', 'mobile');
+            $tenantHasPhone  = Schema::hasColumn('tenants', 'phone');
+            if ($tenantHasMobile && $tenantHasPhone) {
+                $softDeletedTenant->where(function ($q) use ($mobile) {
+                    $q->where('mobile', $mobile)->orWhere('phone', $mobile);
+                });
+            } elseif ($tenantHasMobile) {
+                $softDeletedTenant->where('mobile', $mobile);
+            } elseif ($tenantHasPhone) {
+                $softDeletedTenant->where('phone', $mobile);
+            } else {
+                $softDeletedTenant->whereRaw('1=0');
+            }
+            $softDeletedTenantResult = $softDeletedTenant->first();
+
+            // Check soft deleted owner
+            $ownerHasMobile = Schema::hasColumn('owners', 'mobile');
+            $ownerHasPhone  = Schema::hasColumn('owners', 'phone');
+            if ($ownerHasMobile && $ownerHasPhone) {
+                $softDeletedOwner->where(function ($q) use ($mobile) {
+                    $q->where('mobile', $mobile)->orWhere('phone', $mobile);
+                });
+            } elseif ($ownerHasMobile) {
+                $softDeletedOwner->where('mobile', $mobile);
+            } elseif ($ownerHasPhone) {
+                $softDeletedOwner->where('phone', $mobile);
+            } else {
+                $softDeletedOwner->whereRaw('1=0');
+            }
+            $softDeletedOwnerResult = $softDeletedOwner->first();
+
+            if ($softDeletedTenantResult || $softDeletedOwnerResult) {
+                $role = $softDeletedTenantResult ? 'tenant' : 'owner';
+                $deletedAt = $softDeletedTenantResult ? $softDeletedTenantResult->deleted_at : $softDeletedOwnerResult->deleted_at;
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An account with this mobile number already exists but is deactivated.',
+                    'restore_available' => true,
+                    'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
+                    'deleted_at' => $deletedAt,
+                    'role' => $role
+                ], 409);
             }
 
             // Not found in any table

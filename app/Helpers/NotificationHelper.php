@@ -310,10 +310,14 @@ class NotificationHelper
         // Get language settings
         $notificationLanguage = \App\Models\SystemSetting::getValue('notification_language', 'bangla');
 
+        // Get OTP settings for expiry time
+        $otpSettings = \App\Models\OtpSetting::getSettings();
+        
         // Replace variables in template
         $variables = [
             'otp' => $otp,
-            'company_name' => config('app.name', 'HRMS')
+            'company_name' => config('app.name', 'HRMS'),
+            'minutes' => $otpSettings->otp_expiry_minutes
         ];
 
         // Replace variables in template content

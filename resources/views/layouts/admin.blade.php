@@ -165,23 +165,23 @@
             box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
         
-        /* Accordion-style Sub-menu Styling */
+        /* Simple Modern Sub-menu Styling */
         .sidebar .submenu {
-            background: rgba(52, 152, 219, 0.1);
-            border-left: 3px solid #3498db;
-            margin: 5px 0 0 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid rgba(52, 152, 219, 0.2);
+            margin: 3px 0 0 15px;
             padding: 0;
             list-style: none;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-            border-radius: 0 8px 8px 0;
+            transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+            border-radius: 0 4px 4px 0;
             opacity: 0;
         }
         
         .sidebar .submenu.show {
             max-height: 500px;
-            padding: 8px 0;
+            padding: 4px 0;
             opacity: 1;
         }
         
@@ -190,55 +190,30 @@
         }
         
         .sidebar .submenu-link {
-            color: #b8c7ce !important;
-            padding: 10px 20px 10px 30px;
+            color: #a0aec0 !important;
+            padding: 6px 12px 6px 20px;
             border-radius: 0;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             position: relative;
-            overflow: hidden;
             text-decoration: none;
             display: block;
-            font-size: 0.9rem;
-        }
-        
-        .sidebar .submenu-link::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0;
-            background: linear-gradient(90deg, #3498db, #2980b9);
-            transition: width 0.3s ease;
-            z-index: -1;
+            font-size: 0.95rem;
+            font-weight: 400;
+            border-left: 2px solid transparent;
         }
         
         .sidebar .submenu-link:hover {
             color: #fff !important;
-            background: transparent;
-            transform: translateX(5px);
-        }
-        
-        .sidebar .submenu-link:hover::before {
-            width: 100%;
+            background: rgba(52, 152, 219, 0.08);
+            border-left-color: #3498db;
+            transform: translateX(2px);
         }
         
         .sidebar .submenu-link.active {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: rgba(52, 152, 219, 0.12);
             color: #fff !important;
-            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
-        }
-        
-        .sidebar .submenu-link i {
-            width: 16px;
-            text-align: center;
-            margin-right: 8px;
-            transition: transform 0.3s ease;
-            font-size: 0.85rem;
-        }
-        
-        .sidebar .submenu-link:hover i {
-            transform: scale(1.1);
+            border-left-color: #3498db;
+            font-weight: 500;
         }
         
         /* Menu Toggle Arrow */
@@ -739,6 +714,9 @@
             <a href="{{ route('admin.settings.email-configuration') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-envelope me-2"></i>Email Config
             </a>
+            <a href="{{ route('admin.templates.index') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
+              <i class="fas fa-layer-group me-2"></i>Template Management
+            </a>
             <a href="{{ route('admin.settings.seo') }}" class="list-group-item list-group-item-action bg-transparent text-white-50 border-0">
               <i class="fas fa-search me-2"></i>SEO Settings
             </a>
@@ -801,13 +779,13 @@
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.owners.index') ? 'active' : '' }}"
                                href="{{ route('admin.owners.index') }}">
-                                <i class="fas fa-list me-2"></i>Owner List
+                                Owner List
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.owners.create') ? 'active' : '' }}"
                                href="{{ route('admin.owners.create') }}">
-                                <i class="fas fa-plus me-2"></i>Add New Owner
+                                Add New Owner
                             </a>
                         </li>
                     </ul>
@@ -823,7 +801,7 @@
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.tenants.index') ? 'active' : '' }}"
                                href="{{ route('admin.tenants.index') }}">
-                                <i class="fas fa-list me-2"></i>Tenant List
+                                Tenant List
                             </a>
                         </li>
                     </ul>
@@ -839,19 +817,19 @@
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.subscriptions') ? 'active' : '' }}"
                                href="{{ route('admin.subscriptions') }}">
-                                <i class="fas fa-list me-2"></i>Subscription List
+                                Subscription List
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}"
                                href="{{ route('admin.plans.index') }}">
-                                <i class="fas fa-cube me-2"></i>Package Management
+                                Package Management
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.billing.index') ? 'active' : '' }}"
                                href="{{ route('admin.billing.index') }}">
-                                <i class="fas fa-file-invoice-dollar me-2"></i>Billing & Payments
+                                Billing & Payments
                             </a>
                         </li>
                     </ul>
@@ -867,19 +845,19 @@
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.reports.financial') ? 'active' : '' }}"
                                href="{{ route('admin.reports.financial') }}">
-                                <i class="fas fa-chart-line me-2"></i>Financial Reports
+                                Financial Reports
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.analytics') ? 'active' : '' }}"
                                href="{{ route('admin.analytics') }}">
-                                <i class="fas fa-chart-bar me-2"></i>Analytics Dashboard
+                                Analytics Dashboard
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.login-logs.*') ? 'active' : '' }}"
                                href="{{ route('admin.login-logs.index') }}">
-                                <i class="fas fa-sign-in-alt me-2"></i>Login Logs
+                                Login Logs
                             </a>
                         </li>
                     </ul>
@@ -903,19 +881,19 @@
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.ads.index') ? 'active' : '' }}"
                                href="{{ route('admin.ads.index') }}">
-                                <i class="fas fa-list me-2"></i>All Ads
+                                All Ads
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.ads.create') ? 'active' : '' }}"
                                href="{{ route('admin.ads.create') }}">
-                                <i class="fas fa-plus me-2"></i>Create New Ad
+                                Create New Ad
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.ads.stats') ? 'active' : '' }}"
                                href="{{ route('admin.ads.stats') }}">
-                                <i class="fas fa-chart-bar me-2"></i>Ads Statistics
+                                Ads Statistics
                             </a>
                         </li>
                     </ul>
@@ -931,115 +909,103 @@
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.company') ? 'active' : '' }}"
                                href="{{ route('admin.settings.company') }}">
-                                <i class="fas fa-building me-2"></i>Company Information
+                                Company Information
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.system') ? 'active' : '' }}"
                                href="{{ route('admin.settings.system') }}">
-                                <i class="fas fa-cogs me-2"></i>System Settings
+                                System Settings
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.landing') ? 'active' : '' }}"
                                href="{{ route('admin.settings.landing') }}">
-                                <i class="fas fa-globe me-2"></i>Landing Page
+                                Landing Page
                             </a>
                         </li>
                         <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.company') && !request()->routeIs('admin.settings.system') && !request()->routeIs('admin.settings.landing') && !request()->routeIs('admin.settings.notifications') && !request()->routeIs('admin.settings.email.templates') && !request()->routeIs('admin.settings.sms.templates') && !request()->routeIs('admin.settings.notification-logs') && !request()->routeIs('admin.settings.email-configuration') && !request()->routeIs('admin.settings.seo') && !request()->routeIs('admin.settings.chat') && !request()->routeIs('admin.settings.sms') && !request()->routeIs('admin.settings.backup') ? 'active' : '' }}"
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.*') && !request()->routeIs('admin.settings.company') && !request()->routeIs('admin.settings.system') && !request()->routeIs('admin.settings.landing') && !request()->routeIs('admin.settings.notifications') && !request()->routeIs('admin.settings.email.templates') && !request()->routeIs('admin.settings.sms.templates') && !request()->routeIs('admin.settings.notification-logs') && !request()->routeIs('admin.settings.email-configuration') && !request()->routeIs('admin.settings.sms') && !request()->routeIs('admin.settings.seo') && !request()->routeIs('admin.settings.chat') && !request()->routeIs('admin.settings.backup') ? 'active' : '' }}"
                                href="{{ route('admin.settings.index') }}">
-                                <i class="fas fa-cog me-2"></i>General Settings
+                                General Settings
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.otp-settings.*') ? 'active' : '' }}"
                                href="{{ route('admin.otp-settings.index') }}">
-                                <i class="fas fa-mobile-alt me-2"></i>OTP Settings
+                                OTP Settings
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.notifications.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.notifications') }}">
-                                <i class="fas fa-bell me-2"></i>Notification Settings
+                                Notification Settings
                             </a>
                         </li>
                         <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.template.groups.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.template.groups') }}">
-                                <i class="fas fa-layer-group me-2"></i>Template Groups
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.email.templates.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.email.templates') }}">
-                                <i class="fas fa-envelope me-2"></i>Email Templates
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.sms.templates.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.sms.templates') }}">
-                                <i class="fas fa-sms me-2"></i>SMS Templates
+                            <a class="submenu-link {{ request()->routeIs('admin.templates.*') ? 'active' : '' }}"
+                               href="{{ route('admin.templates.index') }}">
+                                Template Management
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.notification-logs.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.notification-logs') }}">
-                                <i class="fas fa-history me-2"></i>Notification Logs
+                                Notification Logs
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"
                                href="{{ route('admin.notifications.send') }}">
-                                <i class="fas fa-paper-plane me-2"></i>Send Push Notifications
+                                Send Push Notifications
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.email-configuration.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.email-configuration') }}">
-                                <i class="fas fa-envelope me-2"></i>Email Configuration
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.seo') }}">
-                                <i class="fas fa-search me-2"></i>SEO Settings
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a class="submenu-link {{ request()->routeIs('admin.settings.chat.*') ? 'active' : '' }}"
-                               href="{{ route('admin.settings.chat') }}">
-                                <i class="fas fa-comments me-2"></i>Chat Settings
+                                Email Configuration
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.sms.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.sms') }}">
-                                <i class="fas fa-sms me-2"></i>SMS Settings
+                                SMS Configuration
+                            </a>
+                        </li>
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.seo.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.seo') }}">
+                                SEO Settings
+                            </a>
+                        </li>
+                        <li class="submenu-item">
+                            <a class="submenu-link {{ request()->routeIs('admin.settings.chat.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.chat') }}">
+                                Chat Settings
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.settings.backup.*') ? 'active' : '' }}"
                                href="{{ route('admin.settings.backup') }}">
-                                <i class="fas fa-database me-2"></i>Backup Settings
+                                Backup Settings
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.charges.*') ? 'active' : '' }}"
                                href="{{ route('admin.charges.index') }}">
-                                <i class="fas fa-money-bill-wave me-2"></i>Charges Setup
+                                Charges Setup
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.security.otp.*') ? 'active' : '' }}"
                                href="{{ route('admin.security.otp') }}">
-                                <i class="fas fa-shield-alt me-2"></i>OTP Security
+                                OTP Security
                             </a>
                         </li>
                         <li class="submenu-item">
                             <a class="submenu-link {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"
                                href="{{ route('admin.dashboard') }}">
-                                <i class="fas fa-comments me-2"></i>Chat Agent Dashboard
+                                Chat Agent Dashboard
                             </a>
                         </li>
                     </ul>
@@ -1137,9 +1103,9 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebarOverlay.classList.add('show');
             document.body.style.overflow = 'hidden';
             
-            // Add focus trap for accessibility
-            sidebar.setAttribute('aria-hidden', 'false');
-            mobileMenuToggle.setAttribute('aria-expanded', 'true');
+    // Add focus trap for accessibility
+    if (sidebar) sidebar.setAttribute('aria-hidden', 'false');
+    if (mobileMenuToggle) mobileMenuToggle.setAttribute('aria-expanded', 'true');
         }
     }
     
@@ -1148,9 +1114,9 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarOverlay.classList.remove('show');
         document.body.style.overflow = '';
         
-        // Remove focus trap
-        sidebar.setAttribute('aria-hidden', 'true');
-        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    // Remove focus trap
+    if (sidebar) sidebar.setAttribute('aria-hidden', 'true');
+    if (mobileMenuToggle) mobileMenuToggle.setAttribute('aria-expanded', 'false');
     }
     
     if (mobileMenuToggle) {
@@ -1169,26 +1135,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Close sidebar when clicking on a link (mobile)
-    const sidebarLinks = sidebar.querySelectorAll('.nav-link, .dropdown-item');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                closeSidebarMenu();
-            }
+    if (sidebar) {
+        const sidebarLinks = sidebar.querySelectorAll('.nav-link, .dropdown-item');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebarMenu();
+                }
+            });
+            link.addEventListener('touchstart', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebarMenu();
+                }
+            });
         });
-        link.addEventListener('touchstart', () => {
-            if (window.innerWidth <= 768) {
-                closeSidebarMenu();
-            }
-        });
-    });
+    }
     
     // Ensure sidebar is properly hidden on mobile by default
     if (window.innerWidth <= 768) {
         sidebar.classList.remove('show');
         sidebarOverlay.classList.remove('show');
-        sidebar.setAttribute('aria-hidden', 'true');
-        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        if (sidebar) sidebar.setAttribute('aria-hidden', 'true');
+        if (mobileMenuToggle) mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    }
+    
+    // Submenu Toggle Functionality
+    const menuToggles = document.querySelectorAll('.menu-toggle');
+    if (menuToggles.length > 0) {
+        menuToggles.forEach(toggle => {
+            if (toggle) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const parentItem = this.closest('.has-submenu');
+                    if (parentItem) {
+                        const submenu = parentItem.querySelector('.submenu');
+                        
+                        if (submenu) {
+                            // Close all other submenus
+                            const allSubmenus = document.querySelectorAll('.has-submenu');
+                            allSubmenus.forEach(item => {
+                                if (item && item !== parentItem) {
+                                    item.classList.remove('open');
+                                    const otherSubmenu = item.querySelector('.submenu');
+                                    if (otherSubmenu) {
+                                        otherSubmenu.classList.remove('show');
+                                    }
+                                }
+                            });
+                            
+                            // Toggle current submenu
+                            parentItem.classList.toggle('open');
+                            submenu.classList.toggle('show');
+                        }
+                    }
+                });
+            }
+        });
     }
     
     // Handle window resize
@@ -1212,8 +1216,8 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.remove('show');
             sidebarOverlay.classList.remove('show');
             document.body.style.overflow = '';
-            sidebar.setAttribute('aria-hidden', 'true');
-            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        if (sidebar) sidebar.setAttribute('aria-hidden', 'true');
+        if (mobileMenuToggle) mobileMenuToggle.setAttribute('aria-expanded', 'false');
             
             // Hide sidebar column on mobile
             const sidebarCol = document.querySelector('.col-lg-2, .col-md-3');
@@ -1240,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarOverlay.style.display = 'none';
         sidebarOverlay.style.width = '0';
         sidebarOverlay.style.height = '0';
-        sidebar.setAttribute('aria-hidden', 'false');
-        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        if (sidebar) sidebar.setAttribute('aria-hidden', 'false');
+        if (mobileMenuToggle) mobileMenuToggle.setAttribute('aria-expanded', 'false');
         
         // Show sidebar column on desktop
         const sidebarCol = document.querySelector('.col-lg-2, .col-md-3');
@@ -1267,8 +1271,8 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebarCol.style.display = 'none';
         }
         
-        sidebar.setAttribute('aria-hidden', 'true');
-        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        if (sidebar) sidebar.setAttribute('aria-hidden', 'true');
+        if (mobileMenuToggle) mobileMenuToggle.setAttribute('aria-expanded', 'false');
     }
     
     // Add keyboard support for accessibility
@@ -1299,9 +1303,12 @@ function refreshCsrfToken() {
         console.log('CSRF token refreshed successfully');
         
         // Update all CSRF tokens in forms
-        document.querySelectorAll('input[name="_token"]').forEach(input => {
-            input.value = data.token;
-        });
+        const tokenInputs = document.querySelectorAll('input[name="_token"]');
+        if (tokenInputs.length > 0) {
+            tokenInputs.forEach(input => {
+                if (input) input.value = data.token;
+            });
+        }
         
         // Update meta tag
         const metaTag = document.querySelector('meta[name="csrf-token"]');
@@ -1310,9 +1317,12 @@ function refreshCsrfToken() {
         }
         
         // Update any other CSRF token elements
-        document.querySelectorAll('[data-csrf-token]').forEach(element => {
-            element.setAttribute('data-csrf-token', data.token);
-        });
+        const csrfElements = document.querySelectorAll('[data-csrf-token]');
+        if (csrfElements.length > 0) {
+            csrfElements.forEach(element => {
+                if (element) element.setAttribute('data-csrf-token', data.token);
+            });
+        }
         
         console.log('All CSRF tokens updated');
     })
@@ -1336,92 +1346,41 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshCsrfToken();
     });
     
-    // Accordion-style menu interactions
-    const menuToggles = document.querySelectorAll('.sidebar .menu-toggle');
-    menuToggles.forEach(toggle => {
-        toggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const parent = this.closest('.has-submenu');
-            const submenu = parent.querySelector('.submenu');
-            const isOpen = parent.classList.contains('open');
-            
-            // Close all other submenus
-            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
-                if (item !== parent) {
-                    item.classList.remove('open');
-                    const otherSubmenu = item.querySelector('.submenu');
-                    if (otherSubmenu) {
-                        otherSubmenu.classList.remove('show');
-                    }
-                }
-            });
-            
-            // Toggle current submenu
-            if (!isOpen) {
-                parent.classList.add('open');
-                submenu.classList.add('show');
-            } else {
-                parent.classList.remove('open');
-                submenu.classList.remove('show');
-            }
-        });
-        
-        // Add touch support for mobile
-        toggle.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const parent = this.closest('.has-submenu');
-            const submenu = parent.querySelector('.submenu');
-            const isOpen = parent.classList.contains('open');
-            
-            // Close all other submenus
-            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
-                if (item !== parent) {
-                    item.classList.remove('open');
-                    const otherSubmenu = item.querySelector('.submenu');
-                    if (otherSubmenu) {
-                        otherSubmenu.classList.remove('show');
-                    }
-                }
-            });
-            
-            // Toggle current submenu
-            if (!isOpen) {
-                parent.classList.add('open');
-                submenu.classList.add('show');
-            } else {
-                parent.classList.remove('open');
-                submenu.classList.remove('show');
-            }
-        });
-    });
+    // Note: Menu toggle functionality is handled above in the main menu section
     
     // Close submenus when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.sidebar .has-submenu')) {
-            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
-                item.classList.remove('open');
-                const submenu = item.querySelector('.submenu');
-                if (submenu) {
-                    submenu.classList.remove('show');
-                }
-            });
+            const allSubmenus = document.querySelectorAll('.sidebar .has-submenu');
+            if (allSubmenus.length > 0) {
+                allSubmenus.forEach(item => {
+                    if (item) {
+                        item.classList.remove('open');
+                        const submenu = item.querySelector('.submenu');
+                        if (submenu) {
+                            submenu.classList.remove('show');
+                        }
+                    }
+                });
+            }
         }
     });
     
     // Close submenus when touching outside
     document.addEventListener('touchstart', function(e) {
         if (!e.target.closest('.sidebar .has-submenu')) {
-            document.querySelectorAll('.sidebar .has-submenu').forEach(item => {
-                item.classList.remove('open');
-                const submenu = item.querySelector('.submenu');
-                if (submenu) {
-                    submenu.classList.remove('show');
-                }
-            });
+            const allSubmenus = document.querySelectorAll('.sidebar .has-submenu');
+            if (allSubmenus.length > 0) {
+                allSubmenus.forEach(item => {
+                    if (item) {
+                        item.classList.remove('open');
+                        const submenu = item.querySelector('.submenu');
+                        if (submenu) {
+                            submenu.classList.remove('show');
+                        }
+                    }
+                });
+            }
         }
     });
 });

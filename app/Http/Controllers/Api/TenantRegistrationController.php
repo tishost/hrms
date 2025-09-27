@@ -35,6 +35,37 @@ class TenantRegistrationController extends Controller
             // Start database transaction
             DB::beginTransaction();
 
+            // Check for soft deleted accounts with same mobile or email
+            $softDeletedUser = User::onlyTrashed()->where('phone', $request->mobile)->first();
+            $softDeletedTenant = Tenant::onlyTrashed()->where('mobile', $request->mobile)->first();
+            
+            if ($request->email) {
+                $softDeletedUserByEmail = User::onlyTrashed()->where('email', $request->email)->first();
+                $softDeletedTenantByEmail = Tenant::onlyTrashed()->where('email', $request->email)->first();
+                
+                if ($softDeletedUserByEmail || $softDeletedTenantByEmail) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'An account with this email already exists but is deactivated.',
+                        'restore_available' => true,
+                        'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
+                        'deleted_at' => $softDeletedUserByEmail ? $softDeletedUserByEmail->deleted_at->format('Y-m-d H:i:s') : 
+                                       $softDeletedTenantByEmail->deleted_at->format('Y-m-d H:i:s')
+                    ], 409);
+                }
+            }
+            
+            if ($softDeletedUser || $softDeletedTenant) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An account with this mobile number already exists but is deactivated.',
+                    'restore_available' => true,
+                    'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
+                    'deleted_at' => $softDeletedUser ? $softDeletedUser->deleted_at->format('Y-m-d H:i:s') : 
+                                   $softDeletedTenant->deleted_at->format('Y-m-d H:i:s')
+                ], 409);
+            }
+
             // Check if tenant exists
             $tenant = Tenant::where('mobile', $request->mobile)->first();
 
@@ -133,6 +164,76 @@ class TenantRegistrationController extends Controller
 
             return response()->json([
                 'error' => 'Failed to complete registration: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Restore soft deleted tenant account
+     */
+    public function restoreTenantAccount(Request $request)
+    {
+        $request->validate([
+            'mobile' => 'required|string',
+            'email' => 'nullable|email',
+            'confirm_restore' => 'required|boolean|accepted'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Find soft deleted tenant and user
+            $softDeletedUser = User::onlyTrashed()->where('phone', $request->mobile)->first();
+            $softDeletedTenant = Tenant::onlyTrashed()->where('mobile', $request->mobile)->first();
+            
+            if ($request->email) {
+                $softDeletedUserByEmail = User::onlyTrashed()->where('email', $request->email)->first();
+                $softDeletedTenantByEmail = Tenant::onlyTrashed()->where('email', $request->email)->first();
+                
+                if ($softDeletedUserByEmail) {
+                    $softDeletedUser = $softDeletedUserByEmail;
+                }
+                if ($softDeletedTenantByEmail) {
+                    $softDeletedTenant = $softDeletedTenantByEmail;
+                }
+            }
+
+            if (!$softDeletedUser && !$softDeletedTenant) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No deactivated tenant account found with this mobile number or email.'
+                ], 404);
+            }
+
+            $restoredAccounts = [];
+
+            // Restore User
+            if ($softDeletedUser) {
+                $softDeletedUser->restore();
+                $restoredAccounts[] = 'User account';
+            }
+
+            // Restore Tenant
+            if ($softDeletedTenant) {
+                $softDeletedTenant->restore();
+                $restoredAccounts[] = 'Tenant account';
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tenant account restored successfully!',
+                'restored_accounts' => $restoredAccounts,
+                'user' => $softDeletedUser ? $softDeletedUser->fresh() : null,
+                'tenant' => $softDeletedTenant ? $softDeletedTenant->fresh() : null
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to restore tenant account: ' . $e->getMessage()
             ], 500);
         }
     }

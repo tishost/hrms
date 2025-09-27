@@ -36,7 +36,6 @@ class OtpSettingsController extends Controller
             'require_otp_for_tenant_registration' => 'boolean',
             'require_otp_for_login' => 'boolean',
             'require_otp_for_password_reset' => 'boolean',
-            'otp_message_template' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {

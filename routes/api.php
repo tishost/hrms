@@ -22,11 +22,13 @@ use App\Http\Controllers\Api\NotificationController;
 
 // Tenant Registration Routes
 Route::post('/tenant/register', [TenantRegistrationController::class, 'register']);
+Route::post('/tenant/restore-account', [TenantRegistrationController::class, 'restoreTenantAccount']);
 
 // Role-based login
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/register-owner', [AuthController::class, 'registerOwner']);
+Route::post('/restore-account', [AuthController::class, 'restoreAccount']);
 
 // Smart registration routes
 Route::post('/check-mobile-role', [AuthController::class, 'checkMobileRole']);
