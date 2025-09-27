@@ -9,7 +9,123 @@ http://103.98.76.11/api
 
 ## Authentication Endpoints
 
-### 1. Send OTP
+### 1. Restore Account
+**POST** `/restore-account`
+
+Restore a soft deleted account.
+
+#### Request Body
+```json
+{
+  "email": "user@example.com",
+  "phone": "+1234567890",
+  "confirm_restore": true
+}
+```
+
+#### Validation Rules
+- `email`: Required, valid email format
+- `phone`: Optional, string
+- `confirm_restore`: Required, boolean, must be true
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Account restored successfully!",
+  "restored_accounts": ["User account", "Owner account"],
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "user@example.com",
+    "phone": "+1234567890",
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "deleted_at": null
+  }
+}
+```
+
+#### Error Response (404)
+```json
+{
+  "success": false,
+  "message": "No deactivated account found with this email or phone number."
+}
+```
+
+#### Error Response (500)
+```json
+{
+  "success": false,
+  "message": "Failed to restore account: [error details]"
+}
+```
+
+### 2. Restore Tenant Account
+**POST** `/tenant/restore-account`
+
+Restore a soft deleted tenant account.
+
+#### Request Body
+```json
+{
+  "mobile": "+1234567890",
+  "email": "tenant@example.com",
+  "confirm_restore": true
+}
+```
+
+#### Validation Rules
+- `mobile`: Required, string
+- `email`: Optional, valid email format
+- `confirm_restore`: Required, boolean, must be true
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Tenant account restored successfully!",
+  "restored_accounts": ["User account", "Tenant account"],
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "phone": "+1234567890",
+    "email": "tenant@example.com",
+    "tenant_id": 1,
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "deleted_at": null
+  },
+  "tenant": {
+    "id": 1,
+    "name": "John Doe",
+    "mobile": "+1234567890",
+    "email": "tenant@example.com",
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "deleted_at": null
+  }
+}
+```
+
+#### Error Response (404)
+```json
+{
+  "success": false,
+  "message": "No deactivated tenant account found with this mobile number or email."
+}
+```
+
+#### Error Response (500)
+```json
+{
+  "success": false,
+  "message": "Failed to restore tenant account: [error details]"
+}
+```
+
+### 3. Send OTP
 **POST** `/send-otp`
 
 Send OTP to phone number for verification.
@@ -33,6 +149,17 @@ Send OTP to phone number for verification.
   "message": "OTP sent successfully",
   "otp": "123456",
   "expires_in": 10
+}
+```
+
+#### Error Response (409 - Soft Deleted Account)
+```json
+{
+  "success": false,
+  "message": "An account with this phone number exists but is deactivated.",
+  "restore_available": true,
+  "restore_message": "Do you want to restore your old account? If yes, your account will be reactivated.",
+  "deleted_at": "2023-01-01 12:00:00"
 }
 ```
 
@@ -599,4 +726,151 @@ Content-Type: application/json
 - For testing, OTP is returned in the response (remove in production)
 - **Reports are owner-specific** - each owner can only see their own data
 - **Date ranges** for reports should be reasonable (not too long periods)
-- **Report generation** includes real-time data from the database 
+- **Report generation** includes real-time data from the database
+
+## Tenant Registration Endpoints
+
+### 1. Tenant Registration
+**POST** `/tenant/register`
+
+Complete tenant registration with password setup.
+
+#### Request Body
+```json
+{
+  "mobile": "+1234567890",
+  "password": "password123",
+  "password_confirmation": "password123",
+  "email": "tenant@example.com"
+}
+```
+
+#### Validation Rules
+- `mobile`: Required, string
+- `password`: Required, string, min 6 characters, must be confirmed
+- `password_confirmation`: Required, must match password
+- `email`: Optional, valid email format
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Registration successful",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "phone": "+1234567890",
+    "email": "tenant@example.com",
+    "tenant_id": 1,
+    "owner_id": 1
+  },
+  "role": "tenant",
+  "token": "1|abc123..."
+}
+```
+
+#### Error Response (409 - Soft Deleted Account)
+```json
+{
+  "success": false,
+  "message": "An account with this mobile number already exists but is deactivated.",
+  "restore_available": true,
+  "restore_message": "Do you want to restore your old account? If yes, your account will be reactivated.",
+  "deleted_at": "2023-01-01 12:00:00"
+}
+```
+
+#### Error Response (404)
+```json
+{
+  "error": "Tenant not found"
+}
+```
+
+#### Error Response (400)
+```json
+{
+  "error": "Account already registered"
+}
+```
+
+#### Error Response (500)
+```json
+{
+  "error": "Failed to complete registration: [error details]"
+}
+```
+
+### 2. Tenant Account Restoration
+**POST** `/tenant/restore-account`
+
+Restore a soft deleted tenant account.
+
+#### Request Body
+```json
+{
+  "mobile": "+1234567890",
+  "email": "tenant@example.com",
+  "confirm_restore": true
+}
+```
+
+#### Validation Rules
+- `mobile`: Required, string
+- `email`: Optional, valid email format
+- `confirm_restore`: Required, boolean, must be true
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Tenant account restored successfully!",
+  "restored_accounts": ["User account", "Tenant account"],
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "phone": "+1234567890",
+    "email": "tenant@example.com",
+    "tenant_id": 1,
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "deleted_at": null
+  },
+  "tenant": {
+    "id": 1,
+    "name": "John Doe",
+    "mobile": "+1234567890",
+    "email": "tenant@example.com",
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "deleted_at": null
+  }
+}
+```
+
+#### Error Response (404)
+```json
+{
+  "success": false,
+  "message": "No deactivated tenant account found with this mobile number or email."
+}
+```
+
+#### Error Response (500)
+```json
+{
+  "success": false,
+  "message": "Failed to restore tenant account: [error details]"
+}
+```
+
+## Important Notes for Tenant Registration
+
+- **Tenant must exist in database** before registration
+- **Mobile number is the primary identifier** for tenant accounts
+- **Password is required** for account access
+- **Email is optional** but recommended
+- **Soft delete support** - deactivated accounts can be restored
+- **No OTP verification** required for tenant registration
+- **Automatic role assignment** - tenant role is assigned automatically
+- **Token-based authentication** - JWT token provided after successful registration 

@@ -19,7 +19,6 @@ class OtpSetting extends Model
         'require_otp_for_tenant_registration',
         'require_otp_for_login',
         'require_otp_for_password_reset',
-        'otp_message_template',
     ];
 
     protected $casts = [
@@ -49,7 +48,6 @@ class OtpSetting extends Model
                 'require_otp_for_tenant_registration' => false,
                 'require_otp_for_login' => false,
                 'require_otp_for_password_reset' => true,
-                'otp_message_template' => 'Your OTP is: {otp}. Valid for {minutes} minutes.',
             ]);
         }
         

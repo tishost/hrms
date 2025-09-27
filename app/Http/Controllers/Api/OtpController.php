@@ -57,6 +57,23 @@ class OtpController extends Controller
         $type = $effectiveType;
         $userId = $request->user_id;
 
+        // Check for soft deleted accounts with same phone
+        $softDeletedUser = \App\Models\User::onlyTrashed()->where('phone', $phone)->first();
+        $softDeletedOwner = \App\Models\Owner::onlyTrashed()->where('phone', $phone)->first();
+        $softDeletedTenant = \App\Models\Tenant::onlyTrashed()->where('mobile', $phone)->first();
+        
+        if ($softDeletedUser || $softDeletedOwner || $softDeletedTenant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An account with this phone number exists but is deactivated.',
+                'restore_available' => true,
+                'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
+                'deleted_at' => $softDeletedUser ? $softDeletedUser->deleted_at->format('Y-m-d H:i:s') : 
+                               ($softDeletedOwner ? $softDeletedOwner->deleted_at->format('Y-m-d H:i:s') : 
+                               $softDeletedTenant->deleted_at->format('Y-m-d H:i:s'))
+            ], 409);
+        }
+
         // Load OTP settings
         $otpSettings = OtpSetting::getSettings();
 
@@ -195,9 +212,12 @@ class OtpController extends Controller
             } catch (\Exception $e) {
             }
 
-            // Send SMS via SMS service
-            $smsService = new \App\Services\SmsService();
-            $smsResult = $smsService->sendSms($phone, "Your OTP is: {$otp->otp}. Valid for {$otpSettings->otp_expiry_minutes} minutes. - Bari Manager");
+            // Send SMS via NotificationHelper using template system
+            $smsResult = \App\Helpers\NotificationHelper::sendOtpSms($phone, $otp->otp);
+
+            // Dispatch OTP sent event for template system
+            $user = $userId ? \App\Models\User::find($userId) : null;
+            event(new \App\Events\OtpSent($user, $otp->otp, $phone, $type, $otpSettings->otp_expiry_minutes));
 
             // Log SMS result
             \Log::info('OTP SMS send result', [
@@ -593,9 +613,12 @@ class OtpController extends Controller
             } catch (\Exception $e) {
             }
 
-            // Send SMS via SMS service
-            $smsService = new \App\Services\SmsService();
-            $smsResult = $smsService->sendSms($phone, "Your OTP is: {$otp->otp}. Valid for {$settings->otp_expiry_minutes} minutes. - Bari Manager");
+            // Send SMS via NotificationHelper using template system
+            $smsResult = \App\Helpers\NotificationHelper::sendOtpSms($phone, $otp->otp);
+
+            // Dispatch OTP sent event for template system
+            $user = $userId ? \App\Models\User::find($userId) : null;
+            event(new \App\Events\OtpSent($user, $otp->otp, $phone, 'resend', $settings->otp_expiry_minutes));
 
             // Log SMS result
             \Log::info('OTP Resend SMS result', [

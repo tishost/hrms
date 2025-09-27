@@ -105,7 +105,7 @@ class DefaultTemplateSeeder extends Seeder
             [
                 'key' => 'system_otp_sms',
                 'name' => 'System OTP SMS',
-                'content' => 'Your OTP: {otp}. Valid for 10 minutes. {company_name}',
+                'content' => 'Your OTP: {otp}. Valid for {minutes} minutes. {company_name}',
                 'category' => 'system',
                 'is_active' => 1,
                 'priority' => 1,

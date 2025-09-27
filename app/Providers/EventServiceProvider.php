@@ -69,6 +69,10 @@ class EventServiceProvider extends ServiceProvider
             \App\Listeners\EmailTemplateListener::class . '@handleAccountVerification',
             \App\Listeners\SmsTemplateListener::class . '@handleAccountVerification',
         ],
+
+        \App\Events\OtpSent::class => [
+            \App\Listeners\SmsTemplateListener::class . '@handleOtpSent',
+        ],
     ];
 
     /**

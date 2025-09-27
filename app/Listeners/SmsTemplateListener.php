@@ -14,6 +14,7 @@ use App\Events\RentReminder;
 use App\Events\MaintenanceRequest;
 use App\Events\PasswordReset;
 use App\Events\AccountVerification;
+use App\Events\OtpSent;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\SmsNotification;
@@ -157,6 +158,30 @@ class SmsTemplateListener
         $this->sendTemplateSms('account_verification', $event->user, [
             'user_name' => $event->user->name,
             'verification_link' => $event->verificationLink,
+            'company_name' => config('app.name', 'HRMS')
+        ]);
+    }
+
+    /**
+     * Handle OTP sent events
+     */
+    public function handleOtpSent(OtpSent $event)
+    {
+        // Create a temporary user object if needed for template system
+        $user = $event->user;
+        if (!$user) {
+            $user = new \stdClass();
+            $user->id = 0;
+            $user->name = 'User';
+            $user->phone = $event->phone;
+        }
+
+        $this->sendTemplateSms('otp_sent', $user, [
+            'user_name' => $user->name ?? 'User',
+            'otp' => $event->otp,
+            'minutes' => $event->minutes,
+            'phone' => $event->phone,
+            'verification_type' => $event->type,
             'company_name' => config('app.name', 'HRMS')
         ]);
     }

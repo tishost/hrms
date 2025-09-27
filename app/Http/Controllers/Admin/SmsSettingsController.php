@@ -82,12 +82,6 @@ class SmsSettingsController extends Controller
             'sms_api_token' => 'required_if:sms_enabled,1|string|max:255',
             'sms_provider' => 'required_if:sms_enabled,1|in:bulksms,twilio,nexmo',
             'sms_sender_id' => 'required_if:sms_enabled,1|string|max:13',
-            'sms_rent_reminder_enabled' => 'boolean',
-            'sms_maintenance_update_enabled' => 'boolean',
-            'sms_welcome_message_enabled' => 'boolean',
-            'sms_payment_confirmation_enabled' => 'boolean',
-            'sms_checkout_reminder_enabled' => 'boolean',
-            'sms_reminder_days_before' => 'required|integer|min:1|max:30',
             'sms_test_number' => 'nullable|string|max:20',
             'sms_working_hours_start' => 'required|date_format:H:i',
             'sms_working_hours_end' => 'required|date_format:H:i',
@@ -98,12 +92,7 @@ class SmsSettingsController extends Controller
         try {
             // Define all checkbox fields
             $checkboxFields = [
-                'sms_enabled', 
-                'sms_rent_reminder_enabled', 
-                'sms_maintenance_update_enabled', 
-                'sms_welcome_message_enabled', 
-                'sms_payment_confirmation_enabled', 
-                'sms_checkout_reminder_enabled'
+                'sms_enabled'
             ];
 
             // Process all form fields

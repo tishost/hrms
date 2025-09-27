@@ -142,16 +142,18 @@
                             </div>
                         </div>
 
-                        <!-- Message Template -->
+                        <!-- SMS Template Info -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <div class="form-group">
-                                    <label for="otp_message_template">SMS Message Template</label>
-                                    <textarea class="form-control" id="otp_message_template" name="otp_message_template"
-                                              rows="3" maxlength="500">{{ $settings->otp_message_template }}</textarea>
-                                    <small class="form-text text-muted">
-                                        Use {otp} for OTP code and {minutes} for expiry time. Max 500 characters.
-                                    </small>
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle me-2"></i>SMS Template Management</h6>
+                                    <p class="mb-2">OTP SMS messages are now managed through the unified SMS template system.</p>
+                                    <p class="mb-0">
+                                        <a href="{{ route('admin.templates.sms.index') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit me-1"></i>Manage OTP SMS Template
+                                        </a>
+                                        <small class="text-muted ms-2">Template Key: <code>system_otp_sms</code></small>
+                                    </p>
                                 </div>
                             </div>
                         </div>

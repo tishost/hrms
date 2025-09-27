@@ -79,6 +79,34 @@ class EmailTriggers
                 'description' => 'Triggered for account verification emails',
                 'variables' => ['user_name', 'verification_link', 'company_name'],
                 'category' => 'system'
+            ],
+            'otp_sent' => [
+                'name' => 'OTP Sent',
+                'event_class' => 'App\Events\OtpSent',
+                'description' => 'Triggered when OTP is sent to user',
+                'variables' => ['user_name', 'otp', 'minutes', 'phone', 'company_name'],
+                'category' => 'system'
+            ],
+            'otp_verification' => [
+                'name' => 'OTP Verification',
+                'event_class' => 'App\Events\OtpVerification',
+                'description' => 'Triggered for OTP verification process',
+                'variables' => ['user_name', 'otp', 'minutes', 'phone', 'verification_type', 'company_name'],
+                'category' => 'system'
+            ],
+            'otp_registration' => [
+                'name' => 'OTP Registration',
+                'event_class' => 'App\Events\OtpRegistration',
+                'description' => 'Triggered for OTP during user registration',
+                'variables' => ['user_name', 'otp', 'minutes', 'phone', 'company_name'],
+                'category' => 'system'
+            ],
+            'otp_password_reset' => [
+                'name' => 'OTP Password Reset',
+                'event_class' => 'App\Events\OtpPasswordReset',
+                'description' => 'Triggered for OTP during password reset',
+                'variables' => ['user_name', 'otp', 'minutes', 'phone', 'company_name'],
+                'category' => 'system'
             ]
         ];
     }
