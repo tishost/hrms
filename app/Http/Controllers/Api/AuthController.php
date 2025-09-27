@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Owner;
+use App\Models\Tenant;
 use App\Http\Requests\OwnerRegistrationRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
