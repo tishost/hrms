@@ -1024,6 +1024,25 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Check for soft deleted accounts
+            $softDeletedTenant = DB::table('tenants')->where('email', $email)->whereNotNull('deleted_at')->first();
+            $softDeletedOwner = DB::table('owners')->where('email', $email)->whereNotNull('deleted_at')->first();
+            $softDeletedUser = User::onlyTrashed()->where('email', $email)->first();
+
+            if ($softDeletedTenant || $softDeletedOwner || $softDeletedUser) {
+                $role = $softDeletedTenant ? 'tenant' : ($softDeletedOwner ? 'owner' : 'user');
+                $deletedAt = $softDeletedTenant ? $softDeletedTenant->deleted_at : ($softDeletedOwner ? $softDeletedOwner->deleted_at : ($softDeletedUser ? $softDeletedUser->deleted_at : null));
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An account with this email already exists but is deactivated.',
+                    'restore_available' => true,
+                    'restore_message' => 'Do you want to restore your old account? If yes, your account will be reactivated.',
+                    'deleted_at' => $deletedAt,
+                    'role' => $role
+                ], 409);
+            }
+
             // Not found in any table
             return response()->json([
                 'success' => true,
