@@ -34,7 +34,6 @@ class TenantController extends Controller
                 'success' => true,
                 'properties' => $properties
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching properties: ' . $e->getMessage());
             return response()->json([
@@ -83,7 +82,6 @@ class TenantController extends Controller
                     'address' => $property->address
                 ]
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching units: ' . $e->getMessage());
             return response()->json([
@@ -107,7 +105,7 @@ class TenantController extends Controller
             }
 
             $properties = Property::where('owner_id', $user->owner_id)
-                ->with(['units' => function($query) {
+                ->with(['units' => function ($query) {
                     $query->whereDoesntHave('tenant')
                         ->select('id', 'property_id', 'name', 'floor', 'rent');
                 }])
@@ -118,7 +116,6 @@ class TenantController extends Controller
                 'success' => true,
                 'properties' => $properties
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching properties with units: ' . $e->getMessage());
             return response()->json([
@@ -154,7 +151,6 @@ class TenantController extends Controller
                 'success' => true,
                 'tenant' => $tenant
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching tenant dashboard: ' . $e->getMessage());
             return response()->json([
@@ -227,12 +223,17 @@ class TenantController extends Controller
                 $allInvoices = \App\Models\Invoice::where('tenant_id', $tenant->id)->get();
 
                 foreach ($allInvoices as $invoice) {
-                    if ($invoice->status === 'unpaid') {
-                        $dueBalance += $invoice->amount ?? 0;
+                    $status = strtolower($invoice->status ?? '');
+                    // Debug: \Log::info("Tenant {$tenant->id} Invoice {$invoice->id}: Status='{$invoice->status}' (normalized='{$status}'), Amount={$invoice->amount}, TotalAmount={$invoice->total_amount}, Paid={$invoice->paid_amount}");
+                    if (in_array($status, ['unpaid'])) {
+                        $dueBalance += $invoice->total_amount ?? $invoice->amount ?? 0;
                     } else {
+                        // For paid, partial, and other statuses, add the paid amount
                         $totalPaid += $invoice->paid_amount ?? 0;
                     }
                 }
+
+                // Debug: \Log::info("Tenant {$tenant->id} Financial Summary: Due Balance={$dueBalance}, Total Paid={$totalPaid}");
 
                 return [
                     'id' => $tenant->id,
@@ -337,13 +338,17 @@ class TenantController extends Controller
             $allInvoices = \App\Models\Invoice::where('tenant_id', $tenant->id)->get();
 
             foreach ($allInvoices as $invoice) {
-                if ($invoice->status === 'unpaid') {
-                    $dueBalance += $invoice->amount ?? 0;
+                $status = strtolower($invoice->status ?? '');
+                // Debug: \Log::info("Tenant Details {$tenant->id} Invoice {$invoice->id}: Status='{$invoice->status}' (normalized='{$status}'), Amount={$invoice->amount}, TotalAmount={$invoice->total_amount}, Paid={$invoice->paid_amount}");
+                if (in_array($status, ['unpaid'])) {
+                    $dueBalance += $invoice->total_amount ?? $invoice->amount ?? 0;
                 } else {
-                    // For paid and partial invoices, add the paid amount
+                    // For paid, partial, and other statuses, add the paid amount
                     $totalPaid += $invoice->paid_amount ?? 0;
                 }
             }
+
+            // Debug: \Log::info("Tenant Details {$tenant->id} Financial Summary: Due Balance={$dueBalance}, Total Paid={$totalPaid}");
 
             $responseData = [
                 'tenant' => [
@@ -434,7 +439,7 @@ class TenantController extends Controller
                 ], 401);
             }
 
-            $tenant = Tenant::whereHas('unit.property', function($query) use ($user) {
+            $tenant = Tenant::whereHas('unit.property', function ($query) use ($user) {
                 $query->where('owner_id', $user->owner_id);
             })->find($id);
 
@@ -444,10 +449,10 @@ class TenantController extends Controller
                 ], 404);
             }
 
-                        // Get all due bills (unpaid invoices and partial payments)
+            // Get all due bills (unpaid invoices and partial payments)
             $dueBills = [];
 
-                        // Get unpaid invoices with details
+            // Get unpaid invoices with details
             $unpaidInvoices = \DB::table('invoices')
                 ->where('tenant_id', $id)
                 ->where('unit_id', $tenant->unit_id)
@@ -468,7 +473,7 @@ class TenantController extends Controller
                 ];
             }
 
-                        // Get partial payments with details
+            // Get partial payments with details
             $partialPayments = \DB::table('rent_payments')
                 ->where('tenant_id', $id)
                 ->where('unit_id', $tenant->unit_id)
@@ -505,7 +510,6 @@ class TenantController extends Controller
                 'outstanding_amount' => $totalOutstanding,
                 'due_bills' => $dueBills
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching outstanding amount: ' . $e->getMessage());
             return response()->json([
@@ -656,7 +660,6 @@ class TenantController extends Controller
                 'message' => 'Tenant created successfully with invoices',
                 'tenant' => $tenant
             ], 201);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -670,7 +673,7 @@ class TenantController extends Controller
         }
     }
 
-        /**
+    /**
      * Generate initial invoices for new tenant
      */
     private function generateInitialInvoices($tenant, $unit, $startMonth)
@@ -756,7 +759,6 @@ class TenantController extends Controller
             ]);
 
             \Log::info("Generated rent invoice for tenant {$tenant->id}: Invoice ID {$rentInvoice->id}");
-
         } catch (\Exception $e) {
             \Log::error('Error generating invoices: ' . $e->getMessage());
         }
@@ -813,7 +815,6 @@ class TenantController extends Controller
             ]);
 
             \Log::info("Generated ledger transactions for tenant {$tenant->id}");
-
         } catch (\Exception $e) {
             \Log::error('Error generating ledger transactions: ' . $e->getMessage());
         }
@@ -947,7 +948,6 @@ class TenantController extends Controller
                 'message' => 'Tenant updated successfully',
                 'tenant' => $tenant->fresh()
             ], 200);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -976,7 +976,7 @@ class TenantController extends Controller
             } elseif ($user && $user->tenant_id) {
                 $tenantId = $user->tenant_id;
             }
-            
+
             if (!$tenantId) {
                 \Log::error("Authentication failed - User: " . ($user ? $user->name : 'No user') . ", Tenant ID: " . ($user ? $user->tenant_id : 'No tenant_id') . ", Has tenant relation: " . ($user && $user->tenant ? 'Yes' : 'No'));
                 return response()->json([
@@ -1082,7 +1082,6 @@ class TenantController extends Controller
                 'Pragma' => 'no-cache',
                 'Expires' => '0',
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Tenant invoice PDF error: ' . $e->getMessage());
             return response()->json([
@@ -1121,7 +1120,7 @@ class TenantController extends Controller
             // Calculate total monthly charges
             $monthlyRent = $tenant->unit->rent ?? 0;
             $totalCharges = 0;
-            
+
             if ($tenant->unit && $tenant->unit->charges) {
                 foreach ($tenant->unit->charges as $charge) {
                     $totalCharges += $charge->amount ?? 0;
@@ -1149,7 +1148,7 @@ class TenantController extends Controller
             // Get fees from unit charges
             $fees = [];
             $totalFees = 0;
-            
+
             if ($tenant->unit && $tenant->unit->charges) {
                 foreach ($tenant->unit->charges as $charge) {
                     $feeAmount = $charge->amount ?? 0;
@@ -1196,7 +1195,6 @@ class TenantController extends Controller
                     'agreement_details' => $agreementDetails
                 ]
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching rent agreement: ' . $e->getMessage());
             return response()->json([
