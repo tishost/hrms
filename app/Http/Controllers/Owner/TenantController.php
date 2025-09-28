@@ -335,6 +335,32 @@ class TenantController extends Controller
         // Get recent invoices (last 5)
         $recentInvoices = $invoices->take(5);
         
+        // Get notification logs for this tenant
+        $notificationLogs = \App\Models\NotificationLog::where('user_id', $tenant->id)
+            ->orWhere('recipient', $tenant->mobile)
+            ->orWhere('recipient', $tenant->email)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Get tenant-specific email and SMS templates for sending notifications
+        $emailTemplates = \App\Models\EmailTemplate::where('is_active', true)
+            ->where(function($query) {
+                $query->where('trigger_event', 'like', '%tenant%')
+                      ->orWhere('category', 'tenant')
+                      ->orWhere('name', 'like', '%tenant%')
+                      ->orWhere('key', 'like', '%tenant%');
+            })
+            ->get();
+            
+        $smsTemplates = \App\Models\SmsTemplate::where('is_active', true)
+            ->where(function($query) {
+                $query->where('trigger_event', 'like', '%tenant%')
+                      ->orWhere('category', 'tenant')
+                      ->orWhere('name', 'like', '%tenant%')
+                      ->orWhere('key', 'like', '%tenant%');
+            })
+            ->get();
+        
         return view('owner.tenants.show', compact(
             'tenant', 
             'rentPayments', 
@@ -345,12 +371,25 @@ class TenantController extends Controller
             'advanceBalance', 
             'nextDueDate',
             'recentPayments',
-            'recentInvoices'
+            'recentInvoices',
+            'notificationLogs',
+            'emailTemplates',
+            'smsTemplates'
         ));
     }
 
     public function edit(Tenant $tenant)
     {
+        // Check if user is authenticated
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'Please login to access this page.');
+        }
+
+        // Check if user has owner relationship
+        if (!auth()->user()->owner) {
+            return redirect()->route('dashboard')->with('error', 'Unauthorized access.');
+        }
+
         // Check if tenant belongs to the current owner
         $ownerId = auth()->user()->owner->id;
         if ($tenant->owner_id !== $ownerId) {
@@ -412,6 +451,76 @@ class TenantController extends Controller
             }
 
             return response()->json($unitData);
+    }
+
+    /**
+     * Send notification to tenant
+     */
+    public function sendNotification(Request $request, Tenant $tenant)
+    {
+        // Check if tenant belongs to the current owner
+        $ownerId = auth()->user()->owner->id;
+        if ($tenant->owner_id !== $ownerId) {
+            return redirect()->route('owner.tenants.index')->with('error', 'Unauthorized access.');
+        }
+
+        $request->validate([
+            'notification_type' => 'required|in:email,sms',
+            'template_id' => 'required|integer',
+            'subject' => 'required_if:notification_type,email|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        try {
+            $notificationService = new \App\Services\NotificationService();
+            
+            if ($request->notification_type === 'email') {
+                // Validate email address
+                if (!$tenant->email || $tenant->email === 'N/A' || !filter_var($tenant->email, FILTER_VALIDATE_EMAIL)) {
+                    return redirect()->route('owner.tenants.show', $tenant->id)
+                        ->with('error', 'Tenant does not have a valid email address. Please update tenant information first.');
+                }
+                
+                // Send email notification
+                $result = $notificationService->sendEmail(
+                    $tenant->email,
+                    $request->subject,
+                    $request->message,
+                    'manual_notification',
+                    [
+                        'tenant_name' => $tenant->first_name . ' ' . $tenant->last_name,
+                        'property_name' => $tenant->unit->property->name ?? 'Property',
+                        'unit_name' => $tenant->unit->name ?? 'Unit',
+                        'company_name' => \App\Helpers\SystemHelper::getCompanyName(),
+                    ]
+                );
+            } else {
+                // Send SMS notification
+                $result = $notificationService->sendSms(
+                    $tenant->mobile,
+                    $request->message,
+                    'manual_notification',
+                    [
+                        'tenant_name' => $tenant->first_name . ' ' . $tenant->last_name,
+                        'property_name' => $tenant->unit->property->name ?? 'Property',
+                        'unit_name' => $tenant->unit->name ?? 'Unit',
+                        'company_name' => \App\Helpers\SystemHelper::getCompanyName(),
+                    ]
+                );
+            }
+
+            if ($result['success']) {
+                return redirect()->route('owner.tenants.show', $tenant->id)
+                    ->with('success', ucfirst($request->notification_type) . ' notification sent successfully!');
+            } else {
+                return redirect()->route('owner.tenants.show', $tenant->id)
+                    ->with('error', 'Failed to send notification: ' . $result['message']);
+            }
+
+        } catch (\Exception $e) {
+            return redirect()->route('owner.tenants.show', $tenant->id)
+                ->with('error', 'Error sending notification: ' . $e->getMessage());
+        }
     }
 
 }

@@ -16,8 +16,7 @@ use App\Events\PasswordReset;
 use App\Events\AccountVerification;
 use App\Events\OtpSent;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\SmsNotification;
+use App\Services\NotificationService;
 
 class SmsTemplateListener
 {
@@ -163,6 +162,20 @@ class SmsTemplateListener
     }
 
     /**
+     * Handle tenant registration events
+     */
+    public function handleTenantRegistered($event)
+    {
+        $this->sendTemplateSms('tenant_registration_welcome', $event->user, [
+            'tenant_name' => trim(($event->tenant->first_name ?? '') . ' ' . ($event->tenant->last_name ?? '')),
+            'property_name' => $event->property->name ?? 'Property',
+            'unit_name' => $event->unit->name ?? 'Unit',
+            'monthly_rent' => number_format($event->unit->rent ?? 0),
+            'company_name' => \App\Helpers\SystemHelper::getCompanyName(),
+        ]);
+    }
+
+    /**
      * Handle OTP sent events
      */
     public function handleOtpSent(OtpSent $event)
@@ -222,10 +235,15 @@ class SmsTemplateListener
                 $content = str_replace('{{' . $key . '}}', $value, $content);
             }
 
-            // Send the SMS
-            Notification::send($user, new SmsNotification($content));
+            // Send the SMS using NotificationService
+            $notificationService = new NotificationService();
+            $result = $notificationService->sendSms($user->phone, $content, $templateName, $variables);
 
-            Log::info("SMS template '{$template->name}' (trigger: {$templateName}) sent to {$user->phone}");
+            if ($result['success']) {
+                Log::info("SMS template '{$template->name}' (trigger: {$templateName}) sent to {$user->phone}");
+            } else {
+                Log::error("Failed to send SMS template '{$templateName}' to {$user->phone}: " . $result['message']);
+            }
 
         } catch (\Exception $e) {
             Log::error("Failed to send SMS template '{$templateName}': " . $e->getMessage());

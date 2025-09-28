@@ -86,9 +86,6 @@
                 <li class="{{ request()->routeIs('owner.subscription.billing') ? 'active' : '' }}">
                     <a href="{{ route('owner.subscription.billing') }}">💳 Billing History</a>
                 </li>
-                <li class="{{ request()->routeIs('owner.subscription.payment') ? 'active' : '' }}">
-                    <a href="{{ route('owner.subscription.payment') }}">💸 Payment Methods</a>
-                </li>
             </ul>
         </li>
 

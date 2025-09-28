@@ -107,6 +107,38 @@ class EmailTriggers
                 'description' => 'Triggered for OTP during password reset',
                 'variables' => ['user_name', 'otp', 'minutes', 'phone', 'company_name'],
                 'category' => 'system'
+            ],
+            'subscription_order' => [
+                'name' => 'Subscription Order',
+                'event_class' => 'App\Events\SubscriptionOrder',
+                'description' => 'Triggered when a subscription order is placed',
+                'variables' => [
+                    'owner_name', 'owner_email', 'plan_name', 'plan_price', 'invoice_number', 
+                    'order_date', 'due_date', 'payment_method', 'billing_cycle', 'features_included',
+                    'company_name', 'support_email', 'invoice_download_link'
+                ],
+                'category' => 'subscription'
+            ],
+            'subscription_payment_confirmation' => [
+                'name' => 'Subscription Payment Confirmation',
+                'event_class' => 'App\Events\SubscriptionPaymentConfirmed',
+                'description' => 'Triggered when subscription payment is confirmed',
+                'variables' => [
+                    'owner_name', 'owner_email', 'plan_name', 'amount_paid', 'transaction_id', 
+                    'payment_date', 'payment_method', 'invoice_number', 'subscription_start_date',
+                    'subscription_end_date', 'company_name', 'support_email', 'paid_invoice_download_link'
+                ],
+                'category' => 'subscription'
+            ],
+            'subscription_activation' => [
+                'name' => 'Subscription Activation',
+                'event_class' => 'App\Events\SubscriptionActivated',
+                'description' => 'Triggered when subscription is activated',
+                'variables' => [
+                    'owner_name', 'owner_email', 'plan_name', 'subscription_start_date',
+                    'subscription_end_date', 'company_name', 'support_email'
+                ],
+                'category' => 'subscription'
             ]
         ];
     }

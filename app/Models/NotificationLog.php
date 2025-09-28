@@ -14,6 +14,7 @@ class NotificationLog extends Model
         'owner_id',
         'type',
         'recipient',
+        'subject',
         'content',
         'status',
         'sent_at',

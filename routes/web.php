@@ -224,6 +224,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     // Invoice routes
     Route::get('invoices', [App\Http\Controllers\Owner\InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}', [App\Http\Controllers\Owner\InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('invoices/{invoice}/payment', [App\Http\Controllers\Owner\InvoiceController::class, 'paymentForm'])->name('invoices.payment');
+    Route::get('invoices/{invoice}/payment-history', [App\Http\Controllers\Owner\InvoiceController::class, 'paymentHistory'])->name('invoices.payment.history');
+    Route::post('invoices/{invoice}/payment', [App\Http\Controllers\Owner\InvoiceController::class, 'processPayment'])->name('invoices.payment.process');
 
     // Checkout routes
     Route::get('checkouts', [CheckoutController::class, 'index'])->name('checkouts.index');
@@ -247,6 +250,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('subscription/payment/success', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentSuccess'])->name('subscription.payment.success');
     Route::get('subscription/payment/cancel', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentCancel'])->name('subscription.payment.cancel');
     Route::get('subscription/payment/fail', [App\Http\Controllers\Owner\SubscriptionController::class, 'paymentFail'])->name('subscription.payment.fail');
+    
+    // Subscription Invoice routes
+    Route::get('subscription/invoice/{billingId}/download', [App\Http\Controllers\Owner\Subscription\InvoiceController::class, 'downloadInvoice'])->name('subscription.invoice.download');
+    Route::get('subscription/invoice/{billingId}/view', [App\Http\Controllers\Owner\Subscription\InvoiceController::class, 'viewInvoice'])->name('subscription.invoice.view');
 
     // Invoice routes
     Route::get('invoice/{billingId}/view', [App\Http\Controllers\Owner\InvoiceController::class, 'viewInvoice'])->name('invoice.view');

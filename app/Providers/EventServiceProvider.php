@@ -73,6 +73,23 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\OtpSent::class => [
             \App\Listeners\SmsTemplateListener::class . '@handleOtpSent',
         ],
+
+        \App\Events\TenantRegistered::class => [
+            \App\Listeners\EmailTemplateListener::class . '@handleTenantRegistered',
+            \App\Listeners\SmsTemplateListener::class . '@handleTenantRegistered',
+        ],
+
+        \App\Events\SubscriptionOrder::class => [
+            \App\Listeners\EmailTemplateListener::class . '@handleSubscriptionOrder',
+        ],
+
+        \App\Events\SubscriptionPaymentConfirmed::class => [
+            \App\Listeners\EmailTemplateListener::class . '@handleSubscriptionPaymentConfirmed',
+        ],
+
+        \App\Events\SubscriptionActivated::class => [
+            \App\Listeners\EmailTemplateListener::class . '@handleSubscriptionActivated',
+        ],
     ];
 
     /**

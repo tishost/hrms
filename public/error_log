@@ -118,3 +118,84 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 05:16:42 UTC] PHP Warning:  PHP Startup: session.gc_divisor must be greater than 0 in Unknown on line 0
+[28-Sep-2025 06:10:36 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:10:36 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:17:59 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:17:59 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:26:11 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:26:11 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:26:27 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:26:27 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:26:30 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 06:26:30 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 07:50:24 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 07:50:24 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 07:50:24 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 07:50:24 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 07:50:24 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 07:50:24 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 08:40:13 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 08:40:13 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 09:24:52 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 09:24:52 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 09:24:52 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 09:24:52 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 10:16:36 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 10:16:36 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 11:37:19 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 11:37:19 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 11:37:23 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 11:37:23 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 12:38:10 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 12:38:10 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 12:50:08 UTC] PHP Warning:  require_once(/home/barimanager/hrms/public/index.php): Failed to open stream: No such file or directory in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23
+[28-Sep-2025 12:50:08 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/barimanager/hrms/public/index.php' (include_path='.:/opt/cpanel/ea-php84/root/usr/share/pear') in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/barimanager/hrms/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php on line 23

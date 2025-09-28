@@ -92,6 +92,12 @@ class Billing extends Model
     public static function createUpgradeInvoice($upgradeRequest)
     {
         $amount = (float) ($upgradeRequest->amount ?? 0);
+        
+        // Generate unique invoice number - S + Year (last 2 digits) + 5 digit sequence
+        $year = substr(date('Y'), -2);
+        $sequence = str_pad(static::whereYear('created_at', date('Y'))->count() + 1, 5, '0', STR_PAD_LEFT);
+        $invoiceNumber = 'S' . $year . $sequence;
+        
         return self::create([
             'owner_id' => $upgradeRequest->owner_id,
             'subscription_id' => $upgradeRequest->current_subscription_id,
@@ -101,7 +107,7 @@ class Billing extends Model
             'status' => 'unpaid',
             'billing_type' => 'upgrade',
             'due_date' => now()->addDays(7),
-            'invoice_number' => 'UPG-' . date('Y') . '-' . str_pad($upgradeRequest->id, 6, '0', STR_PAD_LEFT)
+            'invoice_number' => $invoiceNumber
         ]);
     }
 

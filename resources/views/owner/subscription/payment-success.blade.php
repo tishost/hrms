@@ -28,6 +28,11 @@
                         <a href="{{ route('owner.dashboard') }}" class="btn btn-primary">
                             <i class="fas fa-home"></i> Go to Dashboard
                         </a>
+                        @if(session('billing_id'))
+                        <a href="{{ route('owner.subscription.invoice.download', session('billing_id')) }}" class="btn btn-success ml-2">
+                            <i class="fas fa-download"></i> Download Invoice PDF
+                        </a>
+                        @endif
                         <a href="{{ route('owner.subscription.billing') }}" class="btn btn-outline-secondary ml-2">
                             <i class="fas fa-file-invoice"></i> View Billing History
                         </a>

@@ -133,7 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/owner/invoices', [InvoiceController::class, 'index']);
     Route::post('/invoices/{invoiceId}/pay', [InvoiceController::class, 'pay']);
     Route::get('/invoices/{invoiceId}/pdf', [InvoiceController::class, 'generatePdf']);
-
+    Route::get('/invoices/{invoiceId}/payment-history', [InvoiceController::class, 'getPaymentHistory']);
     // Owner Profile Update
     Route::post('/owner/profile/update', [OwnerController::class, 'updateProfile']);
 

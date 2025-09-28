@@ -256,8 +256,12 @@ class InvoiceController extends Controller
                 'description' => "Payment for invoice #{$invoice->invoice_number}",
                 'payment_status' => 'completed',
                 'payment_reference' => $request->reference_number,
+                'payment_method' => $paymentMethod,
                 'notes' => $request->notes,
                 'transaction_date' => now(),
+                'reference_type' => 'invoice',
+                'reference_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
             ]);
 
             DB::commit();
@@ -431,6 +435,86 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
+    
+    /**
+     * Get payment history for a specific invoice
+     */
+    public function getPaymentHistory(Request $request, $invoiceId)
+    {
+        try {
+            $user = $request->user();
+
+            // Resolve owner id robustly
+            $ownerId = null;
+            if ($user && $user->owner) {
+                $ownerId = $user->owner->id;
+            } elseif ($user && !empty($user->owner_id)) {
+                $ownerId = $user->owner_id;
+            } else {
+                $ownerRecord = \App\Models\Owner::where('user_id', $user->id ?? null)->first();
+                if ($ownerRecord) {
+                    $ownerId = $ownerRecord->id;
+                }
+            }
+
+            if (!$ownerId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner account not found for this user.'
+                ], 403);
+            }
+
+            // Verify invoice belongs to owner
+            $invoice = Invoice::where('id', $invoiceId)
+                ->where('owner_id', $ownerId)
+                ->first();
+
+            if (!$invoice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice not found'
+                ], 404);
+            }
+
+            // Get payment history for this invoice
+            $payments = RentPayment::where('invoice_id', $invoiceId)
+                ->where('owner_id', $ownerId)
+                ->orderBy('payment_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'amount' => $payment->amount,
+                        'payment_method' => $payment->payment_method,
+                        'reference_number' => $payment->reference_number,
+                        'notes' => $payment->notes,
+                        'payment_date' => $payment->payment_date,
+                        'created_at' => $payment->created_at,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'payments' => $payments,
+                'invoice' => [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'amount' => $invoice->amount,
+                    'paid_amount' => $invoice->paid_amount ?? 0,
+                    'status' => $invoice->status,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Payment history error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load payment history'
+            ], 500);
+        }
+    }
+
 
     private function calculateNewBalance($tenantId, $paymentAmount)
     {

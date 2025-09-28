@@ -132,6 +132,20 @@ class TenantRegistrationController extends Controller
             // Commit transaction
             DB::commit();
 
+            // Dispatch tenant registered event for email notification
+            try {
+                $property = $tenant->unit->property ?? null;
+                $unit = $tenant->unit ?? null;
+                event(new \App\Events\TenantRegistered($tenant, $user, $property, $unit));
+                \Log::info('Tenant registered event dispatched', [
+                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
+                    'email' => $tenant->email
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to dispatch tenant registered event: ' . $e->getMessage());
+            }
+
             \Log::info('Tenant registration completed successfully', [
                 'user_id' => $user->id,
                 'mobile' => $request->mobile,

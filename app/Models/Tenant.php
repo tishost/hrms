@@ -101,8 +101,8 @@ class Tenant extends Model
         return $this->mobile;
     }
 
-    public function getEmailAttribute()
+    public function getEmailAttribute($value)
     {
-        return $this->email ?? 'N/A';
+        return $value ?? 'N/A';
     }
 }

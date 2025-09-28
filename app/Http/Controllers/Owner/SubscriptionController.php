@@ -716,6 +716,29 @@ class SubscriptionController extends Controller
             }
         }
 
+        // Store billing ID in session for PDF download
+        if ($billing) {
+            session(['billing_id' => $billing->id]);
+            session(['transaction_id' => $billing->transaction_id]);
+        }
+
+        // Dispatch payment confirmation event
+        if ($billing && $billing->status === 'paid') {
+            event(new \App\Events\SubscriptionPaymentConfirmed(
+                $billing->owner,
+                $billing->subscription,
+                $billing,
+                $billing->subscription->plan
+            ));
+            
+            // Dispatch subscription activation event
+            event(new \App\Events\SubscriptionActivated(
+                $billing->owner,
+                $billing->subscription,
+                $billing->subscription->plan
+            ));
+        }
+
         return view('owner.subscription.payment-success');
     }
 

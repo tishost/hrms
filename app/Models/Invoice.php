@@ -12,7 +12,9 @@ class Invoice extends Model
 
         static::creating(function ($invoice) {
             if (empty($invoice->invoice_number)) {
-                $invoice->invoice_number = 'INV-' . date('Y') . '-' . str_pad(static::whereYear('created_at', date('Y'))->count() + 1, 4, '0', STR_PAD_LEFT);
+                $year = substr(date('Y'), -2); // Get last 2 digits of year
+                $sequence = str_pad(static::whereYear('created_at', date('Y'))->count() + 1, 6, '0', STR_PAD_LEFT);
+                $invoice->invoice_number = $year . $sequence;
             }
         });
     }
@@ -31,6 +33,7 @@ class Invoice extends Model
         'due_date',
         'paid_date',
         'payment_method',
+        'transaction_id',
         'notes',
         'description',
         'breakdown',

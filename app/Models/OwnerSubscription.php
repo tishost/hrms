@@ -166,8 +166,20 @@ class OwnerSubscription extends Model
 
     public function generateInvoice()
     {
-        // Generate unique invoice number
-        $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+        // Generate unique invoice number - S + Year (last 2 digits) + 5 digit sequence
+        $year = substr(date('Y'), -2);
+        $lastBilling = \App\Models\Billing::where('invoice_number', 'like', 'S' . $year . '%')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        if ($lastBilling) {
+            $lastSequence = (int) substr($lastBilling->invoice_number, 3);
+            $sequence = str_pad($lastSequence + 1, 5, '0', STR_PAD_LEFT);
+        } else {
+            $sequence = '00001';
+        }
+        
+        $invoiceNumber = 'S' . $year . $sequence;
 
         // Log before creating billing
         \Log::info('Generating invoice', [

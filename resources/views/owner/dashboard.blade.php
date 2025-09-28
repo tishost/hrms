@@ -73,6 +73,59 @@
         </div>
     </div>
 </div>
+
+<!-- Financial Cards -->
+<div class="stats-grid mb-4">
+    <div class="stat-card financial-card">
+        <div class="stat-header">
+            <div>
+                <div class="stat-title">Monthly Received</div>
+                <div class="stat-value text-success">৳{{ number_format($financialData['monthly_received']) }}</div>
+                <small class="text-muted">{{ now()->format('F Y') }}</small>
+            </div>
+            <div class="stat-icon revenue">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card financial-card">
+        <div class="stat-header">
+            <div>
+                <div class="stat-title">Due Amount</div>
+                <div class="stat-value text-danger">৳{{ number_format($financialData['due_amount']) }}</div>
+                <small class="text-muted">{{ $financialData['unpaid_invoices'] }} unpaid invoices</small>
+            </div>
+            <div class="stat-icon orders">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card financial-card">
+        <div class="stat-header">
+            <div>
+                <div class="stat-title">All Time Paid</div>
+                <div class="stat-value text-primary">৳{{ number_format($financialData['all_time_paid']) }}</div>
+                <small class="text-muted">{{ $financialData['paid_invoices'] }} paid invoices</small>
+            </div>
+            <div class="stat-icon sales">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card financial-card">
+        <div class="stat-header">
+            <div>
+                <div class="stat-title">Total Invoiced</div>
+                <div class="stat-value text-info">৳{{ number_format($financialData['total_invoiced']) }}</div>
+                <small class="text-muted">{{ $financialData['total_invoices'] }} total invoices</small>
+            </div>
+            <div class="stat-icon revenue">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Package Limits Widget -->
 <div class="row mb-4">
     <div class="col-12">
@@ -970,6 +1023,63 @@
     .chart-container {
         height: 200px;
     }
+}
+
+/* Financial Cards Styling */
+.financial-card {
+    border-left: 4px solid #28a745;
+    transition: all 0.3s ease;
+}
+
+.financial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.financial-card .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.financial-card .text-success {
+    color: #28a745 !important;
+}
+
+.financial-card .text-danger {
+    color: #dc3545 !important;
+}
+
+.financial-card .text-primary {
+    color: #007bff !important;
+}
+
+.financial-card .text-info {
+    color: #17a2b8 !important;
+}
+
+.financial-card .stat-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.financial-card .stat-icon.revenue {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.financial-card .stat-icon.orders {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+}
+
+.financial-card .stat-icon.sales {
+    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
 }
 </style>
 @endsection

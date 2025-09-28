@@ -20,30 +20,54 @@
                                         <p class="card-text">{{ $plan->description }}</p>
                                         <div class="plan-details">
                                             <div class="plan-detail-item">
-                                                <strong>Status:</strong>
-                                                <span class="badge bg-{{ $subscription->status === 'active' ? 'success' : ($subscription->status === 'pending' ? 'warning' : 'danger') }}">
-                                                    {{ ucfirst($subscription->status) }}
+                                                <strong style="color: #333; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #dee2e6;">Status:</strong>
+                                                <span style="background-color: #28a745; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                                                    Active
                                                 </span>
                                             </div>
                                             <div class="plan-detail-item">
-                                                <strong>Price:</strong> ৳{{ number_format($plan->price, 2) }}/year
+                                                <strong style="color: #333; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #dee2e6;">Price:</strong> 
+                                                <span style="color: #333; background: #fff3cd; padding: 4px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #ffeaa7;">৳{{ number_format($plan->price, 2) }}/year</span>
                                             </div>
+                                            @if($subscription->end_date)
+                                            <div class="plan-detail-item">
+                                                <strong style="color: #333; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #dee2e6;">Package Expires:</strong> 
+                                                <span style="color: #333; background: #d1ecf1; padding: 4px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #bee5eb;">{{ $subscription->end_date->format('M d, Y') }}</span>
+                                            </div>
+                                            @endif
                                         </div>
                                         @if($subscription->start_date && $subscription->end_date)
                                             <div class="plan-details">
                                                 <div class="plan-detail-item">
-                                                    <strong>Start Date:</strong> {{ $subscription->start_date->format('M d, Y') }}
+                                                    <strong style="color: #ffffff;">Start Date:</strong> 
+                                                    <span style="color: #ffffff;">{{ $subscription->start_date->format('M d, Y') }}</span>
                                                 </div>
                                                 <div class="plan-detail-item">
-                                                    <strong>End Date:</strong> {{ $subscription->end_date->format('M d, Y') }}
+                                                    <strong style="color: #ffffff;">End Date:</strong> 
+                                                    <span style="color: #ffffff;">{{ $subscription->end_date->format('M d, Y') }}</span>
                                                 </div>
                                             </div>
-                                            @if($subscription->daysUntilExpiry() !== null)
+                                            @php
+                                                $daysRemaining = null;
+                                                if ($subscription->end_date) {
+                                                    $endDate = \Carbon\Carbon::parse($subscription->end_date);
+                                                    $daysRemaining = now()->diffInDays($endDate, false);
+                                                }
+                                            @endphp
+                                            @if($daysRemaining !== null)
                                                 <div class="plan-details">
                                                     <div class="plan-detail-item">
-                                                        <strong>Days Remaining:</strong>
-                                                        <span class="badge bg-{{ $subscription->daysUntilExpiry() > 30 ? 'success' : ($subscription->daysUntilExpiry() > 7 ? 'warning' : 'danger') }}">
-                                                            {{ $subscription->daysUntilExpiry() }} days
+                                                        <strong style="color: #ffffff;">Days Remaining:</strong>
+                                                        @php
+                                                            $badgeColor = '#28a745'; // Green default
+                                                            if ($daysRemaining <= 7) {
+                                                                $badgeColor = '#dc3545'; // Red
+                                                            } elseif ($daysRemaining <= 30) {
+                                                                $badgeColor = '#ffc107'; // Yellow
+                                                            }
+                                                        @endphp
+                                                        <span style="background-color: {{ $badgeColor }}; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                                                            {{ $daysRemaining }} days
                                                         </span>
                                                     </div>
                                                 </div>

@@ -83,6 +83,11 @@ public function tenants()
     return $this->hasMany(Tenant::class, 'owner_id');
 }
 
+public function units()
+{
+    return $this->hasManyThrough(Unit::class, Property::class, 'owner_id', 'property_id');
+}
+
 public function notificationLogs()
 {
     return $this->hasManyThrough(NotificationLog::class, User::class, 'owner_id', 'user_id');
