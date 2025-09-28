@@ -185,7 +185,7 @@ class TenantController extends Controller
             }
 
             // Build query
-            $query = Tenant::whereHas('unit.property', function($query) use ($owner) {
+            $query = Tenant::whereHas('unit.property', function ($query) use ($owner) {
                 $query->where('owner_id', $owner->id);
             })->with(['unit.property']);
 
@@ -203,34 +203,37 @@ class TenantController extends Controller
 
             // Apply property filter
             if ($request->has('property') && $request->property !== 'all') {
-                $query->whereHas('unit.property', function($query) use ($request) {
+                $query->whereHas('unit.property', function ($query) use ($request) {
                     $query->where('name', $request->property);
                 });
             }
 
-            $tenants = $query->get()->map(function($tenant) {
+            $tenants = $query->get()->map(function ($tenant) {
                 // Calculate total rent (base rent + charges)
                 $baseRent = $tenant->unit->rent ?? 0;
                 $totalCharges = 0;
-                
+
                 if ($tenant->unit && $tenant->unit->charges) {
                     foreach ($tenant->unit->charges as $charge) {
                         $totalCharges += $charge->amount ?? 0;
                     }
                 }
-                
+
                 $totalRent = $baseRent + $totalCharges;
-                
-                // Calculate due balance
+
+                // Calculate due balance and total paid
                 $dueBalance = 0;
-                $invoices = \App\Models\Invoice::where('tenant_id', $tenant->id)
-                    ->where('status', 'unpaid')
-                    ->get();
-                
-                foreach ($invoices as $invoice) {
-                    $dueBalance += $invoice->total_amount ?? 0;
+                $totalPaid = 0;
+                $allInvoices = \App\Models\Invoice::where('tenant_id', $tenant->id)->get();
+
+                foreach ($allInvoices as $invoice) {
+                    if ($invoice->status === 'unpaid') {
+                        $dueBalance += $invoice->amount ?? 0;
+                    } else {
+                        $totalPaid += $invoice->paid_amount ?? 0;
+                    }
                 }
-                
+
                 return [
                     'id' => $tenant->id,
                     'name' => $tenant->first_name . ' ' . $tenant->last_name,
@@ -241,6 +244,7 @@ class TenantController extends Controller
                     'rent' => $baseRent,
                     'total_rent' => $totalRent,
                     'due_balance' => $dueBalance,
+                    'total_paid' => $totalPaid,
                     'status' => $tenant->status ?? 'active',
                     'created_at' => $tenant->created_at,
                 ];
@@ -249,7 +253,6 @@ class TenantController extends Controller
             return response()->json([
                 'tenants' => $tenants
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching tenants: ' . $e->getMessage());
             return response()->json([
@@ -284,11 +287,11 @@ class TenantController extends Controller
                 ], 401);
             }
 
-            $tenant = Tenant::whereHas('unit.property', function($query) use ($user) {
+            $tenant = Tenant::whereHas('unit.property', function ($query) use ($user) {
                 $query->where('owner_id', $user->owner_id);
             })
-            ->with(['unit.property'])
-            ->find($id);
+                ->with(['unit.property'])
+                ->find($id);
 
             if (!$tenant) {
                 return response()->json([
@@ -302,18 +305,18 @@ class TenantController extends Controller
             $cleaningCharges = 0;
             $otherCharges = 0;
             $unitCharges = [];
-            
+
             if ($tenant->unit && $tenant->unit->charges) {
                 foreach ($tenant->unit->charges as $charge) {
                     $chargeAmount = $charge->amount ?? 0;
                     $totalCharges += $chargeAmount;
-                    
+
                     // Add individual charge details
                     $unitCharges[] = [
                         'label' => $charge->label ?? 'Unknown',
                         'amount' => $chargeAmount,
                     ];
-                    
+
                     // Categorize charges based on label
                     $label = strtolower($charge->label ?? '');
                     if (strpos($label, 'cleaning') !== false) {
@@ -323,17 +326,23 @@ class TenantController extends Controller
                     }
                 }
             }
-            
+
             $totalRent = $baseRent + $totalCharges;
-            
-            // Calculate due balance
+
+            // Calculate due balance and total paid
             $dueBalance = 0;
-            $invoices = \App\Models\Invoice::where('tenant_id', $tenant->id)
-                ->where('status', 'unpaid')
-                ->get();
-            
-            foreach ($invoices as $invoice) {
-                $dueBalance += $invoice->total_amount ?? 0;
+            $totalPaid = 0;
+
+            // Get all invoices for this tenant
+            $allInvoices = \App\Models\Invoice::where('tenant_id', $tenant->id)->get();
+
+            foreach ($allInvoices as $invoice) {
+                if ($invoice->status === 'unpaid') {
+                    $dueBalance += $invoice->amount ?? 0;
+                } else {
+                    // For paid and partial invoices, add the paid amount
+                    $totalPaid += $invoice->paid_amount ?? 0;
+                }
             }
 
             $responseData = [
@@ -371,6 +380,7 @@ class TenantController extends Controller
                     'rent' => $baseRent,
                     'total_rent' => $totalRent,
                     'due_balance' => $dueBalance,
+                    'total_paid' => $totalPaid,
                     'cleaning_charges' => $cleaningCharges,
                     'other_charges' => $otherCharges,
                     'unit_charges' => $unitCharges,
@@ -402,7 +412,6 @@ class TenantController extends Controller
             \Log::info('NID Images - Front: ' . ($tenant->nid_front_picture ?? 'null') . ', Back: ' . ($tenant->nid_back_picture ?? 'null'));
 
             return response()->json($responseData);
-
         } catch (\Exception $e) {
             \Log::error('Error fetching tenant details: ' . $e->getMessage());
             return response()->json([

@@ -339,18 +339,22 @@
           </thead>
           <tbody>
             @php
-              $txnDate = isset($lastPayment) ? ($lastPayment->payment_date ? $lastPayment->payment_date->format('Y-m-d') : null) : ($invoice->paid_date ?? null);
-              $gateway = isset($lastPayment) ? ($lastPayment->payment_method ?? null) : ($invoice->payment_method ?? null);
-              $txnId = isset($lastPayment) ? ($lastPayment->reference_number ?? null) : ($invoice->transaction_id ?? null);
-              $paidAmt = isset($lastPayment) ? ($lastPayment->amount_paid ?? $lastPayment->amount ?? null) : ($invoice->paid_amount ?? null);
+              // Get all payment transactions for this invoice
+              $payments = \App\Models\RentPayment::where('invoice_id', $invoice->id)
+                  ->orderBy('payment_date', 'desc')
+                  ->orderBy('created_at', 'desc')
+                  ->get();
             @endphp
-            @if(($invoice->status === 'paid') || ($paidAmt && $paidAmt > 0))
-              <tr>
-                <td>{{ $txnDate ?? 'N/A' }}</td>
-                <td>{{ $gateway ?? 'N/A' }}</td>
-                <td>{{ $txnId ?? 'N/A' }}</td>
-                <td>{{ number_format($paidAmt ?? 0, 2) }}BDT</td>
-              </tr>
+            
+            @if($payments->count() > 0)
+              @foreach($payments as $payment)
+                <tr>
+                  <td>{{ $payment->payment_date ? $payment->payment_date->format('Y-m-d') : ($payment->created_at ? $payment->created_at->format('Y-m-d') : 'N/A') }}</td>
+                  <td>{{ $payment->payment_method ?? 'N/A' }}</td>
+                  <td>{{ $payment->reference_number ?? 'N/A' }}</td>
+                  <td>{{ number_format($payment->amount, 2) }}BDT</td>
+                </tr>
+              @endforeach
             @else
               <tr>
                 <td colspan="4" style="text-align: center; color: #666;">No Related Transactions Found</td>
